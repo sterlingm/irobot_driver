@@ -8,8 +8,8 @@ VPATH =  .
 CC=g++ 
 CFLAGS=-w -D LINUX -O3 -fpermissive 
 OBJDIR=obj
-LDFLAGS= -L/usr/X11R6/lib$(LIBSELECT) 
-SOURCES_RAW=main.cpp Robot.cpp rs232.c
+LDFLAGS= -L/usr/X11R6/lib$(LIBSELECT) -lfltk
+SOURCES_RAW=main.cpp Robot.cpp rs232.c GUIWindow.cpp
 
 TARGET:= go
 TARGETD:= go_d
