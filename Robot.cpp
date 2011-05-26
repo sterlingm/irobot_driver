@@ -4,14 +4,10 @@
 using std::cout;
 using std::endl;
 
-unsigned char SAFEMODE[2] = {128, 131};
-unsigned char FULLMODE[2] = {128, 132};
-unsigned char PLAYLEDONLY[6] = {128, 132, 139, 2, 0, 0};
-unsigned char DRIVE[5] = {137, 127, 255, 0, 0};
-
 Robot::Robot(int portNo, int br) : port(portNo), baudrate(br) {
     if(connection.OpenComport(port, baudrate))
         printf("port open did not work\n");
+
     else
         printf("port open worked\n");
 }   //END ROBOT()
@@ -38,12 +34,13 @@ bool Robot::sendSingleByte(unsigned char byte) {
 }   //END SENDSINGLEBYTE
 
 bool Robot::sendBytes(unsigned char* bytes) {
-    if(connection.SendBuf(port, bytes, sizeof(bytes)) == -1){
+    if(connection.SendBuf(port, bytes, sizeof(bytes)) == -1)
         return false;
-	 }else{
-		usleep(15000);
+    else {
+        //cout<<"\nSending bytes "<<(int)bytes[7]<<endl;
+        usleep(15000);
         return true;
-	 }
+    }
 }   //END SENDBYTES
 
 int Robot::pollSensor(unsigned char* buf, int size) {
@@ -51,13 +48,30 @@ int Robot::pollSensor(unsigned char* buf, int size) {
     return read;
 }
 
+void Robot::fullMode() {
+    unsigned char fullmode[4] = {128, 132, 128, 150};
+    if(!sendBytes(fullmode))
+        cout<<"\nCould not send bytes for full mode\n";
+
+    sleep(1);
+}
+
+void Robot::safeMode() {
+    unsigned char safemode[6] = {128, 131, 128, 132, 128, 150};
+    if(!sendBytes(safemode))
+        cout<<"\nCould not send bytes for safe mode\n";
+
+    sleep(1);
+}
+
+
 
 Sensor_Packet Robot::getSensorValue(int which) {
     Sensor_Packet result;
-    //sendBytes(FULLMODE);
-    //request all sensor data and send bytes
-    unsigned char tosend[3] = {148, 1, 6};
-    sendBytes(tosend);
+
+    //send command
+    //unsigned char tosend[3] = {148, 1, 6};
+    //sendBytes(tosend);
 
     unsigned char receive;
     unsigned char* rest;
@@ -248,11 +262,14 @@ Sensor_Packet Robot::getSensorValue(int which) {
 */
 int* Robot::getHighAndLowByte(int v) {
     int* result = new int[2];
+
+    //if a low value, just use the low byte
     if(v > 0 && v < 256) {
         result[0] = 0;
         result[1] = v;
     }   //end if
 
+    //else use both the bytes
     else {
         if(v > 500)
             v = 500;
@@ -261,6 +278,9 @@ int* Robot::getHighAndLowByte(int v) {
         result[0] = (v>>8) & 0xff;
         result[1] = v & 0xff;
     }
+
+
+    //cout<<"vhigh: "<<(int)result[0]<<" vlow: "<<(int)result[1]<<endl;
     return result;
 }   //END GETHIGHANDLOWBYTE
 
@@ -270,8 +290,9 @@ void Robot::drive(int velocity, int radius) {
     unsigned char vlow;
     unsigned char rhigh;
     unsigned char rlow;
-    int* v = getHighAndLowByte(velocity);
-    int* r = getHighAndLowByte(radius);
+    int* v = getHighAndLowByte(velocity);   //get velocity values
+    //GET RADIUS VALUES ONLY WORK FOR -500-500. WILL CHANGE SOON TO WORK FOR ALL
+    int* r = getHighAndLowByte(radius); //get radius values
     vhigh = v[0];
     vlow = v[1];
     rhigh = r[0];
@@ -282,22 +303,18 @@ void Robot::drive(int velocity, int radius) {
 }   //END DRIVE
 
 
-
 //velocity is in mm/s
 void Robot::drive_straight(int velocity) {
     unsigned char vhigh;
     unsigned char vlow;
 
-    //get values for creating byte array
-    int* v = getHighAndLowByte(velocity);
+    int* v = getHighAndLowByte(velocity);   //get velocity values
     vhigh = v[0];
     vlow = v[1];
 
     unsigned char command[5] = {137, vhigh, vlow, 128, 0};
-    //unsigned char command[5] = {137, vhigh, vlow, 127, 255};
     sendBytes(command);
-
-}   //END DRIVESTRAIGHT
+}   //END DRIVE
 
 
 //velocity is in mm/s
@@ -314,15 +331,15 @@ void Robot::turnClockwise(int velocity) {
     }
 
     else {
-        int* v = getHighAndLowByte(velocity);
-        int* vneg = getHighAndLowByte((velocity*-1));
+        int* v = getHighAndLowByte(velocity);   //get velocity values
+        int* vneg = getHighAndLowByte((velocity*-1));   //get negative velocity values for other wheel
         lhigh = v[0];
         llow = v[1];
         rhigh = vneg[0];
         rlow = vneg[1];
 
         //create drive command and send bytes
-        unsigned char command[6] = {128, 145, rhigh, rlow, lhigh, llow};
+        unsigned char command[5] = {145, rhigh, rlow, lhigh, llow};
         sendBytes(command);
     }
 
@@ -351,6 +368,7 @@ void Robot::turnCounterClockwise(int velocity) {
         lhigh = vneg[0];
         llow = vneg[1];
 
+        cout<<"\nintcc\n";
         //create drive command and send bytes
         unsigned char command[5] = {145, rhigh, rlow, lhigh, llow};
         sendBytes(command);
@@ -362,6 +380,5 @@ void Robot::turnCounterClockwise(int velocity) {
 //function to stop the robot
 void Robot::stop() {
     unsigned char command[5] = {137, 0, 0, 0, 0};
-    sendBytes(SAFEMODE);
     sendBytes(command);
 }   //END STOP

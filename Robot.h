@@ -24,6 +24,9 @@ public:
     bool sendBytes(unsigned char*);
     int pollSensor(unsigned char*, int);
 
+    void fullMode();
+    void safeMode();
+
     Sensor_Packet getSensorValue(int);
 
     void drive(int, int);
