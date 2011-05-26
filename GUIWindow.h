@@ -2,9 +2,9 @@
 #ifndef GUIWINDOW_H
 #define GUIWINDOW_H
 #include "Robot.h"
-#include</home/sterling/Downloads/fltk-1.3.x-r8695/FL/Fl.H>
-#include </home/sterling/Downloads/fltk-1.3.x-r8695/FL/Fl_Window.H>
-#include </home/sterling/Downloads/fltk-1.3.x-r8695/FL/Fl_Button.H>
+#include<FL/Fl.H>
+#include <FL/Fl_Window.H>
+#include <FL/Fl_Button.H>
 
 class GUIWindow : public Fl_Window{
 public:
