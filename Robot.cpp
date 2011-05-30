@@ -37,10 +37,14 @@ bool Robot::sendBytes(unsigned char* bytes) {
     if(connection.SendBuf(port, bytes, sizeof(bytes)) == -1)
         return false;
     else {
-        //cout<<"\nSending bytes "<<(int)bytes[7]<<endl;
-        usleep(15000);
+        int i=0;
+        cout<<"\nSending bytes - ";
+        while((int)bytes[i] != 0) {
+            cout<<(int)bytes[i]<<" ";
+            i++;
+        }
         return true;
-    }
+    }   //end else
 }   //END SENDBYTES
 
 int Robot::pollSensor(unsigned char* buf, int size) {
@@ -52,24 +56,21 @@ void Robot::fullMode() {
     unsigned char fullmode[4] = {128, 132, 128, 150};
     if(!sendBytes(fullmode))
         cout<<"\nCould not send bytes for full mode\n";
-
-    sleep(1);
 }
 
 void Robot::safeMode() {
-    unsigned char safemode[6] = {128, 131, 128, 132, 128, 150};
+    unsigned char safemode[2] = {128, 131};
     if(!sendBytes(safemode))
         cout<<"\nCould not send bytes for safe mode\n";
 
-    sleep(1);
 }
-
 
 
 Sensor_Packet Robot::getSensorValue(int which) {
     Sensor_Packet result;
 
-    //send command
+
+    //request sensor data and send bytes
     //unsigned char tosend[3] = {148, 1, 6};
     //sendBytes(tosend);
 
@@ -88,7 +89,6 @@ Sensor_Packet Robot::getSensorValue(int which) {
         //next byte should be the size of the rest
         read = connection.PollComport(port, &receive, sizeof(unsigned char));
         cout << "  Bytes (" << read << "): " << (int)receive;
-
 
         //get the size, add 1 for checksum
         int packet_size = (int)receive + 1;
@@ -253,7 +253,8 @@ Sensor_Packet Robot::getSensorValue(int which) {
 
 
     return result;
-}   //END GETSENSORVALUES
+}
+
 
 
 /*
@@ -271,6 +272,7 @@ int* Robot::getHighAndLowByte(int v) {
 
     //else use both the bytes
     else {
+        //here for velocity, will change if needed and once robot is consistently driving
         if(v > 500)
             v = 500;
         if(v < -500)
@@ -368,7 +370,6 @@ void Robot::turnCounterClockwise(int velocity) {
         lhigh = vneg[0];
         llow = vneg[1];
 
-        cout<<"\nintcc\n";
         //create drive command and send bytes
         unsigned char command[5] = {145, rhigh, rlow, lhigh, llow};
         sendBytes(command);
@@ -382,3 +383,21 @@ void Robot::stop() {
     unsigned char command[5] = {137, 0, 0, 0, 0};
     sendBytes(command);
 }   //END STOP
+
+
+/*
+ function to change the led lights
+ play is for the play led. value of 1 makes play led turn on, 0 turns it off
+ advance is for the advance led. value of 1 makes advance led turn on, 0 turns it off
+ value is 0-255 to specify the color of the power led. 0 for green, 255 for red.
+ intensity is 0-255 to specify the how bright the power led should be. 255 is the brightest, 0 is off
+*/
+void Robot::leds(bool play, bool advance, unsigned char value, unsigned char intensity) {
+    int which = 0;
+    if(play)
+        which = which | 0x02;
+    if(advance)
+        which = which | 0x08;
+    unsigned char command[5] = {139, which, value, intensity};
+    sendBytes(command);
+}

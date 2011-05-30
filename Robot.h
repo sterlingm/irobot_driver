@@ -36,6 +36,8 @@ public:
     void turnClockwise(int);
 
     void stop();
+
+    void leds(bool,bool,unsigned char,unsigned char);
 private:
     int port;
     int baudrate;

@@ -180,7 +180,7 @@ int SerialConnect::SendBuf(int comport_number, unsigned char *buf, int size)
 
 void SerialConnect::CloseComport(int comport_number)
 {
-  printf("closing comport\n");
+  printf("\nclosing comport\n");
   close(Cport[comport_number]);
   tcsetattr(Cport[comport_number], TCSANOW, old_port_settings + comport_number);
 }   //END CLOSECOMPORT
