@@ -4,7 +4,7 @@
 using std::cout;
 using std::endl;
 
-Robot::Robot(int portNo, int br) : port(portNo), baudrate(br) {
+Robot::Robot(int portNo, int br) : port(portNo), baudrate(br), sensorsstreaming(false) {
     if(connection.OpenComport(port, baudrate))
         printf("port open did not work\n");
 
@@ -25,6 +25,10 @@ void Robot::setPort(int& p) {port = p;}
 int& Robot::getBaudRate() {return baudrate;}
 void Robot::setBaudRate(int& br) {baudrate = br;}
 
+int& Robot::getDefaultVelocity() {return dvelocity;}
+void Robot::setDefaultVelocity(int v) {dvelocity = v;}
+
+bool Robot::sensorsStreaming() {return sensorsstreaming;}
 
 bool Robot::sendSingleByte(unsigned char byte) {
     if(connection.SendByte(port, byte))
@@ -33,16 +37,19 @@ bool Robot::sendSingleByte(unsigned char byte) {
         return false;
 }   //END SENDSINGLEBYTE
 
-bool Robot::sendBytes(unsigned char* bytes) {
-    if(connection.SendBuf(port, bytes, sizeof(bytes)) == -1)
+bool Robot::sendBytes(unsigned char* bytes, int length) {
+    int sent = connection.SendBuf(port, bytes, length);
+    if(sent == -1)
         return false;
     else {
+        /*
         int i=0;
-        cout<<"\nSending bytes - ";
+        cout<<endl<<sent<<" bytes were sent - ";
         while((int)bytes[i] != 0) {
             cout<<(int)bytes[i]<<" ";
             i++;
         }
+        */
         return true;
     }   //end else
 }   //END SENDBYTES
@@ -52,19 +59,34 @@ int Robot::pollSensor(unsigned char* buf, int size) {
     return read;
 }
 
+void Robot::start() {
+    unsigned char start[1] = {128};
+    if(!sendBytes(start, 1))
+        cout<<"\nCould not sent bytes for start\n";
+}
+
 void Robot::fullMode() {
-    unsigned char fullmode[4] = {128, 132, 128, 150};
-    if(!sendBytes(fullmode))
+    unsigned char fullmode[2] = {128, 132};
+    if(!sendBytes(fullmode, 2))
         cout<<"\nCould not send bytes for full mode\n";
+    sleep(1);
 }
 
 void Robot::safeMode() {
     unsigned char safemode[2] = {128, 131};
-    if(!sendBytes(safemode))
+    if(!sendBytes(safemode, 2))
         cout<<"\nCould not send bytes for safe mode\n";
-
+    sleep(1);
 }
 
+
+void Robot::streamSensors() {
+    unsigned char stream[3] = {148, 1, 6};
+    if(!sendBytes(stream, 3))
+        cout<<"\nCould not send bytes for sensor streaming\n";
+    else
+        sensorsstreaming = true;
+}
 
 Sensor_Packet Robot::getSensorValue(int which) {
     Sensor_Packet result;
@@ -273,77 +295,91 @@ int* Robot::getHighAndLowByte(int v) {
     //else use both the bytes
     else {
         //here for velocity, will change if needed and once robot is consistently driving
-        if(v > 500)
-            v = 500;
-        if(v < -500)
-            v = -500;
+        //if(v > 500)
+          //  v = 500;
+        //if(v < -500)
+          //  v = -500;
         result[0] = (v>>8) & 0xff;
         result[1] = v & 0xff;
     }
 
+    cout<<"\nhigh: "<<(int)result[0]<<" low: "<<(int)result[1];
 
-    //cout<<"vhigh: "<<(int)result[0]<<" vlow: "<<(int)result[1]<<endl;
     return result;
 }   //END GETHIGHANDLOWBYTE
 
 
 void Robot::drive(int velocity, int radius) {
+    cout<<"\nindrive";
     unsigned char vhigh;
     unsigned char vlow;
     unsigned char rhigh;
     unsigned char rlow;
-    int* v = getHighAndLowByte(velocity);   //get velocity values
-    //GET RADIUS VALUES ONLY WORK FOR -500-500. WILL CHANGE SOON TO WORK FOR ALL
-    int* r = getHighAndLowByte(radius); //get radius values
+
+    if(velocity > 500)
+        velocity = 500;
+    else if(velocity < -500)
+        velocity = -500;
+
+    if(radius < -2000)
+        radius = -2000;
+    else if( (radius > 2000) && (radius != 32768) && (radius != 32767) && (radius != 65535) )
+        radius = 2000;
+
+    //get velocity and radius values
+    int* v = getHighAndLowByte(velocity);
+    int* r = getHighAndLowByte(radius);
     vhigh = v[0];
     vlow = v[1];
     rhigh = r[0];
     rlow = r[1];
 
     unsigned char command[5] = {137, vhigh, vlow, rhigh, rlow};
-    sendBytes(command);
+    sendBytes(command, 5);
 }   //END DRIVE
 
 
 //velocity is in mm/s
 void Robot::drive_straight(int velocity) {
+    cout<<"\nindrivedtraight";
     unsigned char vhigh;
     unsigned char vlow;
 
-    int* v = getHighAndLowByte(velocity);   //get velocity values
+    if(velocity > 500)
+        velocity = 500;
+    else if(velocity < -500)
+        velocity = -500;
+
+    //get velocity values
+    int* v = getHighAndLowByte(velocity);
     vhigh = v[0];
     vlow = v[1];
 
+
     unsigned char command[5] = {137, vhigh, vlow, 128, 0};
-    sendBytes(command);
+    sendBytes(command, 5);
 }   //END DRIVE
 
 
 //velocity is in mm/s
 void Robot::turnClockwise(int velocity) {
-    unsigned char rhigh;
-    unsigned char rlow;
-    unsigned char lhigh;
-    unsigned char llow;
+    cout<<"\ninturncw";
+    unsigned char vhigh;
+    unsigned char vlow;
 
     //if negative, call turnLeft
-    if(velocity < 0) {
-        //printf("calling turnLeft with %d\n", (velocity*-1));
+    if(velocity < 0)
         turnCounterClockwise(velocity*-1);
-    }
 
     else {
         int* v = getHighAndLowByte(velocity);   //get velocity values
-        int* vneg = getHighAndLowByte((velocity*-1));   //get negative velocity values for other wheel
-        lhigh = v[0];
-        llow = v[1];
-        rhigh = vneg[0];
-        rlow = vneg[1];
+        vhigh = v[0];
+        vlow = v[1];
 
         //create drive command and send bytes
-        unsigned char command[5] = {145, rhigh, rlow, lhigh, llow};
-        sendBytes(command);
-    }
+        unsigned char command[5] = {137, vhigh, vlow, 255, 255};
+        sendBytes(command, 5);
+    }   //end else
 
 }   //END TURNCLOCKWISE
 
@@ -351,29 +387,22 @@ void Robot::turnClockwise(int velocity) {
 
 //velocity is in mm/s.
 void Robot::turnCounterClockwise(int velocity) {
-    unsigned char rhigh;
-    unsigned char rlow;
-    unsigned char lhigh;
-    unsigned char llow;
+    unsigned char vhigh;
+    unsigned char vlow;
 
 
-    if(velocity < 0) {
-        //printf("calling turnLeft with %d\n", (velocity*-1));
+    if(velocity < 0)
         turnClockwise(velocity*-1);
-    }
 
     else {
         int* v = getHighAndLowByte(velocity);
-        int* vneg = getHighAndLowByte((velocity*-1));
-        rhigh = v[0];
-        rlow = v[1];
-        lhigh = vneg[0];
-        llow = vneg[1];
+        vhigh = v[0];
+        vlow = v[1];
 
         //create drive command and send bytes
-        unsigned char command[5] = {145, rhigh, rlow, lhigh, llow};
-        sendBytes(command);
-    }
+        unsigned char command[5] = {137, vhigh, vlow, 0, 1};
+        sendBytes(command, 5);
+    }   //end else
 
 }   //END TURNCOUNTERCLOCKWISE
 
@@ -381,7 +410,7 @@ void Robot::turnCounterClockwise(int velocity) {
 //function to stop the robot
 void Robot::stop() {
     unsigned char command[5] = {137, 0, 0, 0, 0};
-    sendBytes(command);
+    sendBytes(command, 5);
 }   //END STOP
 
 
@@ -398,6 +427,76 @@ void Robot::leds(bool play, bool advance, unsigned char value, unsigned char int
         which = which | 0x02;
     if(advance)
         which = which | 0x08;
-    unsigned char command[5] = {139, which, value, intensity};
-    sendBytes(command);
+    unsigned char command[4] = {139, which, value, intensity};
+    sendBytes(command, 4);
+}
+
+
+
+void Robot::turnDegrees(int x, int v) {
+
+    bool negative = false;  //true for moving clockwise
+    if(x > 180) {
+        x = 360 - x;
+        negative = true;
+    }
+    if(x < 0) {
+        x = x * -1;
+        negative = true;
+    }
+
+    double p = (x * (double)100 / 180) / 100;  //percent of 180
+    cout<<endl<<"p: "<<p;
+
+    double distance = p * 430; //how far to actually move (mm)
+
+    cout<<endl<<"distance: "<<distance;
+    double time = distance / v; //how long to turn
+
+    cout<<endl<<"time: "<<time;
+
+    //ADJUST TIME
+    if(v<= 125)
+        time += 0.05;
+    else if(v <= 200)
+        {}
+    else if(v <= 275)
+        time += 0.007;
+    else if (v <= 350)
+        time -= 0.01;
+    else if(v <= 450)
+        {}
+    else if(v <= 475)
+        time += 0.05;
+    else if(v <= 485)
+        time += 0.05;
+    else
+        time += 0.125;
+    //set time to microseconds
+    time = time * 1000000;
+
+    if(!negative)
+        turnCounterClockwise(v);
+    else
+        turnClockwise(v);
+
+    usleep(time);
+    stop();
+}
+
+//turn x degrees in y seconds
+void Robot::turnDegreesInSeconds(int x, double y) {
+    //get distance
+    double p = (x * (double)100 / 180) / 100;  //percent of 180
+    double distance = p * 430;
+
+    int velocity = distance / y;
+
+    cout<<"\nvelocity: "<<velocity;
+
+    turnCounterClockwise(velocity);
+
+    int time = y * 1000000;
+    usleep(time);
+    stop();
 }

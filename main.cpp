@@ -1,5 +1,6 @@
 #include "Robot.h"
 #include "utility.h"
+#include "GUIWindow.h"
 #include <time.h>
 #include <iostream>
 #include <map>
@@ -51,40 +52,25 @@ int main(int argc, char* args[]) {
     //robot.safeMode();
     //robot.LED(10, 0, 0);
 
-
-    robot.sendBytes(full_mode);
-    sleep(1);
-    robot.leds(true, true, 128, 128);
+    //GUIWindow window(robot);
+    //return Fl::run();
 
 
-
-    //robot.sendBytes(full_mode);
-    //sleep(2);
-    //robot.sendBytes(test);
-    //robot.sendBytes(two_leds_on_half);
-    //robot.sendBytes(drive_forward);
-    //	 return 1;
-    //cout << "\nDriving straight.";
-    //robot.drive_straight(20);
-
-    //unsigned char tosend[3] = {148, 1, 6};
-    //if(!robot.sendBytes(tosend))
-        //cout<<"\ncouldn't send bytes for sensor streaming\n";
-
+    robot.fullMode();
+    robot.turnDegreesInSeconds(180, 0.90);
 /*
     while(1) {
 
         //sleep for x milliseconds
         usleep(15000);
         Sensor_Packet temp;
-        temp = robot.getSensorValue(BUMP);
+        temp = robot.getSensorValue(ANGLE);
 
         cout<<endl<<temp.values[0];
         cout<<endl<<temp.values[1];
 
     }   //end while
-
-    robot.sendBytes(pause_stream);
 */
     return 0;
+
 }   //END MAIN

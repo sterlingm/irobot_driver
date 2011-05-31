@@ -21,7 +21,7 @@ public:
     Fl_Button* safeMode;
 
 private:
-    Robot robot;
+    Robot* robot;
 
     static void cb_drive(Fl_Widget*, void*);
     inline void cb_drive_i();

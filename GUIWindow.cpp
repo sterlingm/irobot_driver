@@ -5,7 +5,7 @@ using namespace std;
 //all code in here should be self explanatory
 
 
-GUIWindow::GUIWindow(Robot& r) : Fl_Window(500, 350, "iRobot Create"), robot(r) {
+GUIWindow::GUIWindow(Robot& r) : Fl_Window(500, 350, "iRobot Create"), robot(&r) {
     begin();    //make the widgets, button for each option
         drive = new Fl_Button(50, 75, 70, 30, "Drive");
         drive->callback(cb_drive, this);
@@ -21,11 +21,7 @@ GUIWindow::GUIWindow(Robot& r) : Fl_Window(500, 350, "iRobot Create"), robot(r) 
 
         stop = new Fl_Button(350, 175, 50, 30, "Stop");
         stop->callback(cb_stop, this);
-        stop->shortcut('s');
-
-        quit = new Fl_Button(350, 275, 50, 30, "Quit");
-        quit->callback(cb_quit, this);
-        quit->shortcut('q');
+        stop->shortcut('q');
 
         fullMode = new Fl_Button(50, 275, 80, 30, "Full Mode");
         fullMode->callback(cb_fullmode, this);
@@ -34,14 +30,19 @@ GUIWindow::GUIWindow(Robot& r) : Fl_Window(500, 350, "iRobot Create"), robot(r) 
         safeMode = new Fl_Button(150, 275, 80, 30, "Safe Mode");
         safeMode->callback(cb_safemode, this);
         safeMode->shortcut('s');
+
+        quit = new Fl_Button(350, 275, 50, 30, "Quit");
+        quit->callback(cb_quit, this);
+        quit->shortcut(FL_CTRL + 'q');
     end();  //end making widgets
+    robot->fullMode();
     resizable(this);
     show(); //show it
 }
 
 
 //same as before, just able to specify dimensions
-GUIWindow::GUIWindow(int w, int h, const char* title, Robot& r) : Fl_Window(w, h, title), robot(r) {
+GUIWindow::GUIWindow(int w, int h, const char* title, Robot& r) : Fl_Window(w, h, title), robot(&r) {
     begin();
         drive = new Fl_Button(50, 75, 70, 30, "Drive");
         drive->callback(cb_drive, this);
@@ -57,11 +58,11 @@ GUIWindow::GUIWindow(int w, int h, const char* title, Robot& r) : Fl_Window(w, h
 
         stop = new Fl_Button(310, 175, 50, 30, "Stop");
         stop->callback(cb_stop, this);
-        stop->shortcut('s');
+        stop->shortcut('q');
 
         quit = new Fl_Button(150, 275, 50, 30, "Quit");
         quit->callback(cb_quit, this);
-        quit->shortcut('q');
+        quit->shortcut(FL_CTRL + 'q');
 
         fullMode = new Fl_Button(50, 275, 80, 30, "Full Mode");
         fullMode->callback(cb_fullmode, this);
@@ -71,6 +72,7 @@ GUIWindow::GUIWindow(int w, int h, const char* title, Robot& r) : Fl_Window(w, h
         safeMode->callback(cb_safemode, this);
         safeMode->shortcut('s');
     end();
+    robot->fullMode();
     resizable(this);
     show();
 }
@@ -90,7 +92,7 @@ void GUIWindow::cb_drive(Fl_Widget* o, void* v) {
 }
 
 void GUIWindow::cb_drive_i() {
-    robot.drive_straight(100);
+    robot->drive_straight(100);
 }
 
 void GUIWindow::cb_turnCW(Fl_Widget* o, void* v) {
@@ -99,7 +101,7 @@ void GUIWindow::cb_turnCW(Fl_Widget* o, void* v) {
 }
 
 void GUIWindow::cb_turnCW_i() {
-    robot.turnClockwise(100);
+    robot->turnClockwise(100);
 }
 
 void GUIWindow::cb_turnCCW(Fl_Widget* o, void* v) {
@@ -108,7 +110,7 @@ void GUIWindow::cb_turnCCW(Fl_Widget* o, void* v) {
 }
 
 void GUIWindow::cb_turnCCW_i() {
-    robot.turnCounterClockwise(100);
+    robot->turnCounterClockwise(100);
 }
 
 void GUIWindow::cb_stop(Fl_Widget* o, void* v) {
@@ -117,7 +119,7 @@ void GUIWindow::cb_stop(Fl_Widget* o, void* v) {
 }
 
 void GUIWindow::cb_stop_i() {
-    robot.stop();
+    robot->stop();
 }
 
 
@@ -127,7 +129,7 @@ void GUIWindow::cb_fullmode(Fl_Widget* o, void* v) {
 }
 
 void GUIWindow::cb_fullmode_i() {
-    robot.fullMode();
+    robot->fullMode();
 }
 
 void GUIWindow::cb_safemode(Fl_Widget* o, void* v) {
@@ -136,7 +138,7 @@ void GUIWindow::cb_safemode(Fl_Widget* o, void* v) {
 }
 
 void GUIWindow::cb_safemode_i() {
-    robot.safeMode();
+    robot->safeMode();
 }
 
 
@@ -146,7 +148,7 @@ void GUIWindow::cb_quit(Fl_Widget* o, void* v) {
 }
 
 void GUIWindow::cb_quit_i() {
-    robot.stop();
+    robot->stop();
     hide();
 }
 
