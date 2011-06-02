@@ -1,8 +1,7 @@
 #include "Robot.h"
 #include "rs232.h"
-#include <iostream>
-using std::cout;
-using std::endl;
+
+
 /*
   Constructor for a Robot
   Takes in a port number and a baudrate
@@ -81,6 +80,7 @@ void Robot::setCurrentSensor(int s) {currentSensor = s;}
 */
 bool Robot::sensorsStreaming() {return sensorsstreaming;}
 
+
 /*
  Sends a single byte to the robot
  Returns true if the byte was successfully sent
@@ -98,21 +98,10 @@ bool Robot::sendSingleByte(unsigned char byte) {
  Returns true if the byte array was successfully sent
 */
 bool Robot::sendBytes(unsigned char* bytes, int length) {
-    int sent = connection.SendBuf(port, bytes, length);
-    if(sent == -1)
+    if(connection.SendBuf(port, bytes, length) == -1)
         return false;
-    else {
-        /*
-        int i=0;
-        cout<<endl<<sent<<" bytes were sent - ";
-        while((int)bytes[i] != 0) {
-            cout<<(int)bytes[i]<<" ";
-            i++;
-        }
-        */
-
+    else
         return true;
-    }   //end else
 }   //END SENDBYTES
 
 
@@ -121,8 +110,7 @@ bool Robot::sendBytes(unsigned char* bytes, int length) {
  Returns the amount of bytes read back from the robot
 */
 int Robot::pollSensor(unsigned char* buf, int size) {
-    int read = connection.PollComport(port, buf, size);
-    return read;
+    return connection.PollComport(port, buf, size);
 }   //END POLLSENSOR
 
 
@@ -132,7 +120,7 @@ int Robot::pollSensor(unsigned char* buf, int size) {
 void Robot::start() {
     unsigned char start[1] = {128};
     if(!sendBytes(start, 1))
-        cout<<"\nCould not sent bytes for start\n";
+        std::cout<<"\nCould not sent bytes for start\n";
 }   //END START
 
 
@@ -142,7 +130,7 @@ void Robot::start() {
 void Robot::fullMode() {
     unsigned char fullmode[2] = {128, 132};
     if(!sendBytes(fullmode, 2))
-        cout<<"\nCould not send bytes for full mode\n";
+        std::cout<<"\nCould not send bytes for full mode\n";
     sleep(1);
 }   //END FULLMODE
 
@@ -153,7 +141,7 @@ void Robot::fullMode() {
 void Robot::safeMode() {
     unsigned char safemode[2] = {128, 131};
     if(!sendBytes(safemode, 2))
-        cout<<"\nCould not send bytes for safe mode\n";
+        std::cout<<"\nCould not send bytes for safe mode\n";
     sleep(1);
 }   //END SAFEMODE
 
@@ -165,7 +153,7 @@ void Robot::streamSensors() {
     if(!sensorsstreaming) {
         unsigned char stream[3] = {148, 1, 6};
         if(!sendBytes(stream, 3))
-            cout<<"\nCould not send bytes for sensor streaming\n";
+            std::cout<<"\nCould not send bytes for sensor streaming\n";
         else
             sensorsstreaming = true;
     }
@@ -178,7 +166,7 @@ void Robot::pauseSensorStream() {
     if(sensorsstreaming) {
         unsigned char stop[2] = {150, 0};
         if(!sendBytes(stop, 2))
-            cout<<"\nCould not send bytes for stopping the sensor stream\n";
+            std::cout<<"\nCould not send bytes for pausing the sensor stream\n";
         else
             sensorsstreaming = false;
     }
@@ -197,7 +185,8 @@ void Robot::toggleSensorStream() {
         a = 1;
     sensorsstreaming = !sensorsstreaming;
     unsigned char command[2] = {150, a};
-    sendBytes(command, 2);
+    if(!sendBytes(command, 2))
+        std::cout<<"\nCould not send bytes to toggle the sensor stream";
 }   //END TOGGLESENSORSTREAM
 
 
@@ -207,7 +196,6 @@ void Robot::toggleSensorStream() {
 */
 Sensor_Packet Robot::getSensorValue(int which) {
     Sensor_Packet result;
-
     unsigned char receive;
     unsigned char* rest;
 
@@ -215,14 +203,14 @@ Sensor_Packet Robot::getSensorValue(int which) {
 
     //read a byte
     read = connection.PollComport(port, &receive, sizeof(unsigned char));
-    //cout << "\nBytes (" << read << "): ";
+    //std::cout << "\nBytes (" << read << "): ";
 
     if((int)receive == 19) {
-        //cout<<(int)receive;
+        //std::cout<<(int)receive;
 
         //next byte should be the size of the rest
         read = connection.PollComport(port, &receive, sizeof(unsigned char));
-        //cout << "  Bytes (" << read << "): " << (int)receive;
+        //std::cout << "  Bytes (" << read << "): " << (int)receive;
 
         //get the size, add 1 for checksum
         int packet_size = (int)receive + 1;
@@ -230,11 +218,11 @@ Sensor_Packet Robot::getSensorValue(int which) {
 
         //get values
         read = connection.PollComport(port, rest, (sizeof(unsigned char) * (packet_size)));
-        //cout << "  Bytes (" << read << "): ";
+        //std::cout << "  Bytes (" << read << "): ";
 
 
         switch(which) {
-            case BUMP:
+            case BUMP:  //works for wheel drop also
                 result.values[0] = (int)rest[1];
                 result.values[1] = -1;
                 break;
@@ -407,8 +395,6 @@ int* Robot::getHighAndLowByte(int v) {
         result[1] = v & 0xff;
     }
 
-    //cout<<"\nhigh: "<<(int)result[0]<<" low: "<<(int)result[1];
-
     return result;
 }   //END GETHIGHANDLOWBYTE
 
@@ -423,16 +409,6 @@ void Robot::drive(int velocity, int radius) {
     unsigned char rhigh;
     unsigned char rlow;
 
-    if(velocity > 500)
-        velocity = 500;
-    else if(velocity < -500)
-        velocity = -500;
-
-    if(radius < -2000)
-        radius = -2000;
-    else if( (radius > 2000) && (radius != 32768) && (radius != 32767) && (radius != 65535) )
-        radius = 2000;
-
     //get velocity and radius values
     int* v = getHighAndLowByte(velocity);
     int* r = getHighAndLowByte(radius);
@@ -442,9 +418,9 @@ void Robot::drive(int velocity, int radius) {
     rlow = r[1];
 
     unsigned char command[5] = {137, vhigh, vlow, rhigh, rlow};
-    sendBytes(command, 5);
+    if(!sendBytes(command, 5))
+        std::cout<<"\nCould not send bytes to drive";
 }   //END DRIVE
-
 
 /*
  Drives the robot straight at a given velocity
@@ -454,19 +430,14 @@ void Robot::drive_straight(int velocity) {
     unsigned char vhigh;
     unsigned char vlow;
 
-    if(velocity > 500)
-        velocity = 500;
-    else if(velocity < -500)
-        velocity = -500;
-
     //get velocity values
     int* v = getHighAndLowByte(velocity);
     vhigh = v[0];
     vlow = v[1];
 
-
-    unsigned char command[5] = {137, vhigh, vlow, 128, 0};
-    sendBytes(command, 5);
+    unsigned char command[5] = {137, vhigh, vlow, 127, 255};
+    if(!sendBytes(command, 5))
+        std::cout<<"\nCould not send bytes to drive straight";
 }   //END DRIVESTRAIGHT
 
 
@@ -478,21 +449,15 @@ void Robot::turnClockwise(int velocity) {
     unsigned char vhigh;
     unsigned char vlow;
 
-    //if negative, call turnLeft
-    if(velocity < 0)
-        turnCounterClockwise(velocity*-1);
+    int* v = getHighAndLowByte(velocity);   //get velocity values
+    vhigh = v[0];   //high byte
+    vlow = v[1];    //low byte
 
-    else {
-        int* v = getHighAndLowByte(velocity);   //get velocity values
-        vhigh = v[0];
-        vlow = v[1];
-
-        //create drive command and send bytes
-        unsigned char command[5] = {137, vhigh, vlow, 255, 255};
-        sendBytes(command, 5);
-    }   //end else
+    //create and send drive command
+    unsigned char command[5] = {137, vhigh, vlow, 255, 255};
+    if(!sendBytes(command, 5))
+        std::cout<<"\nCould not send bytes to turn clockwise";
 }   //END TURNCLOCKWISE
-
 
 
 /*
@@ -503,47 +468,15 @@ void Robot::turnCounterClockwise(int velocity) {
     unsigned char vhigh;
     unsigned char vlow;
 
+    int* v = getHighAndLowByte(velocity);   //get velocity values
+    vhigh = v[0];   //high byte
+    vlow = v[1];    //low byte
 
-    if(velocity < 0)
-        turnClockwise(velocity*-1);
-
-    else {
-        int* v = getHighAndLowByte(velocity);
-        vhigh = v[0];
-        vlow = v[1];
-
-        //create drive command and send bytes
-        unsigned char command[5] = {137, vhigh, vlow, 0, 1};
-        sendBytes(command, 5);
-    }   //end else
+    //create and send drive command
+    unsigned char command[5] = {137, vhigh, vlow, 0, 1};
+    if(!sendBytes(command, 5))
+        std::cout<<"\nCould not send bytes to turn counter clockwise";
 }   //END TURNCOUNTERCLOCKWISE
-
-
-/*
- Stops the robot
-*/
-void Robot::stop() {
-    unsigned char command[5] = {137, 0, 0, 0, 0};
-    sendBytes(command, 5);
-}   //END STOP
-
-
-/*
- Changes the led lights
- play is for the play led. value of 1 makes play led turn on, 0 turns it off
- advance is for the advance led. value of 1 makes advance led turn on, 0 turns it off
- value is 0-255 to specify the color of the power led. 0 for green, 255 for red.
- intensity is 0-255 to specify the how bright the power led should be. 255 is the brightest, 0 is off
-*/
-void Robot::leds(bool play, bool advance, unsigned char value, unsigned char intensity) {
-    int which = 0;
-    if(play)
-        which = which | 0x02;
-    if(advance)
-        which = which | 0x08;
-    unsigned char command[4] = {139, which, value, intensity};
-    sendBytes(command, 4);
-}   //END LEDS
 
 
 /*
@@ -552,24 +485,25 @@ void Robot::leds(bool play, bool advance, unsigned char value, unsigned char int
  velocity is the specified velocity in mm/s and can range from -500-500
 */
 void Robot::turnXDegrees(int degree, int velocity) {
+    bool negative = false;  //true for moving clockwise, false for counter clockwise
 
-    bool negative = false;  //true for moving clockwise
-
+    //if the degree is negative, get absolute value and set negative
     if(degree < 0) {
         degree = degree * -1;
         negative = negative ^ true;
     }
+    //if the velocity is negative, get abolsute value and set negative
     if(velocity < 0) {
         velocity = velocity * -1;
         negative = negative ^ true;
     }
 
 
-
-    if(! ( (degree == 0) || (velocity == 0) ) ) {
+    //only turn if both the degree and velocity have a value > 0
+    if( (degree != 0) && (velocity != 0) ) {
 
         double p = (degree * (double)100 / 180) / 100;  //percent of 180
-        double distance = p * 430; //how far to actually move (mm)
+        double distance = p * 430; //how far to move (mm)
 
         double time = distance / velocity; //how long to turn
 
@@ -599,18 +533,21 @@ void Robot::turnXDegrees(int degree, int velocity) {
 
         usleep(time);
         stop();
-    }
+    }   //end if
 }   //END TURNXDEGREES
+
 
 //turn x degrees in y seconds
 void Robot::turnXDegreesInYSeconds(int degree, double seconds) {
 
+    //only turn if both seconds and degree have a value > 0
     if(seconds > 0 && degree > 0) {
+
         //get distance
         double p = (degree * (double)100 / 180) / 100;  //percent of 180
-        double distance = p * 430;
+        double distance = p * 430;  //distance to move (mm)
 
-        int velocity = distance / seconds;
+        int velocity = distance / seconds;  //how fast to turn
 
         turnCounterClockwise(velocity);
 
@@ -619,3 +556,32 @@ void Robot::turnXDegreesInYSeconds(int degree, double seconds) {
         stop();
     }
 }   //END TURNXDEGREESINYSECONDS
+
+
+/*
+ Stops the robot
+*/
+void Robot::stop() {
+    unsigned char command[5] = {137, 0, 0, 0, 0};
+    if(!sendBytes(command, 5))
+        std::cout<<"\nCould not send bytes to stop";
+}   //END STOP
+
+
+/*
+ Changes the led lights
+ play is for the play led. value of 1 makes play led turn on, 0 turns it off
+ advance is for the advance led. value of 1 makes advance led turn on, 0 turns it off
+ value is 0-255 to specify the color of the power led. 0 for green, 255 for red.
+ intensity is 0-255 to specify the how bright the power led should be. 255 is the brightest, 0 is off
+*/
+void Robot::leds(bool play, bool advance, unsigned char value, unsigned char intensity) {
+    int which = 0;
+    if(play)
+        which = which | 0x02;
+    if(advance)
+        which = which | 0x08;
+    unsigned char command[4] = {139, which, value, intensity};
+    if(!sendBytes(command, 4))
+        std::cout<<"\nCould not send bytes to change the leds";
+}   //END LEDS

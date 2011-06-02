@@ -1,9 +1,10 @@
 #ifndef UTILITY_H
 #define UTILITY_H
+#include <iostream>
 
 
 #define BUMP 7
-#define WHEEL_DROPS 7
+#define WHEEL_DROP 7
 #define WALL 8
 #define CLIFF_LEFT 9
 #define CLIFF_FRONT_LEFT 10

@@ -2,8 +2,6 @@
 #define ROBOT_H
 #include "rs232.h"
 #include "utility.h"
-#include <vector>
-#include <map>
 
 class Robot
 {
@@ -12,6 +10,8 @@ public:
     ~Robot();
 
     void close();
+
+    SerialConnect& getConnection();
 
     int& getPort();
     void setPort(int&);
@@ -27,7 +27,6 @@ public:
 
     bool sensorsStreaming();
 
-    SerialConnect& getConnection();
     bool sendSingleByte(unsigned char);
     bool sendBytes(unsigned char*, int);
     int pollSensor(unsigned char*, int);
@@ -44,14 +43,14 @@ public:
 
     void drive(int, int);
     void drive_straight(int);
-    void turnCounterClockwise(int);
     void turnClockwise(int);
+    void turnCounterClockwise(int);
+    void turnXDegrees(int, int);
+    void turnXDegreesInYSeconds(int,double);
     void stop();
 
     void leds(bool,bool,unsigned char,unsigned char);
 
-    void turnXDegrees(int, int);
-    void turnXDegreesInYSeconds(int,double);
 private:
     int port;
     int baudrate;
