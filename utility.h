@@ -40,7 +40,11 @@
 #define REQUESTED_LEFT_VELOCITY 42
 
 
-
+/*
+ struct to hold sensor values
+ index 0 is the first byte, index 1 is the second byte
+ a value of -1 represents no value
+*/
 struct Sensor_Packet {
     int values[2];
     Sensor_Packet() {values[0] = -1; values[1] = -1;}

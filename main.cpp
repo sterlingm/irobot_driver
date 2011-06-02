@@ -30,6 +30,19 @@ void testModes() {
     } while(input > 0);
 }
 
+
+void loop() {
+
+    //sleep for x milliseconds
+    usleep(15000);
+    Sensor_Packet temp;
+    temp = robot.getSensorValue(ANGLE);
+
+    cout<<endl<<temp.values[0];
+    cout<<endl<<temp.values[1];
+
+}
+
 int main(int argc, char* args[]) {
     //16 for /dev/ttyUSB0
     //  Robot robot(16, 19200);
@@ -43,7 +56,8 @@ int main(int argc, char* args[]) {
     unsigned char drive_forward[5] = {137, 0, 100, 128, 0};
 
 
-    unsigned char leds[4] = {139,10,255,128};
+    unsigned char leds[4] = {139,10,10,128};
+
 
     //testModes();
     //Stream sensor
@@ -52,12 +66,17 @@ int main(int argc, char* args[]) {
     //robot.safeMode();
     //robot.LED(10, 0, 0);
 
-    //GUIWindow window(robot);
-    //return Fl::run();
+    GUIWindow window(robot);
+    return Fl::run();
 
-
+/*
     robot.fullMode();
-    robot.turnDegreesInSeconds(180, 0.90);
+    robot.turnDegrees(90, 250);
+    robot.turnDegrees(90, 250);
+    robot.turnDegrees(90, 250);
+    robot.turnDegrees(90, 250);
+*/
+
 /*
     while(1) {
 

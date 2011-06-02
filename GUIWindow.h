@@ -5,26 +5,53 @@
 #include<FL/Fl.H>
 #include <FL/Fl_Window.H>
 #include <FL/Fl_Button.H>
+#include <FL/Fl_Check_Button.H>
+#include <FL/Fl_Input.H>
+#include <FL/Fl_Slider.H>
+#include <FL/Fl_Menu_Button.H>
+
 
 class GUIWindow : public Fl_Window{
 public:
     GUIWindow(Robot&);
-    GUIWindow(int, int, const char*, Robot&);
     ~GUIWindow();
 
+    Robot*& getRobot();
+
     Fl_Button* drive;
+    Fl_Button* turn;
     Fl_Button* turnCW;
     Fl_Button* turnCCW;
     Fl_Button* stop;
-    Fl_Button* quit;
+    Fl_Button* leds;
+    Fl_Button* toggleSensorStream;
     Fl_Button* fullMode;
     Fl_Button* safeMode;
+    Fl_Button* quit;
+
+    Fl_Check_Button* playLED;
+    Fl_Check_Button* advanceLED;
+
+    Fl_Input* velocity;
+    Fl_Input* driveRadius;
+    Fl_Input* turnAngle;
+    Fl_Input* turnSeconds;
+
+    Fl_Slider* powerColor;
+    Fl_Slider* powerIntensity;
+
+    Fl_Menu_Button* whichSensor;
 
 private:
     Robot* robot;
 
+    void setSensorItems();
+
     static void cb_drive(Fl_Widget*, void*);
     inline void cb_drive_i();
+
+    static void cb_turn(Fl_Widget*, void*);
+    inline void cb_turn_i();
 
     static void cb_turnCW(Fl_Widget*, void*);
     inline void cb_turnCW_i();
@@ -38,10 +65,20 @@ private:
     static void cb_quit(Fl_Widget*, void*);
     inline void cb_quit_i();
 
+    static void cb_toggleSensorStream(Fl_Widget*, void*);
+    inline void cb_toggleSensorStream_i();
+
     static void cb_fullmode(Fl_Widget*, void*);
     inline void cb_fullmode_i();
 
     static void cb_safemode(Fl_Widget*, void*);
     inline void cb_safemode_i();
+
+    static void cb_leds(Fl_Widget*, void*);
+    inline void cb_leds_i();
+
+    static void cb_choice(Fl_Widget*, void*);
+    inline void cb_choice_i();
+
 };
 #endif

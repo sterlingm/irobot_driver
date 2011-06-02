@@ -22,6 +22,9 @@ public:
     int& getDefaultVelocity();
     void setDefaultVelocity(int);
 
+    int& getCurrentSensor();
+    void setCurrentSensor(int);
+
     bool sensorsStreaming();
 
     SerialConnect& getConnection();
@@ -35,6 +38,8 @@ public:
     void safeMode();
 
     void streamSensors();
+    void pauseSensorStream();
+    void toggleSensorStream();
     Sensor_Packet getSensorValue(int);
 
     void drive(int, int);
@@ -45,12 +50,13 @@ public:
 
     void leds(bool,bool,unsigned char,unsigned char);
 
-    void turnDegrees(int, int);
-    void turnDegreesInSeconds(int,double);
+    void turnXDegrees(int, int);
+    void turnXDegreesInYSeconds(int,double);
 private:
     int port;
     int baudrate;
-    int dvelocity;
+    int dVelocity;
+    int currentSensor;
     SerialConnect connection;
     bool sensorsstreaming;
 
