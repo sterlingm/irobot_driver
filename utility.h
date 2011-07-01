@@ -2,7 +2,6 @@
 #define UTILITY_H
 #include <iostream>
 
-
 #define BUMP 7
 #define WHEEL_DROP 7
 #define WALL 8
@@ -39,6 +38,13 @@
 #define REQUESTED_RADIUS 40
 #define REQUESTED_RIGHT_VELOCITY 41
 #define REQUESTED_LEFT_VELOCITY 42
+
+
+
+#define FORWARD 1
+#define BACKWARDS 2
+#define TURNCW 3
+#define TURNCCW 4
 
 
 /*

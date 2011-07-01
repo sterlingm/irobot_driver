@@ -1,13 +1,13 @@
 #include "Robot.h"
 #include "rs232.h"
-
+#include <math.h>
 
 /*
   Constructor for a Robot
   Takes in a port number and a baudrate
   Defaults the current sensor OI_MODE
 */
-Robot::Robot(int portNo, int br) : port(portNo), baudrate(br), sensorsstreaming(false), currentSensor(OI_MODE) {
+Robot::Robot(int portNo, int br) : port(portNo), baudrate(br), sensorsstreaming(false), currentSensor(OI_MODE), velocity(0) {
     if(connection.OpenComport(port, baudrate))
         printf("port open did not work\n");
 
@@ -23,61 +23,31 @@ Robot::~Robot() {
     connection.CloseComport(port);
 }   //END ~ROBOT()
 
-/*
-  Closes the serial comport
-*/
+/* Closes the serial comport*/
 void Robot::close() {connection.CloseComport(port);}
 
-/*
- Returns the serial port connection
-*/
-SerialConnect& Robot::getConnection() {return connection;}
-
-
-/*
- Returns the port number
-*/
-int& Robot::getPort() {return port;}
-
-/*
- Sets the port number to p
-*/
+/*Sets the port number to p*/
 void Robot::setPort(int& p) {port = p;}
-
-
-/*
- Returns the baud rate
-*/
-int& Robot::getBaudRate() {return baudrate;}
-
-/*
- Sets the baud rate to br
-*/
+/*Sets the baud rate to br*/
 void Robot::setBaudRate(int& br) {baudrate = br;}
-
-/*
- Returns the default velocity
-*/
-int& Robot::getDefaultVelocity() {return dVelocity;}
-
-/*
- Sets the default velocity to v
-*/
-void Robot::setDefaultVelocity(int v) {dVelocity = v;}
-
-/*
- Returns the current sensor
-*/
-int& Robot::getCurrentSensor() {return currentSensor;}
-
-/*
- Sets the current sensor to s
-*/
+/*Sets the default velocity to v*/
+void Robot::setVelocity(int v) {velocity = v;}
+/*Sets the current sensor to s*/
 void Robot::setCurrentSensor(int s) {currentSensor = s;}
 
-/*
- Returns true if the sensors are streaming
-*/
+/*Returns the serial port connection*/
+SerialConnect& Robot::getConnection() {return connection;}
+/*Returns the port number*/
+int& Robot::getPort() {return port;}
+/*Returns the baud rate*/
+int& Robot::getBaudRate() {return baudrate;}
+/*Returns the default velocity*/
+int& Robot::getVelocity() {return velocity;}
+/*Returns the current sensor*/
+int& Robot::getCurrentSensor() {return currentSensor;}
+
+
+/*Returns true if the sensors are streaming*/
 bool Robot::sensorsStreaming() {return sensorsstreaming;}
 
 
@@ -114,9 +84,7 @@ int Robot::pollSensor(unsigned char* buf, int size) {
 }   //END POLLSENSOR
 
 
-/*
- Sends the start command, 128, to the robot
-*/
+/*Sends the start command, 128, to the robot*/
 void Robot::start() {
     unsigned char start[1] = {128};
     if(!sendBytes(start, 1))
@@ -124,9 +92,7 @@ void Robot::start() {
 }   //END START
 
 
-/*
- Puts the robot in full mode, then sleeps for 1 second
-*/
+/*Puts the robot in full mode, then sleeps for 1 second*/
 void Robot::fullMode() {
     unsigned char fullmode[2] = {128, 132};
     if(!sendBytes(fullmode, 2))
@@ -135,9 +101,7 @@ void Robot::fullMode() {
 }   //END FULLMODE
 
 
-/*
- Puts the robot into safe mode, then sleeps for 1 second
-*/
+/*Puts the robot into safe mode, then sleeps for 1 second*/
 void Robot::safeMode() {
     unsigned char safemode[2] = {128, 131};
     if(!sendBytes(safemode, 2))
@@ -146,9 +110,7 @@ void Robot::safeMode() {
 }   //END SAFEMODE
 
 
-/*
- Makes the robot's sensors begin streaming if they are not already
-*/
+/*Makes the robot's sensors begin streaming if they are not already*/
 void Robot::streamSensors() {
     if(!sensorsstreaming) {
         unsigned char stream[3] = {148, 1, 6};
@@ -159,9 +121,7 @@ void Robot::streamSensors() {
     }
 }   //END STREAMSENSORS
 
-/*
- Pauses the sensor streaming if the sensors are streaming
-*/
+/*Pauses the sensor streaming if the sensors are streaming*/
 void Robot::pauseSensorStream() {
     if(sensorsstreaming) {
         unsigned char stop[2] = {150, 0};
@@ -190,10 +150,7 @@ void Robot::toggleSensorStream() {
 }   //END TOGGLESENSORSTREAM
 
 
-/*
- which is an integer value for a sensor
- Returns a Sensor_Packet for which
-*/
+/*Returns a Sensor_Packet for which*/
 Sensor_Packet Robot::getSensorValue(int which) {
     Sensor_Packet result;
     unsigned char receive;
@@ -377,7 +334,7 @@ Sensor_Packet Robot::getSensorValue(int which) {
 
 
 /*
- returns an int array of size two for the high and low byte for a value
+ Returns an int array of size two for the high and low byte for a value
  index 0 is the high byte and index 1 is the low byte
 */
 int* Robot::getHighAndLowByte(int v) {
@@ -422,6 +379,14 @@ void Robot::drive(int velocity, int radius) {
         std::cout<<"\nCould not send bytes to drive";
 }   //END DRIVE
 
+
+/*Calls drive(int,int) with the robot's velocity variable as the velocity*/
+void Robot::drive(int radius) {
+    drive(getVelocity(), radius);
+}   //END DRIVE
+
+
+
 /*
  Drives the robot straight at a given velocity
  velocity is the specified velocity in mm/s and can rage from -500-500
@@ -439,6 +404,62 @@ void Robot::drive_straight(int velocity) {
     if(!sendBytes(command, 5))
         std::cout<<"\nCould not send bytes to drive straight";
 }   //END DRIVESTRAIGHT
+
+/*Calls drive_straight with the velocity variable as the velocity*/
+void Robot::drive_straight() {
+    drive_straight(getVelocity());
+}   //END DRIVESTRAIGHT
+
+
+
+/*Drives the robot the specified distance (in mm) at the specified speed*/
+void Robot::driveXDistance(int distance, int velocity) {
+    bool backwards = false;
+    if(velocity < 0) {
+        velocity = velocity * -1;
+        backwards = true;
+    }
+    if(distance < 0) {
+        distance = distance * -1;
+        backwards = true;
+    }
+
+    double time = (double)distance / velocity;
+
+    //ADJUST TIME
+    if(velocity<= 125)
+        time += 0.05;
+    else if(velocity <= 275)
+        {}
+    else if (velocity <= 350)
+        time -= 0.01;
+    else if(velocity <= 450)
+        {}
+    else if(velocity <= 475)
+        time += 0.05;
+    else if(velocity <= 485)
+        time += 0.05;
+    else
+        time += 0.125;
+
+    time = time * 1000000;
+
+    if(backwards)
+        drive_straight((velocity*-1));
+    else
+        drive_straight(velocity);
+
+    usleep(time);
+    stop();
+
+}   //END DRIVEXDISTANCE
+
+
+/*Calls driveXMM with the velocity variable as the velocity value*/
+void Robot::driveXDistance(int distance) {
+    driveXDistance(distance, getVelocity());
+}   //END DRIVEXDISTANCE
+
 
 
 /*
@@ -479,6 +500,362 @@ void Robot::turnCounterClockwise(int velocity) {
 }   //END TURNCOUNTERCLOCKWISE
 
 
+
+
+
+double Robot::adjustTurningTime(int velocity, int angle) {
+
+    if(velocity <= 25) {
+        if(angle == 90 || angle == -90)
+            return -0.8;
+        else if(angle == 180)
+            return -1.6;
+        else if(angle == -180)
+            return -1.25;
+        else if(angle == 270)
+            return -2.37;
+        else if(angle == -270)
+            return -2.3;
+        else if(angle == 360)
+            return -3.46;
+        else if(angle == -360)
+            return -3.25;
+    }   //end velocity<=25
+
+    else if(velocity <=50) {
+        if(angle == 90)
+            return -0.4;
+        else if(angle == -90)
+            return -0.23;
+        else if(angle == 180)
+            return -0.8;
+        else if(angle == -180)
+            return -0.72;
+        else if(angle == 270 || angle == -270)
+            return -1.15;
+        else if(angle == 360)
+            return -1.65;
+        else if(angle == -360)
+            return -1.6;
+        else if(angle == -225)
+            return -0.935;
+    }   //end velocity<=50
+
+    else if(velocity <=75) {
+        if(angle == 90)
+            return -0.0975;
+        else if(angle == 45)
+            return 0;
+        else if(angle == -90)
+            return -0.01;
+        else if(angle == 180 || angle == -180)
+            return -0.195;
+        else if(angle == 270)
+            return -0.25;
+        else if(angle == -270)
+            return -0.3;
+        else if(angle == 360)
+            return -0.45;
+        else if(angle == -360)
+            return -0.46;
+    }   //end velocity<=75
+
+    else if(velocity <=100) {
+        if(angle == 90 || angle == -90)
+            return -0.1;
+        else if(angle == 180)
+            return -0.19;
+        else if(angle == -180)
+            return -0.185;
+        else if(angle == 270)
+            return -0.35;
+        else if(angle == -270)
+            return -0.3175;
+        else if(angle == 360)
+            return -0.45999;
+        else if(angle == -360)
+            return -0.485;
+    }   //end velocity<=100
+
+    else if(velocity <=125) {
+        if(angle == 90)
+            return -0.0875;
+        else if(angle == -90)
+            return -0.035;
+        else if(angle == 180)
+            return -0.18;
+        else if(angle == -180)
+            return -0.15;
+        else if(angle == 270)
+            return -0.2925;
+        else if(angle == -270)
+            return -0.3175;
+        else if(angle == 360 || -360)
+            return -0.4;
+    }   //end velocity<=125
+
+    else if(velocity <=150) {
+        if(angle == 90)
+            return -0.08;
+        else if(angle == -90)
+            return -0.0315;
+        else if(angle == 180 || angle == -180)
+            return -0.155;
+        else if(angle == 270)
+            return -0.2625;
+        else if(angle == -270)
+            return -0.255;
+        else if(angle == 360)
+            return -0.41;
+        else if(angle == -360)
+            return -0.375;
+    }   //end velocity<=150
+
+    else if(velocity <=175) {
+        if(angle == 90)
+            return -0.0675;
+        else if(angle == -90)
+            return -0.0275;
+        else if(angle == 180 || angle == -180)
+            return -0.135;
+        else if(angle == 270)
+            return -0.25;
+        else if(angle == -270)
+            return -0.235;
+        else if(angle == 360)
+            return -0.345;
+        else if(angle == -360)
+            return -0.3275;
+    }   //end velocity<=175
+
+    else if(velocity <=200) {
+        if(angle == 90)
+            return -0.0685;
+        else if(angle == -90)
+            return -0.0275;
+        else if(angle == 180)
+            return -0.125;
+        else if(angle == -180)
+            return -0.12;
+        else if(angle == 270 || angle == -270)
+            return -0.215;
+        else if(angle == 360 || angle == -360)
+            return -0.3;
+    }   //end velocity<=200
+
+    else if(velocity <=225) {
+        if(angle == 90 || angle == -90)
+            return -0.0585;
+        else if(angle == 180)
+            return -0.11;
+        else if(angle == -180)
+            return -0.1075;
+        else if(angle == 270 || angle == -270)
+            return -0.2;
+        else if(angle == 360)
+            return -0.295;
+        else if(angle == -360)
+            return -0.285;
+    }   //end velocity<=225
+
+    else if(velocity <=250) {
+        if(angle == 90)
+            return -0.05;
+        else if(angle == -90)
+            return -0.027;
+        else if(angle == 180 || angle == -180)
+            return -0.99;
+        else if(angle == 270)
+            return -0.175;
+        else if(angle == -270)
+            return -0.18;
+        else if(angle == 360)
+            return -0.2525;
+        else if(angle == -360)
+            return -0.25;
+    }   //end velocity<=250
+
+    else if(velocity <=275) {
+        if(angle == 90 || angle == -90)
+            return -0.0475;
+        else if(angle == 180)
+            return -0.1025;
+        else if(angle == -180)
+            return -0.099;
+        else if(angle == 270 || angle == -270)
+            return -0.16;
+        else if(angle == 360)
+            return -0.25;
+        else if(angle == -360)
+            return -0.225;
+    }   //end velocity<=275
+
+    else if(velocity <=300) {
+        if(angle == 90 || angle == -90)
+            return -0.04;
+        else if(angle == 180)
+            return -0.095;
+        else if(angle == -180)
+            return -0.095;
+        else if(angle == 270 || angle == -270)
+            return -0.15;
+        else if(angle == 360)
+            return -0.1975;
+        else if(angle == -360)
+            return -0.225;
+    }   //end velocity<=300
+
+    else if(velocity <=325) {
+        if(angle == 90)
+            return -0.04;
+        else if(angle == -90)
+            return -0.01875;
+        else if(angle == 180)
+            return -0.0884;
+        else if(angle == -180)
+            return -0.08;
+        else if(angle == 270 || angle == -270)
+            return -0.14;
+        else if(angle == 360)
+            return -0.1975;
+        else if(angle == -360)
+            return -0.2;
+    }   //end velocity<=325
+
+    else if(velocity <=350) {
+        if(angle == 90)
+            return -0.0375;
+        else if(angle == -90)
+            return -0.017;
+        else if(angle == 180)
+            return -0.0770;
+        else if(angle == -180)
+            return -0.08;
+        else if(angle == 270 || angle == -270)
+            return -0.13;
+        else if(angle == 360)
+            return -0.19;
+        else if(angle == -360)
+            return -0.18;
+    }   //end velocity<=350
+
+    else if(velocity <=375) {
+        if(angle == 90)
+            return -0.035;
+        else if(angle == -90)
+            return -0.017;
+        else if(angle == 180)
+            return -0.07;
+        else if(angle == -180)
+            return -0.07;
+        else if(angle == 270 || angle == -270)
+            return -0.125;
+        else if(angle == 360 || angle == -360)
+            return -0.18;
+    }   //end velocity<=375
+
+    else if(velocity <=400) {
+        if(angle == 90)
+            return -0.02;
+        else if(angle == -90)
+            return -0.016;
+        else if(angle == 180)
+            return -0.052;
+        else if(angle == -180)
+            return -0.05;
+        else if(angle == 270)
+            return -0.1;
+        else if(angle == -270)
+            return -0.1;
+        else if(angle == 360)
+            return -0.15;
+        else if(angle == -360)
+            return -0.15;
+    }   //end velocity<=400
+
+    else if(velocity <=425) {
+        if(angle == 90)
+            return -0.015;
+        else if(angle == -90)
+            return -0.015;
+        else if(angle == 180)
+            return -0.04;
+        else if(angle == -180)
+            return -0.05;
+        else if(angle == 270)
+            return -0.0855;
+        else if(angle == -270)
+            return -0.085;
+        else if(angle == 360)
+            return -0.13;
+        else if(angle == -360)
+            return -0.13;
+    }   //end velocity<=425
+
+    else if(velocity <=450) {
+        if(angle == 90)
+            return -0.015;
+        else if(angle == -90)
+            return -0.0025;
+        else if(angle == 180)
+            return -0.00925;
+        else if(angle == -180)
+            return -0.04;
+        else if(angle == 270)
+            return -0.085;
+        else if(angle == -270)
+            return -0.085;
+        else if(angle == 360)
+            return -0.125;
+        else if(angle == -360)
+            return -0.12;
+    }   //end velocity<=450
+
+    else if(velocity <=475) {
+        if(angle == 90)
+            return -0.015;
+        else if(angle == -90)
+            return 0.015;
+        else if(angle == 180)
+            return -0.0025;
+        else if(angle == -180)
+            return 0;
+        else if(angle == 270)
+            return -0.055;
+        else if(angle == -270)
+            return -0.02;
+        else if(angle == 360)
+            return -0.089;
+        else if(angle == -360)
+            return -0.06;
+    }   //end velocity<=475
+
+    else if(velocity <=500) {
+        if(angle == 90)
+            return 0.01;
+        else if(angle == 45)
+            return 0.01;
+        else if(angle == -90)
+            return -0.02;
+        else if(angle == 180)
+            return 0.04;
+        else if(angle == -180)
+            return 0.035;
+        else if(angle == 270)
+            return 0.0425;
+        else if(angle == -270)
+            return 0.03;
+        else if(angle == 360)
+            return 0.0495;
+        else if(angle == -360)
+            return 0.01;
+    }   //end velocity<=500
+
+    return 0;
+}
+
+
+
 /*
  Turns the robot for a given degree at a given velocity
  degree is the specified degrees to turn
@@ -486,42 +863,30 @@ void Robot::turnCounterClockwise(int velocity) {
 */
 void Robot::turnXDegrees(int degree, int velocity) {
     bool negative = false;  //true for moving clockwise, false for counter clockwise
-
-    //if the degree is negative, get absolute value and set negative
-    if(degree < 0) {
-        degree = degree * -1;
-        negative = negative ^ true;
-    }
-    //if the velocity is negative, get abolsute value and set negative
-    if(velocity < 0) {
-        velocity = velocity * -1;
-        negative = negative ^ true;
-    }
-
+    double tDegree = degree;
+    double tVelocity = velocity;
 
     //only turn if both the degree and velocity have a value > 0
     if( (degree != 0) && (velocity != 0) ) {
 
-        double p = (degree * (double)100 / 180) / 100;  //percent of 180
-        double distance = p * 430; //how far to move (mm)
 
-        double time = distance / velocity; //how long to turn
+        //if the degree is negative, get absolute value and set negative
+        if(degree < 0) {
+            tDegree = degree * -1;
+            negative = negative ^ true;
+        }
+        //if the velocity is negative, get abolsute value and set negative
+        if(velocity < 0) {
+            tVelocity = velocity * -1;
+            negative = negative ^ true;
+        }
 
-        //ADJUST TIME
-        if(velocity<= 125)
-            time += 0.05;
-        else if(velocity <= 275)
-            {}
-        else if (velocity <= 350)
-            time -= 0.01;
-        else if(velocity <= 450)
-            {}
-        else if(velocity <= 475)
-            time += 0.05;
-        else if(velocity <= 485)
-            time += 0.05;
-        else
-            time += 0.125;
+        double p = (tDegree * (double)100 / 360) / 100;  //percent of 180
+        double distance = p * 900; //how far to move (mm)
+
+        double time = distance / tVelocity; //how long to turn
+
+        time += adjustTurningTime(velocity,degree);
 
         //set time to microseconds
         time = time * 1000000;
@@ -536,8 +901,12 @@ void Robot::turnXDegrees(int degree, int velocity) {
     }   //end if
 }   //END TURNXDEGREES
 
+/*Turns the robot x degrees*/
+void Robot::turnXDegrees(int degree) {
+    turnXDegrees(degree, getVelocity());
+}
 
-//turn x degrees in y seconds
+/*Turn x degrees in y seconds*/
 void Robot::turnXDegreesInYSeconds(int degree, double seconds) {
 
     //only turn if both seconds and degree have a value > 0
@@ -545,7 +914,7 @@ void Robot::turnXDegreesInYSeconds(int degree, double seconds) {
 
         //get distance
         double p = (degree * (double)100 / 180) / 100;  //percent of 180
-        double distance = p * 430;  //distance to move (mm)
+        double distance = p * 440;  //distance to move (mm)
 
         int velocity = distance / seconds;  //how fast to turn
 
@@ -558,9 +927,7 @@ void Robot::turnXDegreesInYSeconds(int degree, double seconds) {
 }   //END TURNXDEGREESINYSECONDS
 
 
-/*
- Stops the robot
-*/
+/*Stops the robot*/
 void Robot::stop() {
     unsigned char command[5] = {137, 0, 0, 0, 0};
     if(!sendBytes(command, 5))
@@ -585,3 +952,127 @@ void Robot::leds(bool play, bool advance, unsigned char value, unsigned char int
     if(!sendBytes(command, 4))
         std::cout<<"\nCould not send bytes to change the leds";
 }   //END LEDS
+
+
+
+/*Robot moves from one position to another*/
+bool Robot::step(Position& a, Position& b, char& d) {
+
+
+    if(a.getRow() == b.getRow()) {
+        if( (a.getCol() - b.getCol() == -1) ) {
+            if( (d == 'n') || (d == 'N') ) {
+                turnXDegrees(-90);
+                driveXDistance(335);
+                d = 'e';
+            }
+            else if( (d == 's') || (d == 'S') ) {
+                turnXDegrees(90);
+                driveXDistance(335);
+                d = 'e';
+            }
+            else if( (d == 'w') || (d == 'W') ) {
+                turnXDegrees(180);
+                driveXDistance(335);
+                d = 'e';
+            }
+            else if( (d == 'e') || (d == 'E') )
+                driveXDistance(335);
+        }   //end if east
+
+        else if( (a.getCol() - b.getCol() == 1) ) {
+            if( (d == 'n') || (d == 'N') ) {
+                turnXDegrees(90);
+                driveXDistance(335);
+                d = 'w';
+            }
+            else if( (d == 's') || (d == 'S') ) {
+                turnXDegrees(-90);
+                driveXDistance(335);
+                d = 'w';
+            }
+            else if( (d == 'e') || (d == 'E') ) {
+                turnXDegrees(180);
+                driveXDistance(335);
+                d = 'w';
+            }
+            else if( (d == 'w') || (d == 'W') )
+                driveXDistance(335);
+        }   //end if west
+
+        stop();
+        return true;
+    }   //end same row
+
+
+    else if(a.getCol() == b.getCol()) {
+
+        if( (a.getRow() - b.getRow() == -1) ) {
+
+            if( (d == 'w') || (d == 'W') ) {
+                turnXDegrees(90);
+                driveXDistance(335);
+                stop();
+                d = 's';
+            }
+            else if( (d == 'e') || (d == 'E') ) {
+                turnXDegrees(-90);
+                driveXDistance(335);
+                stop();
+                d = 's';
+            }
+            else if( (d == 'n') || (d == 'N') ) {
+                turnXDegrees(180);
+                driveXDistance(335);
+                stop();
+                d = 's';
+            }
+            else if( (d == 's') || (d == 'S') )
+                driveXDistance(335);
+
+        }   //end if south
+
+        else if( (a.getRow() - b.getRow() == 1) ) {
+
+            if( (d == 'w') || (d == 'W') ) {
+                turnXDegrees(-90);
+                driveXDistance(335);
+                d = 'n';
+            }
+            else if( (d == 'e') || (d == 'E') ) {
+                turnXDegrees(90);
+                driveXDistance(335);
+                d = 'n';
+            }
+            else if( (d == 's') || (d == 'S') ) {
+                turnXDegrees(180);
+                driveXDistance(335);
+                d = 'n';
+            }
+            else if( (d == 'n') || (d == 'N') )
+                driveXDistance(335);
+
+        }   //end if north
+
+        stop();
+        return true;
+    }   //end same column
+    else {
+        std::cout<<"\nCannot step from "<<a.toString()<<" to "<<b.toString();
+        return false;
+    }
+
+
+}   //END STEP
+
+/*Robot steps through a whole path*/
+void Robot::stepPath(Path& p, char& d) {
+
+    for(int i=1;i<p.getSize();i++) {
+        step(p.getPath().at(i-1), p.getPath().at(i), d);
+        sleep(1);
+    }
+
+
+}
+

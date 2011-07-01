@@ -107,21 +107,16 @@ GUIWindow::GUIWindow(Robot& r) : Fl_Window(500, 400, "iRobot Create"), robot(&r)
     Fl::add_idle(IdleCallback, this);
     resizable(this);
     show(); //show it
+
 }   //END CONSTRUCTOR
 
-/*
- Destructor
-*/
+/*Destructor*/
 GUIWindow::~GUIWindow() {}
 
-/*
- Returns a reference to the robot
-*/
+/*Returns a reference to the robot*/
 Robot*& GUIWindow::getRobot() {return robot;}
 
-/*
- Adds items to the sensor Fl_Choice
-*/
+/*Adds items to the sensor Fl_Choice*/
 void GUIWindow::setSensorItems() {
 
     whichSensor->add("Bump_Wheel_Drop", 0, cb_choice, (void*)this);
@@ -163,9 +158,7 @@ void GUIWindow::setSensorItems() {
 }   //END ADDSENSORITEMS
 
 
-/*
- Callback function for the full mode button
-*/
+/*Callback function for the full mode button*/
 void GUIWindow::cb_fullmode(Fl_Widget* o, void* v) {
     GUIWindow* w = (GUIWindow*)v;
     w->cb_fullmode_i();
@@ -179,9 +172,7 @@ inline void GUIWindow::cb_fullmode_i() {
     robot->fullMode();
 }   //END CBFULLMODE_I
 
-/*
- Callback function for the safe mode button
-*/
+/*Callback function for the safe mode button*/
 void GUIWindow::cb_safemode(Fl_Widget* o, void* v) {
     GUIWindow* w = (GUIWindow*)v;
     w->cb_safemode_i();
@@ -196,9 +187,7 @@ inline void GUIWindow::cb_safemode_i() {
 }   //END CBSAFEMODE_I
 
 
-/*
- Callback function for the drive buttonat
-*/
+/*Callback function for the drive button*/
 void GUIWindow::cb_drive(Fl_Widget* o, void* v) {
     GUIWindow* w = (GUIWindow*)v;
     w->cb_drive_i();
@@ -219,9 +208,7 @@ inline void GUIWindow::cb_drive_i() {
 }   //END CBDRIVE_I
 
 
-/*
- Callback function for the turn button
-*/
+/*Callback function for the turn button*/
 void GUIWindow::cb_turn(Fl_Widget* o, void* v) {
     GUIWindow* w = (GUIWindow*)v;
     w->cb_turn_i();
@@ -243,9 +230,7 @@ inline void GUIWindow::cb_turn_i() {
 }   //END CBTURN_I
 
 
-/*
- Callback Function for the turn clockwise button
-*/
+/*Callback Function for the turn clockwise button*/
 void GUIWindow::cb_turnCW(Fl_Widget* o, void* v) {
     GUIWindow* w = (GUIWindow*)v;
     w->cb_turnCW_i();
@@ -260,9 +245,7 @@ inline void GUIWindow::cb_turnCW_i() {
     robot->turnClockwise(v);
 }   //END CBTURNCLOCKWISE_I
 
-/*
- Callback function for the turn counter clockwise button
-*/
+/*Callback function for the turn counter clockwise button*/
 void GUIWindow::cb_turnCCW(Fl_Widget* o, void* v) {
     GUIWindow* w = (GUIWindow*)v;
     w->cb_turnCCW_i();
@@ -277,9 +260,7 @@ inline void GUIWindow::cb_turnCCW_i() {
     robot->turnCounterClockwise(v);
 }   //END CBTURNCOUNTERCLOCKWISE_I
 
-/*
- Callback function for the stop button
-*/
+/*Callback function for the stop button*/
 void GUIWindow::cb_stop(Fl_Widget* o, void* v) {
     GUIWindow* w = (GUIWindow*)v;
     w->cb_stop_i();
@@ -294,9 +275,7 @@ inline void GUIWindow::cb_stop_i() {
 }   //END CBSTOP_I
 
 
-/*
- Callback function for the led button
-*/
+/*Callback function for the led button*/
 void GUIWindow::cb_leds(Fl_Widget* o, void* v) {
     GUIWindow* w = (GUIWindow*)v;
     w->cb_leds_i();
@@ -314,9 +293,7 @@ inline void GUIWindow::cb_leds_i() {
     robot->leds(playLED->value(),advanceLED->value(),powerColor->value(),powerIntensity->value());
 }   //END CBLEDS_I
 
-/*
- Callback function for the toggle sensor stream button
-*/
+/*Callback function for the toggle sensor stream button*/
 void GUIWindow::cb_toggleSensorStream(Fl_Widget* o, void* v) {
     GUIWindow* w = (GUIWindow*)v;
     w->cb_toggleSensorStream_i();
@@ -331,9 +308,7 @@ inline void GUIWindow::cb_toggleSensorStream_i() {
 }   //END CBTOGGLESENSORSTREAM_I
 
 
-/*
- Callback function or the choice menu of sensors
-*/
+/*Callback function or the choice menu of sensors*/
 void GUIWindow::cb_choice(Fl_Widget* o, void* v) {
     GUIWindow* w = (GUIWindow*)v;
     w->cb_choice_i();
@@ -459,9 +434,7 @@ inline void GUIWindow::cb_choice_i() {
 }   //END CBCHOICE_I
 
 
-/*
- Callback function for the quit button
-*/
+/*Callback function for the quit button*/
 void GUIWindow::cb_quit(Fl_Widget* o, void* v) {
     GUIWindow* w = (GUIWindow*)v;
     w->cb_quit_i();

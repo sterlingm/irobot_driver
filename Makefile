@@ -9,7 +9,7 @@ CC=g++
 CFLAGS=-w -D LINUX -O3 -fpermissive 
 OBJDIR=obj
 LDFLAGS= -L/usr/X11R6/lib$(LIBSELECT) -lfltk
-SOURCES_RAW=main.cpp Robot.cpp rs232.c GUIWindow.cpp
+SOURCES_RAW=main.cpp Robot.cpp rs232.c GUIWindow.cpp agent.cpp grid.cpp position.cpp path.cpp priorityqueue.cpp tree.cpp
 
 TARGET:= go
 TARGETD:= go_d
