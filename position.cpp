@@ -32,11 +32,11 @@ bool Position::equals(Position& b) {
 }   //END EQUALS
 
 /*Returns a Position with all the same values*/
-Position Position::clone(Position& p) {
+Position Position::clone() {
     Position result;
-    result.row = p.row;
-    result.col = p.col;
-    result.visited = p.visited;
+    result.row = row;
+    result.col = col;
+    result.visited = visited;
     return result;
 }   //END CLONE
 

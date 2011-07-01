@@ -21,7 +21,7 @@ public:
 	void setVisited(bool);
 
 	bool equals(Position&);
-    Position clone(Position&);
+    Position clone();
 
 	std::string toString();
 private:
