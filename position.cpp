@@ -2,10 +2,10 @@
 #include <sstream>
 
 /*Constructor that sets values to -1 and false*/
-Position::Position() : row(-1), col(-1), visited(false) {}
+Position::Position() : row(-1), col(-1) {}
 
 /*Constructor*/
-Position::Position(int r, int c) : row(r), col(c), visited(false) {}
+Position::Position(int r, int c) : row(r), col(c) {}
 
 /*Destructor*/
 Position::~Position() {}
@@ -14,15 +14,11 @@ Position::~Position() {}
 int& Position::getRow() {return row;}
 /*Returns col*/
 int& Position::getCol() {return col;}
-/*Returns visited*/
-bool Position::getVisited() {return visited;}
 
 /*Sets row to r*/
 void Position::setRow(int r) {row = r;}
 /*Sets col to c*/
 void Position::setCol(int c) {col = c;}
-/*Sets visited to v*/
-void Position::setVisited(bool v) {visited = v;}
 
 /*Returns true if all members equal the members in b*/
 bool Position::equals(Position& b) {
@@ -36,7 +32,6 @@ Position Position::clone() {
     Position result;
     result.row = row;
     result.col = col;
-    result.visited = visited;
     return result;
 }   //END CLONE
 

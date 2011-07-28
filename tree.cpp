@@ -2,8 +2,6 @@
 #include <stdlib.h>
 #include "tree.h"
 
-/*Blank Constructor*/
-Tree::Node::Node() {}
 
 /*Constructor*/
 Tree::Node::Node(Position& v, Node*& p) : value(v), parent(p), gvalue(0), hvalue(0), fvalue(0) {}
@@ -63,8 +61,6 @@ const char* Tree::NodeNotFoundException::what() const throw() {
 	return "The node is not in the tree!\n";
 }
 
-/*Blank constructor*/
-Tree::Tree() : root(NULL), dummyroot(NULL) {}
 
 /*Constructor that sets p as the root value*/
 Tree::Tree(Position& p) {
@@ -87,15 +83,6 @@ bool Tree::contains(Position& p) {
     return false;
 }   //END CONTAINS
 
-/*Returns a reference to the node n in the tree
-  Throws a NodeNotFoundException if no node is found*/
-Tree::Node*& Tree::find(Node*& n) {
-    for(int i=0;i<nodes.size();i++)
-        if(n->getValue().equals(nodes.at(i)->getValue()))
-            return nodes.at(i);
-
-    throw new NodeNotFoundException();
-}   //END FIND
 
 /*Creates a node with value and parent and adds it to the tree*/
 Tree::Node* Tree::add(Position& value, Node*& parent) {

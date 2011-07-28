@@ -1,6 +1,8 @@
 #ifndef UTILITY_H
 #define UTILITY_H
+
 #include <iostream>
+#include <pthread.h>
 
 #define BUMP 7
 #define WHEEL_DROP 7
@@ -46,6 +48,8 @@
 #define TURNCW 3
 #define TURNCCW 4
 
+#define PORT "4950"
+
 
 /*
  struct to hold sensor values
@@ -57,5 +61,21 @@ struct Sensor_Packet {
     Sensor_Packet() {values[0] = -1; values[1] = -1;}
 };
 
+struct Command_Packet {
+    int id;
+    int arg1;
+    int arg2;
+};
+
+
+static bool QUITPROGRAM = false;
+
+static pthread_mutex_t mutex_agent_goal = PTHREAD_MUTEX_INITIALIZER;
+static pthread_mutex_t mutex_agent_path = PTHREAD_MUTEX_INITIALIZER;
+static pthread_mutex_t mutex_agent_pos = PTHREAD_MUTEX_INITIALIZER;
+
+static double MENU_SLEEP_TIME = 100000;
+
+static int UNIT_SIZE = 335;
 
 #endif

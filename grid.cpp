@@ -94,11 +94,16 @@ void Grid::clear() {
 
 /*Clears the grid and then marks path p on the grid*/
 void Grid::markPath(Path& p) {
-
     clear();
-    setPos(p.getPath().at(p.getSize()-1).getRow(), p.getPath().at(p.getSize()-1).getCol(), 'x');
-    for(int i=0;i<p.getSize()-1;i++)
-        setPos(p.getPath().at(i).getRow(), p.getPath().at(i).getCol(), '.');
+    setPos(p.getPath().at(0).getRow(), p.getPath().at(0).getCol(), 'x');
+
+    for(int i=1;i<p.getSize();i++)
+        //check for duplicate
+        if( (i == 1) && (p.getPath().at(0).equals(p.getPath().at(1))) ) {}
+
+        else
+            setPos(p.getPath().at(i).getRow(), p.getPath().at(i).getCol(), '.');
+
 
 }   //END MARKPATH
 

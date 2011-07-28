@@ -1,6 +1,11 @@
+
+
 #include "Robot.h"
 #include "rs232.h"
+#include "agent.h"
 #include <math.h>
+
+
 
 /*
   Constructor for a Robot
@@ -33,7 +38,11 @@ void Robot::setBaudRate(int& br) {baudrate = br;}
 /*Sets the default velocity to v*/
 void Robot::setVelocity(int v) {velocity = v;}
 /*Sets the current sensor to s*/
-void Robot::setCurrentSensor(int s) {currentSensor = s;}
+void Robot::setCurrentSensor(int& s) {currentSensor = s;}
+/*Sets agent to a*/
+void Robot::setAgent(Agent*& a) {agent = a;}
+/*Sets connection to c*/
+void Robot::setConnection(SerialConnect& c) {connection = c;}
 
 /*Returns the serial port connection*/
 SerialConnect& Robot::getConnection() {return connection;}
@@ -45,10 +54,9 @@ int& Robot::getBaudRate() {return baudrate;}
 int& Robot::getVelocity() {return velocity;}
 /*Returns the current sensor*/
 int& Robot::getCurrentSensor() {return currentSensor;}
+/*Returns agent*/
+Agent*& Robot::getAgent() {return agent;}
 
-
-/*Returns true if the sensors are streaming*/
-bool Robot::sensorsStreaming() {return sensorsstreaming;}
 
 
 /*
@@ -956,52 +964,52 @@ void Robot::leds(bool play, bool advance, unsigned char value, unsigned char int
 
 
 /*Robot moves from one position to another*/
-bool Robot::step(Position& a, Position& b, char& d) {
+Position Robot::step(Position& a, Position& b, char& d) {
 
+    std::cout<<"\nStepping from "<<a.toString()<<" to "<<b.toString()<<" with direction "<<d;
 
     if(a.getRow() == b.getRow()) {
         if( (a.getCol() - b.getCol() == -1) ) {
             if( (d == 'n') || (d == 'N') ) {
-                turnXDegrees(-90);
-                driveXDistance(335);
                 d = 'e';
+                turnXDegrees(-90);
+                driveXDistance(UTILITY_H::UNIT_SIZE);
             }
             else if( (d == 's') || (d == 'S') ) {
-                turnXDegrees(90);
-                driveXDistance(335);
                 d = 'e';
+                turnXDegrees(90);
+                driveXDistance(UTILITY_H::UNIT_SIZE);
             }
             else if( (d == 'w') || (d == 'W') ) {
-                turnXDegrees(180);
-                driveXDistance(335);
                 d = 'e';
+                turnXDegrees(180);
+                driveXDistance(UTILITY_H::UNIT_SIZE);
             }
             else if( (d == 'e') || (d == 'E') )
-                driveXDistance(335);
+                driveXDistance(UTILITY_H::UNIT_SIZE);
         }   //end if east
 
         else if( (a.getCol() - b.getCol() == 1) ) {
             if( (d == 'n') || (d == 'N') ) {
-                turnXDegrees(90);
-                driveXDistance(335);
                 d = 'w';
+                turnXDegrees(90);
+                driveXDistance(UTILITY_H::UNIT_SIZE);
             }
             else if( (d == 's') || (d == 'S') ) {
-                turnXDegrees(-90);
-                driveXDistance(335);
                 d = 'w';
+                turnXDegrees(-90);
+                driveXDistance(UTILITY_H::UNIT_SIZE);
             }
             else if( (d == 'e') || (d == 'E') ) {
-                turnXDegrees(180);
-                driveXDistance(335);
                 d = 'w';
+                turnXDegrees(180);
+                driveXDistance(UTILITY_H::UNIT_SIZE);
             }
             else if( (d == 'w') || (d == 'W') )
-                driveXDistance(335);
+                driveXDistance(UTILITY_H::UNIT_SIZE);
         }   //end if west
 
-        stop();
-        return true;
+        return b;
     }   //end same row
 
 
@@ -1010,69 +1018,87 @@ bool Robot::step(Position& a, Position& b, char& d) {
         if( (a.getRow() - b.getRow() == -1) ) {
 
             if( (d == 'w') || (d == 'W') ) {
-                turnXDegrees(90);
-                driveXDistance(335);
-                stop();
                 d = 's';
+                turnXDegrees(90);
+                driveXDistance(UTILITY_H::UNIT_SIZE);
             }
             else if( (d == 'e') || (d == 'E') ) {
-                turnXDegrees(-90);
-                driveXDistance(335);
-                stop();
                 d = 's';
+                turnXDegrees(-90);
+                driveXDistance(UTILITY_H::UNIT_SIZE);
             }
             else if( (d == 'n') || (d == 'N') ) {
-                turnXDegrees(180);
-                driveXDistance(335);
-                stop();
                 d = 's';
+                turnXDegrees(180);
+                driveXDistance(UTILITY_H::UNIT_SIZE);
             }
             else if( (d == 's') || (d == 'S') )
-                driveXDistance(335);
+                driveXDistance(UTILITY_H::UNIT_SIZE);
 
         }   //end if south
 
         else if( (a.getRow() - b.getRow() == 1) ) {
 
             if( (d == 'w') || (d == 'W') ) {
-                turnXDegrees(-90);
-                driveXDistance(335);
                 d = 'n';
+                turnXDegrees(-90);
+                driveXDistance(UTILITY_H::UNIT_SIZE);
             }
             else if( (d == 'e') || (d == 'E') ) {
-                turnXDegrees(90);
-                driveXDistance(335);
                 d = 'n';
+                turnXDegrees(90);
+                driveXDistance(UTILITY_H::UNIT_SIZE);
             }
             else if( (d == 's') || (d == 'S') ) {
-                turnXDegrees(180);
-                driveXDistance(335);
                 d = 'n';
+                turnXDegrees(180);
+                driveXDistance(UTILITY_H::UNIT_SIZE);
             }
             else if( (d == 'n') || (d == 'N') )
-                driveXDistance(335);
+                driveXDistance(UTILITY_H::UNIT_SIZE);
 
         }   //end if north
 
-        stop();
-        return true;
+        return b;
     }   //end same column
     else {
         std::cout<<"\nCannot step from "<<a.toString()<<" to "<<b.toString();
-        return false;
-    }
-
-
+        return a;
+    }   //end else
 }   //END STEP
 
+
+
 /*Robot steps through a whole path*/
-void Robot::stepPath(Path& p, char& d) {
-
-    for(int i=1;i<p.getSize();i++) {
-        step(p.getPath().at(i-1), p.getPath().at(i), d);
-        sleep(1);
-    }
+Position Robot::stepPath() {
 
 
+    pthread_mutex_lock(&UTILITY_H::mutex_agent_path);
+    pthread_mutex_lock(&UTILITY_H::mutex_agent_pos);
+    pthread_mutex_lock(&UTILITY_H::mutex_agent_goal);
+
+    Path& temp = agent->getPath();
+    Position result = temp.getPath().at(0);
+
+    pthread_mutex_unlock(&UTILITY_H::mutex_agent_path);
+    pthread_mutex_unlock(&UTILITY_H::mutex_agent_pos);
+    pthread_mutex_unlock(&UTILITY_H::mutex_agent_goal);
+
+
+
+
+    while(!agent->getPosition().equals(agent->getGoal()) && agent->getPath().getSize() > 1) {
+        Position p = step(temp.getPath().at(0), temp.getPath().at(1), agent->getDirection());
+        agent->setPosition(p);
+        result = p;
+
+        //update the path
+        agent->getGrid()->clear();
+        Path newpath = agent->traverse(agent->getGoal());
+        agent->setPath(newpath);
+    }   //end while
+
+    stop();
+
+    return result;
 }
-

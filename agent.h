@@ -12,43 +12,142 @@ class Agent {
 
 public:
 
+    //! Exception for when a path does not exist
 	class NoPathException : public std::exception {
 	public:
 		virtual const char* what() const throw();
 	};	//end exception
 
-    Agent(Grid*&, Position, char, Robot&);
+
+    //! A constructor
+    /*!
+     * Initializes grid, robot, and direction to parameters
+     */
+    Agent(Grid*&, Robot&, char);
+
+    //! Destructor
     ~Agent();
 
-    //getters, setters
-    char& getDirection();
-    void setDirection(char);
-    Position getPosition();
-    void setPosition(Position);
-    bool posVisited(Position&);
-    Grid*& getGrid();
-    void setGrid(Grid*&);
-    Robot*& getRobot();
 
+    //! Getter function for direction
+    /*!
+     * Returns reference to direction member
+     */
+    char& getDirection();
+    //! Setter function for direction
+    /*!
+     * Sets direction member to d
+     * if d is e(east), E(east), w(west), W(west), s(south), S(south), n(north), or N(north)
+     */
+    void setDirection(char);
+
+
+    //! Getter function for pos
+    /*!
+     * Returns a reference to pos member
+     */
+    Position& getPosition();
+    //! Setter function for pos
+    /*!
+     * Sets pos member to p
+     */
+    void setPosition(Position&);
+
+
+
+    //! Getter function for goal
+    /*!
+     * Returns a reference to goal member
+     */
+    Position& getGoal();
+    //! Setter function for goal
+    /*!
+     * Sets goal to g
+     */
+    void setGoal(Position&);
+
+
+
+    //! Getter function for path
+    /*!
+     * Returns a reference to path member
+     */
+    Path& getPath();
+    //! Setter function for path
+    /*!
+     * Sets path to p
+     */
+    void setPath(Path&);
+
+
+
+    //! Getter function for grid
+    /*!
+     * Returns a reference to grid member
+     */
+    Grid*& getGrid();
+    //! Setter function for grid
+    /*!
+     * Sets grid member to g
+     */
+    void setGrid(Grid*&);
+
+
+
+    //! Getter function for robot
+    /*!
+     * Returns a reference to robot member
+     */
+    Robot*& getRobot();
+    //! Setter function for robot
+    /*!
+     * Sets robot member to r
+     */
+    void setRobot(Robot&);
+
+
+
+    //! Retruns true if position has been visited
+    /*!
+     * Returns true if Position reference passed is
+     * within grid member bounds, not visited, and equal to ' '
+     */
     bool positionValid(Position&);
 
+    //! Returns straight line distance between two Positions
+    /*!
+     * Returns straight line distance between two Position references passed
+     */
     double getSLDistance(Position&,Position&);
 
-    bool processCommand(int);
-
-    bool checkStepValidity(Position&, Position&);
-
+    //! Returns vector of adjacent positions to the parameter position
+    /*!
+     * Returns a vector of Positions that are adjacent to the Position reference passed
+     */
     std::vector<Position> adjacentPositions(Position&);
 
-    Tree::Node* confirmMove(Tree::Node*&, Tree::Node*&, PriorityQueue&);    //ask overseer for direction
+    //! Returns a path from pos to the parameter
+    /*!
+     * Returns a Path from pos member to the Position reference passed
+     * Throws a NoPathException if no path exists
+     */
+    Path traverse(Position&);
 
-    Path traverse(Position&, Position&, bool, bool);
 
+    //! Moves the robot through path
+    /*!
+     * The robot moves through the path member
+     * If it cannot move to the end, the robot moves as far as it can
+     */
+    void stepPath();
 
 private:
     Robot* robot;
     Grid* grid;
     char direction;
-    Position pos;
+    Position pos;   //current position
+    Position goal;  //current goal
+    Path path;
+
 };
 #endif
