@@ -1,6 +1,6 @@
 # This makefile compiles ....
 
-INCLUDE = -I/usr/X11R6/include 
+INCLUDE = -I/usr/X11R6/include -lpthread 
 #INCLUDE_W32 = -Isrc 
 srcdir = .
 VPATH =  .
@@ -9,7 +9,7 @@ CC=g++
 CFLAGS=-w -D LINUX -O3 -fpermissive 
 OBJDIR=obj
 LDFLAGS= -L/usr/X11R6/lib$(LIBSELECT) -lfltk
-SOURCES_RAW=main.cpp Robot.cpp rs232.c GUIWindow.cpp agent.cpp grid.cpp position.cpp path.cpp priorityqueue.cpp tree.cpp
+SOURCES_RAW= agent.cpp position.cpp rs232.c priorityqueue.cpp main.cpp tree.cpp grid.cpp path.cpp tcpserver.cpp tcpclient.cpp servercontrol.cpp clientcontrol.cpp Robot.cpp 
 
 TARGET:= go
 TARGETD:= go_d
