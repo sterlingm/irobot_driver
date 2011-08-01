@@ -55,7 +55,7 @@ bool Path::contains(Position& p) {
 std::string Path::toString() {
     std::ostringstream result;
 
-    for(int i=0;i<path.size();i++)
+    for(int i=1;i<path.size();i++)
         result<<" "<<path.at(i).toString();
 
     return result.str();

@@ -37,7 +37,7 @@ inline void ServerControl::update_path_thread_i() {
         pthread_mutex_lock(&UTILITY_H::mutex_agent_path);
         pthread_mutex_lock(&UTILITY_H::mutex_agent_pos);
 
-        std::cout<<"\nUpdating Path between "<<myServer->getAgent()->getPosition().toString()<<" to "<<myServer->getAgent()->getGoal().toString();
+        //std::cout<<"\nUpdating Path between "<<myServer->getAgent()->getPosition().toString()<<" to "<<myServer->getAgent()->getGoal().toString();
         //traverse
         myServer->getAgent()->getGrid()->clear();
         Path newPath = myServer->getAgent()->traverse(myServer->getAgent()->getGoal());
@@ -64,8 +64,8 @@ void* ServerControl::display_menu_thread(void* threadid) {
 /*Inline function for display thread. Infinitely displays the menu every 0.85 seconds*/
 inline void ServerControl::display_menu_thread_i() {
     for(;;) {
-        //update every 0.85 second
-        usleep(850000);
+        //usleep for x time
+        usleep(UTILITY_H::MENU_SLEEP_TIME);
 
         //lock
         pthread_mutex_lock(&UTILITY_H::mutex_agent_goal);

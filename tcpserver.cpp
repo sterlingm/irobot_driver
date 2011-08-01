@@ -1,5 +1,8 @@
 #include "tcpserver.h"
 #include "agent.h"
+#include <netinet/tcp.h>
+    int numSent;
+    int numRead;
 
 TcpServer::TcpServer(char* p) : port(p), done(false) {}
 
@@ -80,41 +83,134 @@ bool TcpServer::launchServer() {
 /*Gets a message sent back from client in response to a previously sent command*/
 void TcpServer::getSendBack(char* command) {
 
-    //if new goal
-    if(command[0] == '1') {
+    std::string tempCommand = command;
 
-        int prow = (int)command[1] - 48;
-        int pcol = (int)command[2] - 48;
-        int grow = (int)command[3] - 48;
-        int gcol = (int)command[4] - 48;
+    //if message starts with header
+    if(command[0] == '-') {
 
-        //lock
-        pthread_mutex_lock(&UTILITY_H::mutex_agent_goal);
-        pthread_mutex_lock(&UTILITY_H::mutex_agent_path);
-        pthread_mutex_lock(&UTILITY_H::mutex_agent_pos);
+        //check for no message stacking
+        int numHeaders = 0;
+        for(int i=0;i<tempCommand.length();i++)
+            if(tempCommand[i] == '-')
+                numHeaders++;
 
-        //update
-        myAgent->getPosition().setRow(prow);
-        myAgent->getPosition().setCol(pcol);
-        myAgent->getGoal().setRow(grow);
-        myAgent->getGoal().setCol(gcol);
+        //if no message stacking
+        if(numHeaders == 1) {
 
-        //unlock
-        pthread_mutex_unlock(&UTILITY_H::mutex_agent_goal);
-        pthread_mutex_unlock(&UTILITY_H::mutex_agent_path);
-        pthread_mutex_unlock(&UTILITY_H::mutex_agent_pos);
+            //get the number of digits in the length
+            int length_digit = 0;
+            while(isdigit(command[length_digit+2]))
+                length_digit++;
+            //std::cout<<"\nlength_digit: "<<length_digit;
 
-    }   //end if new goal
-    //if new sensor
-    else if(command[0] == '2') {
 
-        int id = (int)command[1] - 48;
-        myAgent->getRobot()->setCurrentSensor(id);
+            int index = 2;
+            std::stringstream iso_length;
+            for(int i=0;i<length_digit;i++)
+                iso_length<<command[index+i];
+            //std::cout<<"\niso_length: "<<iso_length.str();
 
-    }   //end if sensor
-    //if quit
-    else if(command[0] == '5')
-        done = true;
+
+            //get length as int value
+            int length = atoi(iso_length.str().c_str());
+            //std::cout<<"\nlength: "<<length;
+
+            //get the actual message
+            std::string rest = tempCommand.substr(3+length_digit, length);
+            //std::cout<<"\nrest:"<<rest<<"-";
+
+            //check for the correct length
+            if( rest.length() == length ) {
+
+                //if packet id 1 (update pos/goal)
+                if(rest[0] == '1') {
+
+                    int prowend = 3;
+                    while(isdigit(rest[prowend]))
+                        prowend++;
+                    std::string p = rest.substr(2, prowend-2);
+                    int prow = atoi(p.c_str());
+                    //std::cout<<"\nprow: "<<prow;
+
+
+                    int pcolend = prowend+1;
+                    while(isdigit(rest[pcolend]))
+                        pcolend++;
+                    std::string c = rest.substr(prowend, pcolend-prowend);
+                    int pcol = atoi(c.c_str());
+                    //std::cout<<"\npcol: "<<pcol;
+
+
+                    int growend = pcolend+1;
+                    while(isdigit(rest[growend]))
+                        growend++;
+                    std::string gr = rest.substr(pcolend, growend-pcolend);
+                    int grow = atoi(gr.c_str());
+                    //std::cout<<"\ngrow: "<<grow;
+
+
+                    int gcolend = growend+1;
+                    while(isdigit(rest[gcolend]))
+                        gcolend++;
+                    std::string gc = rest.substr(growend, gcolend-growend);
+                    int gcol = atoi(gc.c_str());
+                    //std::cout<<"\ngcol: "<<gcol;
+
+
+                    //lock
+                    pthread_mutex_lock(&UTILITY_H::mutex_agent_goal);
+                    pthread_mutex_lock(&UTILITY_H::mutex_agent_path);
+                    pthread_mutex_lock(&UTILITY_H::mutex_agent_pos);
+
+                    //update
+                    myAgent->getPosition().setRow(prow);
+                    myAgent->getPosition().setCol(pcol);
+                    myAgent->getGoal().setRow(grow);
+                    myAgent->getGoal().setCol(gcol);
+
+                    //unlock
+                    pthread_mutex_unlock(&UTILITY_H::mutex_agent_goal);
+                    pthread_mutex_unlock(&UTILITY_H::mutex_agent_path);
+                    pthread_mutex_unlock(&UTILITY_H::mutex_agent_pos);
+
+
+
+                }   //end if new goal
+
+
+                //else if packet id 2 (change sensor)
+                else if(rest[0] == '2') {
+
+                    int idend = 3;
+                    while(isdigit(rest[idend]))
+                        idend++;
+                    std::string temp = rest.substr(2, idend-2);
+                    int id = atoi(temp.c_str());
+
+
+                    if(id > 6 && id < 43)
+                        myAgent->getRobot()->setCurrentSensor(id);
+
+                    else
+                        std::cout<<"\n"<<id<<" is Invalid id";
+
+
+                }   //end if new sensor
+
+                else if(rest[0] == '5')
+                    done = true;
+
+
+            }   //end if no stacking
+            else {
+                std::cout<<"\nINCORRECT LENGTH";
+                std::cout<<"\nrest:"<<rest;
+                std::cout<<"\nrest.length(): "<<rest.length();
+                std::cout<<"\nlength: "<<length;
+                std::cout<<"\nlength_digit: "<<length_digit;
+            }
+        }   //end if correct length
+    }   //end if header
 }   //END GETSENDBACK
 
 
@@ -127,8 +223,6 @@ void TcpServer::communicate() {
     struct timeval waitd = {10, 0};          // the max wait time for an event
     int sel;                      // holds return value for select();
 
-    int numSent;
-    int numRead;
     char in[255];   //in buffer
     char out[255];  //out buffer
     memset(&in, 0, 255);

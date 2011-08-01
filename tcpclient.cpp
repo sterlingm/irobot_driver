@@ -1,6 +1,7 @@
 
 #include "tcpclient.h"
 #include "agent.h"
+#include <netinet/tcp.h>
 
 TcpClient::TcpClient(char* p) : port(p), done(false), update_agent(new char[6]), myAgent(NULL) {}
 
@@ -51,59 +52,100 @@ bool TcpClient::launchClient() {
 /*Stores current position and goal and sends information to server*/
 void TcpClient::updateServerAgent() {
 
-    update_agent[0] = '1';
-    update_agent[1] = (char)(((int)'0')+myAgent->getPosition().getRow());
-    update_agent[2] = (char)(((int)'0')+myAgent->getPosition().getCol());
-    update_agent[3] = (char)(((int)'0')+myAgent->getGoal().getRow());
-    update_agent[4] = (char)(((int)'0')+myAgent->getGoal().getCol());
-    update_agent[5] = '\0';
+    std::stringstream messagelength;
+    messagelength<<"1 "<<myAgent->getPosition().getRow()<<" "<<myAgent->getPosition().getCol()<<" "<<myAgent->getGoal().getRow()<<" "<<myAgent->getGoal().getCol();
 
 
-    int numSent = send(fd, update_agent, 6, 0);
+    std::string tempStrLen = messagelength.str();
+
+
+
+    int prowend = 3;
+    while(isdigit(tempStrLen[prowend]))
+        prowend++;
+
+
+    int pcolend = prowend+1;
+    while(isdigit(tempStrLen[pcolend]))
+        pcolend++;
+
+
+    int growend = pcolend+1;
+    while(isdigit(tempStrLen[growend]))
+        growend++;
+
+
+    int gcolend = growend+1;
+    while(isdigit(tempStrLen[gcolend]))
+        gcolend++;
+
+
+    int length_of_rest = gcolend;
+    std::cout<<"\ntempStrLen: "<<tempStrLen;
+    std::cout<<"\nlength: "<<length_of_rest;
+
+    //hold the whole message to be sent back
+    std::stringstream temp;
+    temp<<"- "<<length_of_rest<<" "<<messagelength.str();
+    std::cout<<"\ntemp: "<<temp.str();
+
+    std::string message = temp.str();
+    std::cout<<"\nmessage: "<<message;
+
+
+    //get the number of digits in length_of_rest
+    int length_digits=0;
+    while(isdigit(message[length_digits+2]))
+        length_digits++;
+    std::cout<<"\nlength_digits: "<<length_digits;
+
+    //make message to send back. +1 length for \0
+    char* back = new char[message.length()+1];
+
+    for(int i=0;i<message.length();i++)
+        back[i] = message[i];
+    back[message.length()] = '\0';
+
+    std::cout<<"\nback: "<<back;
+
+
+    int numSent = send(fd, back, message.length()+1, 0);
+
 }   //END UPDATESERVERAGENT
 
 
 /*Processes a command from the server*/
 void TcpClient::getCommand(char* command) {
     int numSent;
+    std::string tempCommand = command;
+
+    std::cout<<"\ncommand: "<<tempCommand;
+
     //id 1, change goal
     if(command[0] == '1') {
 
-        std::string tempCommand = command;
-        std::cout<<"\ntempCommand: "<<tempCommand;
-
-        int rowend = 2;
-
-        while(isdigit(command[rowend+1]))
+        //get row from command
+        int rowend = 3;
+        while(isdigit(command[rowend]))
             rowend++;
+        int row = atoi(tempCommand.substr(2, rowend-1).c_str());
 
-        std::cout<<"\nrowend: "<<rowend;
 
-        int colend = rowend+1;
 
-        while(isdigit(command[colend+1]))
+        //get column from command
+        int colstart = rowend+1;
+        int colend = colstart+1;
+        while(isdigit(command[colend]))
             colend++;
+        int col = atoi(tempCommand.substr(colstart, colend-colstart).c_str());
+
+        //create temp position
+        Position temp(row, col);
 
 
-        std::cout<<"\ncolend final: "<<colend;
-
-
-        int r = atoi(tempCommand.substr(1, rowend-1).c_str());
-        std::cout<<"\nsubstr: "<<tempCommand.substr(1, rowend-1).c_str();
-        std::cout<<"\nROW: "<<r;
-
-
-        //have to change to get numbers > 10
-        Position temp;
-        int row = (int)command[2] - 48;
-        temp.setRow(row);
-
-
-        int col = (int)command[4] - 48;
-        temp.setCol(col);
-
+        //std::cout<<"\nNEW GOAL VALUE: "<<myAgent->getGrid()->getPos(row, col);
         //std::cout<<"\nrow: "<<row<<" col: "<<col<<"\n";
-        //std::cout<<temp.toString()<<"\n";
+        //std::cout<<"\ntemp: "<<temp.toString()<<"\n";
 
         //lock
         pthread_mutex_lock(&UTILITY_H::mutex_agent_goal);
@@ -124,39 +166,69 @@ void TcpClient::getCommand(char* command) {
         pthread_mutex_unlock(&UTILITY_H::mutex_agent_path);
         pthread_mutex_unlock(&UTILITY_H::mutex_agent_pos);
 
-        //updateserver
-        updateServerAgent();
 
     }   //end if 1
+
+
     //id 2, change sensor
     else if(command[0] == '2') {
 
-        //have to change for id > 10
-        int id = (int)command[2] - 48;
-        myAgent->getRobot()->setCurrentSensor(id);
+        //isolate id
+        int idend = 3;
+        while(isdigit(command[idend]))
+            idend++;
+        std::string temp = tempCommand.substr(2, idend-2);
+        int id = atoi(temp.c_str());
 
-        char* back = new char[3];
-        back[0] = '2';
-        back[1] = command[2];
-        back[2] = '\0';
+        if(id > 6 && id < 43)
+            myAgent->getRobot()->setCurrentSensor(id);
+        else
+            std::cout<<"\n"<<id<<" is Invalid id";
 
-        numSent = send(fd, back, 3, 0);
-        delete back;
+        //length of '2 id'
+        int l = 2 + temp.length();
+        //- l ...
+        int length = 3 + l;
+
+
+        //hold message
+        std::stringstream message;
+        message<<"- "<<l<<" ";
+        message<<command;
+        std::cout<<"\nSENSOR message: "<<message.str();
+
+        char back[message.str().length()+1];
+
+
+        for(int i=0;i<message.str().length();i++)
+            back[i] = message.str()[i];
+        back[message.str().length()] = '\0';
+
+        std::cout<<"\nback: "<<back;
+
+        numSent = send(fd, back, message.str().length()+1, 0);
     }   //end if 2
+
+
     //id 3, toggle sensor streaming
     else if(command[0] == '3')
         myAgent->getRobot()->toggleSensorStream();
     //id 4, turn 360
     else if(command[0] == '4')
         myAgent->getRobot()->turnXDegrees(360);
+
     //id 5, quit
     else if(command[0] == '5') {
-        char* back = new char[2];
-        back[0] = '5';
-        back[1] = '\0';
-        numSent = send(fd, back, 2, 0);
+        char back[6];
+        back[0] = '-';
+        back[1] = ' ';
+        back[2] = '1';
+        back[3] = ' ';
+        back[4] = '5';
+        back[5] = '\0';
+
+        numSent = send(fd, back, 6, 0);
         done = true;
-        delete back;
     }   //end if 5
 }   //END GETCOMMAND
 
@@ -216,7 +288,7 @@ void TcpClient::communicate() {
             }   //end if connection closed
             //if a message, call get command
             else if(in[0] != '\0') {
-                cout<<"\nServer: "<<in;
+                //cout<<"\nServer: "<<in;
                 getCommand(in);
                 memset(&in, 0, 255);
             }   //end if message
@@ -233,14 +305,26 @@ void TcpClient::communicate() {
             //clear fd
             FD_CLR(fd, &write_flags);
 
-            //send
-            numSent = send(fd, out, 255, 0);
-            //if an error, exit
-            if(numSent < 0) {
-                printf("\nError sending %m", errno);
-                done = true;
-            }   //end if an error
-            //clear
+
+            //check for message corruptness!!
+            int numHeaders = 0;
+            std::stringstream temp;
+            temp<<out;
+            for(int i=0;i<temp.str().length();i++)
+                if(temp.str()[i] == '-')
+                    numHeaders++;
+
+
+            if(numHeaders == 1) {
+                //send
+                numSent = send(fd, out, 255, 0);
+                //if an error, exit
+                if(numSent < 0) {
+                    printf("\nError sending %m", errno);
+                    done = true;
+                }   //end if an error
+                //clear
+            }
             memset(&out, 0, 255);
 
         }   //end if

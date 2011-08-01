@@ -57,7 +57,7 @@ int main(int argc, char* args[]) {
             cout<<"\nSuccessful Connection!";
 
 
-            std::string file = "/home/sterling/irobot/grid1.txt";
+            std::string file = "/home/sterling/irobot_driver/grid1.txt";
             //cout<<"\nEnter a path to a grid\n";
             //cin>>file;
             //cout<<endl<<file;
@@ -102,7 +102,7 @@ int main(int argc, char* args[]) {
             cout<<"\nSuccessful Connection!";
 
 
-            std::string file = "/home/sterling/irobot/grid1.txt";
+            std::string file = "/home/sterling/irobot_driver/labgrid.txt";
             //cout<<"\nEnter a path to a grid\n";
             //cin>>file;
             //cout<<endl<<file;
