@@ -11,21 +11,17 @@ public:
     ~ServerControl();
 
 	//! Getter function for myServer member
-	/*!
-	 * Returns reference of myServer member
-	 */
+	/*! Returns reference of myServer member */
     TcpServer*& getServer();
 
 	//! Setter function for myServer member
-	/*!
-	 * Sets myServer to s
-	 */
+	/*! Sets myServer to s */
     void setServer(TcpServer*);
 
 	//! Controls the server
 	/*!
-	 * Controls the server
-	 * Creates three threads for the client
+	 * Controls the server\n
+	 * Creates three threads for the client\n
 	 * Calls myServer->communicate function
 	 */
     void control();

@@ -25,51 +25,35 @@ public:
     ~PriorityQueue();
 
 	//! Get the top of the queue
-	/*!
-	 * Returns the first node in the queue
-	 */
+	/*! Returns the first node in the queue */
     Tree::Node*& top();
 
     //! Get the size of the queue
-	/*!
-	 * Returns the number of nodes in the queue
-	 */
+	/*! Returns the number of nodes in the queue */
     int size();
 
 	//! Check if the queue is empty
-	/*!
-	 * Returns true if the queue has zero nodes
-	 */
+	/*! Returns true if the queue has zero nodes */
     bool isEmpty();
 
 	//! Check if the queue contains a node
-	/*!
-	 * Returns true if there is a node in the queue equal to n
-	 */
+	/*! Returns true if there is a node in the queue equal to n */
     bool contains(Tree::Node*&);
 
 	//! Push a node onto the queue
-	/*!
-	 * Pushes n onto the back of the queue
-	 */
+	/*! Pushes n onto the back of the queue */
     void push(Tree::Node*&);
 
 	//! Pop a node off of the queue
-	/*!
-	 * Removes a node off the front of the queue
-	 */
+	/*! Removes a node off the front of the queue */
     void pop();
 
     //! Remove a node from the queue
-	/*!
-	 * Remove n from the queue
-	 */
+	/*! Remove n from the queue */
     void remove(Tree::Node*&);
 
 	//! Clear the queue
-	/*!
-	 * Removes all nodes from the queue
-	 */
+	/*! Removes all nodes from the queue */
     void clear();
 
 	//! Returns a printable string of the queue

@@ -158,9 +158,7 @@ void TcpServer::getSendBack(char* command) {
 
 
                     //lock
-                    pthread_mutex_lock(&UTILITY_H::mutex_agent_goal);
-                    pthread_mutex_lock(&UTILITY_H::mutex_agent_path);
-                    pthread_mutex_lock(&UTILITY_H::mutex_agent_pos);
+                    pthread_mutex_lock(&UTILITY_H::mutex_agent);
 
                     //update
                     myAgent->getPosition().setRow(prow);
@@ -169,11 +167,7 @@ void TcpServer::getSendBack(char* command) {
                     myAgent->getGoal().setCol(gcol);
 
                     //unlock
-                    pthread_mutex_unlock(&UTILITY_H::mutex_agent_goal);
-                    pthread_mutex_unlock(&UTILITY_H::mutex_agent_path);
-                    pthread_mutex_unlock(&UTILITY_H::mutex_agent_pos);
-
-
+                    pthread_mutex_unlock(&UTILITY_H::mutex_agent);
 
                 }   //end if new goal
 

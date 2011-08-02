@@ -6,6 +6,9 @@
 pthread_t drive;
 pthread_t update;
 
+ClientControl::ClientControl() {}
+ClientControl::~ClientControl() {}
+
 /*Getter and setter for myClient*/
 TcpClient*& ClientControl::getClient() {return myClient;}
 void ClientControl::setClient(TcpClient* c) {myClient = c;}

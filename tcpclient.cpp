@@ -17,13 +17,13 @@ Agent*& TcpClient::getAgent() {return myAgent;}
 
 /*Tries to connect to a server. Returns true if successful*/
 bool TcpClient::launchClient() {
-    int status, sock, adrlen;
+    int status, sock, adrlen;   //status, file descriptor, address length
 
     struct addrinfo hints;
     struct addrinfo *servinfo;  //will point to the results
 
     memset(&hints, 0, sizeof hints); //make sure the struct is empty
-    hints.ai_family = AF_INET;
+    hints.ai_family = AF_INET;  //local address
     hints.ai_socktype = SOCK_STREAM; //tcp
     hints.ai_flags = AI_PASSIVE;     //use local-host address
 
@@ -40,6 +40,7 @@ bool TcpClient::launchClient() {
         return false;
     }
 
+    //connect
     if(connect(fd, servinfo->ai_addr, servinfo->ai_addrlen) < 0) {
         printf("\nclient connection failure %m", errno);
         return false;
@@ -52,74 +53,63 @@ bool TcpClient::launchClient() {
 /*Stores current position and goal and sends information to server*/
 void TcpClient::updateServerAgent() {
 
+    //hold message to get the length of it
     std::stringstream messagelength;
+    //message is 1 prow pcol grow gcol
     messagelength<<"1 "<<myAgent->getPosition().getRow()<<" "<<myAgent->getPosition().getCol()<<" "<<myAgent->getGoal().getRow()<<" "<<myAgent->getGoal().getCol();
-
-
+    //make it into a string
     std::string tempStrLen = messagelength.str();
 
 
+    int length_of_rest = 3;
 
-    int prowend = 3;
-    while(isdigit(tempStrLen[prowend]))
-        prowend++;
+    //find number of digits in prow
+    while(isdigit(tempStrLen[length_of_rest]))
+        length_of_rest++;
 
+    //increment after prow
+    length_of_rest++;
 
-    int pcolend = prowend+1;
-    while(isdigit(tempStrLen[pcolend]))
-        pcolend++;
-
-
-    int growend = pcolend+1;
-    while(isdigit(tempStrLen[growend]))
-        growend++;
+    //find number of digits in pcol
+    while(isdigit(tempStrLen[length_of_rest]))
+        length_of_rest++;
 
 
-    int gcolend = growend+1;
-    while(isdigit(tempStrLen[gcolend]))
-        gcolend++;
+    //increment after pcol
+    length_of_rest++;
+
+    //find number of digits in grow
+    while(isdigit(tempStrLen[length_of_rest]))
+        length_of_rest++;
+
+    //increment after grow
+    length_of_rest++;
+
+    //find number of digits in gcol
+    while(isdigit(tempStrLen[length_of_rest]))
+        length_of_rest++;
 
 
-    int length_of_rest = gcolend;
-    std::cout<<"\ntempStrLen: "<<tempStrLen;
-    std::cout<<"\nlength: "<<length_of_rest;
+    //std::cout<<"\ntempStrLen: "<<tempStrLen;
+    //std::cout<<"\nlength: "<<length_of_rest;
 
-    //hold the whole message to be sent back
-    std::stringstream temp;
-    temp<<"- "<<length_of_rest<<" "<<messagelength.str();
-    std::cout<<"\ntemp: "<<temp.str();
+    //create message to send to server
+    std::stringstream message;
+    message<<"- "<<length_of_rest<<" "<<messagelength.str();
 
-    std::string message = temp.str();
-    std::cout<<"\nmessage: "<<message;
+    //std::cout<<"\nmessage: "<<message.str();
 
 
-    //get the number of digits in length_of_rest
-    int length_digits=0;
-    while(isdigit(message[length_digits+2]))
-        length_digits++;
-    std::cout<<"\nlength_digits: "<<length_digits;
-
-    //make message to send back. +1 length for \0
-    char* back = new char[message.length()+1];
-
-    for(int i=0;i<message.length();i++)
-        back[i] = message[i];
-    back[message.length()] = '\0';
-
-    std::cout<<"\nback: "<<back;
-
-
-    int numSent = send(fd, back, message.length()+1, 0);
+    int numSent = send(fd, message.str().c_str(), message.str().length(), 0);
 
 }   //END UPDATESERVERAGENT
 
 
 /*Processes a command from the server*/
 void TcpClient::getCommand(char* command) {
-    int numSent;
     std::string tempCommand = command;
 
-    std::cout<<"\ncommand: "<<tempCommand;
+    //std::cout<<"\ncommand: "<<tempCommand;
 
     //id 1, change goal
     if(command[0] == '1') {
@@ -148,9 +138,7 @@ void TcpClient::getCommand(char* command) {
         //std::cout<<"\ntemp: "<<temp.toString()<<"\n";
 
         //lock
-        pthread_mutex_lock(&UTILITY_H::mutex_agent_goal);
-        pthread_mutex_lock(&UTILITY_H::mutex_agent_path);
-        pthread_mutex_lock(&UTILITY_H::mutex_agent_pos);
+        pthread_mutex_lock(&UTILITY_H::mutex_agent);
 
         //set new goal
         myAgent->setGoal(temp);
@@ -162,9 +150,7 @@ void TcpClient::getCommand(char* command) {
         myAgent->setPath(new_path);
 
         //unlock
-        pthread_mutex_unlock(&UTILITY_H::mutex_agent_goal);
-        pthread_mutex_unlock(&UTILITY_H::mutex_agent_path);
-        pthread_mutex_unlock(&UTILITY_H::mutex_agent_pos);
+        pthread_mutex_unlock(&UTILITY_H::mutex_agent);
 
 
     }   //end if 1
@@ -180,33 +166,27 @@ void TcpClient::getCommand(char* command) {
         std::string temp = tempCommand.substr(2, idend-2);
         int id = atoi(temp.c_str());
 
-        if(id > 6 && id < 43)
-            myAgent->getRobot()->setCurrentSensor(id);
-        else
+        //check id
+        //if invalid, just print and close function
+        if(id < 7 || id > 42)
             std::cout<<"\n"<<id<<" is Invalid id";
+        //else if valid, set new sensor and send message back to server
+        else {
 
-        //length of '2 id'
-        int l = 2 + temp.length();
-        //- l ...
-        int length = 3 + l;
+            //length of "2 id"
+            int l = 2 + temp.length();
+            //"- l ..."
+            int length = 3 + l;
+
+            //create message to send back to server
+            std::stringstream message;
+            message<<"- "<<l<<" ";
+            message<<command;
+            std::cout<<"\nSENSOR message: "<<message.str();
 
 
-        //hold message
-        std::stringstream message;
-        message<<"- "<<l<<" ";
-        message<<command;
-        std::cout<<"\nSENSOR message: "<<message.str();
-
-        char back[message.str().length()+1];
-
-
-        for(int i=0;i<message.str().length();i++)
-            back[i] = message.str()[i];
-        back[message.str().length()] = '\0';
-
-        std::cout<<"\nback: "<<back;
-
-        numSent = send(fd, back, message.str().length()+1, 0);
+            int numSent = send(fd, message.str().c_str(), message.str().length(), 0);
+        }   //end if valid sensor
     }   //end if 2
 
 
@@ -227,7 +207,7 @@ void TcpClient::getCommand(char* command) {
         back[4] = '5';
         back[5] = '\0';
 
-        numSent = send(fd, back, 6, 0);
+        int numSent = send(fd, back, 6, 0);
         done = true;
     }   //end if 5
 }   //END GETCOMMAND
@@ -310,11 +290,12 @@ void TcpClient::communicate() {
             int numHeaders = 0;
             std::stringstream temp;
             temp<<out;
+            //count number of headers
             for(int i=0;i<temp.str().length();i++)
                 if(temp.str()[i] == '-')
                     numHeaders++;
 
-
+            //check if exactly 1 header
             if(numHeaders == 1) {
                 //send
                 numSent = send(fd, out, 255, 0);
@@ -324,7 +305,8 @@ void TcpClient::communicate() {
                     done = true;
                 }   //end if an error
                 //clear
-            }
+            }   //end if headers == 1
+            //clear out buffer
             memset(&out, 0, 255);
 
         }   //end if

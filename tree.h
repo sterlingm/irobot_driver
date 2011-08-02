@@ -119,42 +119,32 @@ public:
 
 
     //! A Constructor
-    /*!
-     * Sets root to p
-     */
+    /*! Sets root to p */
 	Tree(Position&);
 	//! A Destructor
 	~Tree();
 
     //! Getter function for root member
-    /*!
-     * Returns a reference of root member
-     */
+    /*! Returns a reference of root member */
 	Node*& getRoot();
 
     //! Checks if a Position is in the tree
-    /*!
-     * Returns true if a Position in the tree is equal to p
-     */
+    /*! Returns true if a Position in the tree is equal to p */
     bool contains(Position&);
 
     //! Add a Position to the tree
-    /*!
-     * Makes a node for value and adds that node to the tree as one of parent's children
-     */
+    /*! Makes a node for value and adds that node to the tree as one of parent's children */
 	Node* add(Position&, Node*&);
 
     //! Add a group of Positions to the tree
-    /*!
-     * Makes a Node for each Position in group and adds it to tree as one of parent's children
-     */
+    /*! Makes a Node for each Position in group and adds it to tree as one of parent's children */
 	void addGroup(std::vector<Position>&, Node*&);
 
     //! Returns a printable string for the root node of the tree
 	std::string rootToString();
 	//! Returns a printable string of a subtree
 	/*!
-	 * Returns a printable string of a subtree
+	 * Returns a printable string of a subtree\n
 	 * Treats t as the root
 	 */
 	std::string toString(Node*&);

@@ -10,54 +10,38 @@ class Position {
 public:
 
     //! A Constructor
-    /*!
-     * Sets row and col to -1
-     */
+    /*! Sets row and col to -1 */
 	Position();
 
     //! A Constructor
-    /*!
-     * Sets row to r and col to c
-     */
+    /*! Sets row to r and col to c */
 	Position(int, int);
 
     //! A Destructor
 	~Position();
 
     //! Getter function for row member
-    /*!
-     * Returns a reference of row member
-     */
+    /*! Returns a reference of row member */
 	int& getRow();
 
 	//! Setter function for row
-	/*!
-	 * Sets row to r
-	 */
+	/*! Sets row to r */
 	void setRow(int);
 
 	//! Getter function for col
-	/*!
-	 * Returns a reference of col member
-	 */
+	/*! Returns a reference of col member */
 	int& getCol();
 
 	//! Setter function for col
-	/*!
-	 * Sets col to c
-	 */
+	/*! Sets col to c */
 	void setCol(int);
 
 	//! Checks if this position is equal to specified Position
-	/*!
-	 * Returns true if row and col are equal in both Positions
-	 */
+	/*! Returns true if row and col are equal in both Positions */
 	bool equals(Position&);
 
 	//! Function to clone Position
-	/*!
-	 * Returns a Position instance that has row and col equal to this Position's members
-	 */
+	/*! Returns a Position instance that has row and col equal to this Position's members */
     Position clone();
 
 	//! Returns a printable string of the Position

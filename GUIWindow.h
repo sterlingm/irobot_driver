@@ -15,18 +15,14 @@ class GUIWindow : public Fl_Window{
 public:
 
     //! A constructor
-    /*!
-     * Sets robot to r
-     */
+    /*! Sets robot to r */
     GUIWindow(Robot&);
 
     //! Destructor
     ~GUIWindow();
 
     //! Getter function for robot member
-    /*!
-     * Returns reference of robot member
-     */
+    /*! Returns reference of robot member */
     Robot*& getRobot();
 
 private:

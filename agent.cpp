@@ -237,10 +237,7 @@ void Agent::stepPath() {
     while( path.getSize() > 1 && goal.equals(path.getPath().at(path.getSize()-1))  ) {
 
         //lock path
-        pthread_mutex_lock(&UTILITY_H::mutex_agent_path);
-        pthread_mutex_lock(&UTILITY_H::mutex_agent_pos);
-        pthread_mutex_lock(&UTILITY_H::mutex_agent_goal);
-
+        pthread_mutex_lock(&UTILITY_H::mutex_agent);
         //step through first pair
         pos = path.getPath().at(1);
 
@@ -250,9 +247,7 @@ void Agent::stepPath() {
         path.getPath().erase(path.getPath().begin());
 
         //unlock
-        pthread_mutex_unlock(&UTILITY_H::mutex_agent_path);
-        pthread_mutex_unlock(&UTILITY_H::mutex_agent_pos);
-        pthread_mutex_unlock(&UTILITY_H::mutex_agent_goal);
+        pthread_mutex_unlock(&UTILITY_H::mutex_agent);
     }   //end while
 }   //END STEPPATH
 

@@ -20,9 +20,7 @@ public:
 
 
     //! A constructor
-    /*!
-     * Initializes grid, robot, and direction to parameters
-     */
+    /*! Initializes grid, robot, and direction to parameters */
     Agent(Grid*&, Robot&, char);
 
     //! Destructor
@@ -30,105 +28,77 @@ public:
 
 
     //! Getter function for direction
-    /*!
-     * Returns reference to direction member
-     */
+    /*! Returns reference to direction member */
     char& getDirection();
     //! Setter function for direction
     /*!
-     * Sets direction member to d
+     * Sets direction member to d\n
      * if d is e(east), E(east), w(west), W(west), s(south), S(south), n(north), or N(north)
      */
     void setDirection(char);
 
 
     //! Getter function for pos
-    /*!
-     * Returns a reference to pos member
-     */
+    /*! Returns a reference to pos member */
     Position& getPosition();
     //! Setter function for pos
-    /*!
-     * Sets pos member to p
-     */
+    /*! Sets pos member to p */
     void setPosition(Position&);
 
 
-
     //! Getter function for goal
-    /*!
-     * Returns a reference to goal member
-     */
+    /*! Returns a reference to goal member */
     Position& getGoal();
     //! Setter function for goal
-    /*!
-     * Sets goal to g
-     */
+    /*! Sets goal to g */
     void setGoal(Position&);
 
 
-
     //! Getter function for path
-    /*!
-     * Returns a reference to path member
-     */
+    /*! Returns a reference to path member */
     Path& getPath();
     //! Setter function for path
-    /*!
-     * Sets path to p
-     */
+    /*! Sets path to p */
     void setPath(Path&);
 
 
 
     //! Getter function for grid
-    /*!
-     * Returns a reference to grid member
-     */
+    /*! Returns a reference to grid member */
     Grid*& getGrid();
     //! Setter function for grid
-    /*!
-     * Sets grid member to g
-     */
+    /*! Sets grid member to g */
     void setGrid(Grid*&);
 
 
 
     //! Getter function for robot
-    /*!
-     * Returns a reference to robot member
-     */
+    /*! Returns a reference to robot member */
     Robot*& getRobot();
     //! Setter function for robot
-    /*!
-     * Sets robot member to r
-     */
+    /*! Sets robot member to r */
     void setRobot(Robot&);
-
 
 
     //! Retruns true if position has been visited
     /*!
-     * Returns true if Position reference passed is
+     * Returns true if Position reference passed is\n
      * within grid member bounds, not visited, and equal to ' '
      */
     bool positionValid(Position&);
 
+
     //! Returns straight line distance between two Positions
-    /*!
-     * Returns straight line distance between two Position references passed
-     */
+    /*! Returns straight line distance between two Position references passed */
     double getSLDistance(Position&,Position&);
 
     //! Returns vector of adjacent positions to the parameter position
-    /*!
-     * Returns a vector of Positions that are adjacent to the Position reference passed
-     */
+    /*! Returns a vector of Positions that are adjacent to the Position reference passed */
     std::vector<Position> adjacentPositions(Position&);
 
     //! Returns a path from pos to the parameter
     /*!
-     * Returns a Path from pos member to the Position reference passed
+     * Returns a Path from pos member to the Position reference passed\n
      * Throws a NoPathException if no path exists
      */
     Path traverse(Position&);
@@ -136,7 +106,7 @@ public:
 
     //! Moves the robot through path
     /*!
-     * The robot moves through the path member
+     * The robot moves through the path member\n
      * If it cannot move to the end, the robot moves as far as it can
      */
     void stepPath();

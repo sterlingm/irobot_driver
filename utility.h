@@ -62,22 +62,12 @@ struct Sensor_Packet {
     Sensor_Packet() {values[0] = -1; values[1] = -1;}
 };
 
-struct Command_Packet {
-    char* header;
-    char* size;
-    char* rest;
-};
-
-
-static bool QUITPROGRAM = false;
-
-static pthread_mutex_t mutex_agent_goal = PTHREAD_MUTEX_INITIALIZER;
-static pthread_mutex_t mutex_agent_path = PTHREAD_MUTEX_INITIALIZER;
-static pthread_mutex_t mutex_agent_pos = PTHREAD_MUTEX_INITIALIZER;
+static pthread_mutex_t mutex_agent = PTHREAD_MUTEX_INITIALIZER;
 static pthread_mutex_t mutex_send = PTHREAD_MUTEX_INITIALIZER;
 static pthread_mutex_t mutex_read = PTHREAD_MUTEX_INITIALIZER;
 
-static double MENU_SLEEP_TIME = 850000;
+static int MENU_SLEEP_TIME = 850000;
+static int UPDATE_PATH_TIME = 200000;
 
 static int UNIT_SIZE = 335;
 

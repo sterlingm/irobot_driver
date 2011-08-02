@@ -1073,16 +1073,12 @@ Position Robot::step(Position& a, Position& b, char& d) {
 Position Robot::stepPath() {
 
 
-    pthread_mutex_lock(&UTILITY_H::mutex_agent_path);
-    pthread_mutex_lock(&UTILITY_H::mutex_agent_pos);
-    pthread_mutex_lock(&UTILITY_H::mutex_agent_goal);
+    pthread_mutex_lock(&UTILITY_H::mutex_agent);
 
     Path& temp = agent->getPath();
     Position result = temp.getPath().at(0);
 
-    pthread_mutex_unlock(&UTILITY_H::mutex_agent_path);
-    pthread_mutex_unlock(&UTILITY_H::mutex_agent_pos);
-    pthread_mutex_unlock(&UTILITY_H::mutex_agent_goal);
+    pthread_mutex_unlock(&UTILITY_H::mutex_agent);
 
 
 
@@ -1098,7 +1094,7 @@ Position Robot::stepPath() {
         agent->setPath(newpath);
     }   //end while
 
+    //stop and return
     stop();
-
     return result;
 }

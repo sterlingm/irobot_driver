@@ -30,12 +30,10 @@ void* ServerControl::update_path_thread(void* threadid) {
 inline void ServerControl::update_path_thread_i() {
     for(;;) {
         //sleep for 0.2 seconds
-        usleep(200000);
+        usleep(UTILITY_H::UPDATE_PATH_TIME);
 
         //lock goal
-        pthread_mutex_lock(&UTILITY_H::mutex_agent_goal);
-        pthread_mutex_lock(&UTILITY_H::mutex_agent_path);
-        pthread_mutex_lock(&UTILITY_H::mutex_agent_pos);
+        pthread_mutex_lock(&UTILITY_H::mutex_agent);
 
         //std::cout<<"\nUpdating Path between "<<myServer->getAgent()->getPosition().toString()<<" to "<<myServer->getAgent()->getGoal().toString();
         //traverse
@@ -46,9 +44,7 @@ inline void ServerControl::update_path_thread_i() {
         myServer->getAgent()->setPath(newPath);
 
         //unlock
-        pthread_mutex_unlock(&UTILITY_H::mutex_agent_goal);
-        pthread_mutex_unlock(&UTILITY_H::mutex_agent_path);
-        pthread_mutex_unlock(&UTILITY_H::mutex_agent_pos);
+        pthread_mutex_unlock(&UTILITY_H::mutex_agent);
 
     }   //end infinite for
 }   //END UPDATE_PATH_THREAD_I
@@ -68,9 +64,7 @@ inline void ServerControl::display_menu_thread_i() {
         usleep(UTILITY_H::MENU_SLEEP_TIME);
 
         //lock
-        pthread_mutex_lock(&UTILITY_H::mutex_agent_goal);
-        pthread_mutex_lock(&UTILITY_H::mutex_agent_path);
-        pthread_mutex_lock(&UTILITY_H::mutex_agent_pos);
+        pthread_mutex_lock(&UTILITY_H::mutex_agent);
 
         //clear the screen
         system("clear");
@@ -80,9 +74,7 @@ inline void ServerControl::display_menu_thread_i() {
         myServer->getAgent()->getGrid()->markPath(myServer->getAgent()->getPath());
 
         //unlock
-        pthread_mutex_unlock(&UTILITY_H::mutex_agent_goal);
-        pthread_mutex_unlock(&UTILITY_H::mutex_agent_path);
-        pthread_mutex_unlock(&UTILITY_H::mutex_agent_pos);
+        pthread_mutex_unlock(&UTILITY_H::mutex_agent);
 
         //print
         std::cout<<myServer->getAgent()->getGrid()->toString();
