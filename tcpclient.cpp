@@ -101,7 +101,6 @@ void TcpClient::updateServerAgent() {
 
 
     int numSent = send(fd, message.str().c_str(), message.str().length(), 0);
-
 }   //END UPDATESERVERAGENT
 
 

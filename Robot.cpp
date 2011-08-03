@@ -966,7 +966,7 @@ void Robot::leds(bool play, bool advance, unsigned char value, unsigned char int
 /*Robot moves from one position to another*/
 Position Robot::step(Position& a, Position& b, char& d) {
 
-    std::cout<<"\nStepping from "<<a.toString()<<" to "<<b.toString()<<" with direction "<<d;
+    //std::cout<<"\nStepping from "<<a.toString()<<" to "<<b.toString()<<" with direction "<<d;
 
     if(a.getRow() == b.getRow()) {
         if( (a.getCol() - b.getCol() == -1) ) {

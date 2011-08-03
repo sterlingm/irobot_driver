@@ -261,7 +261,7 @@ void TcpServer::communicate() {
             }   //end if connection closed
             //if message, call getsendback
             else if(in[0] != '\0') {
-                cout<<"\nClient: "<<in;
+                //cout<<"\nClient: "<<in;
                 getSendBack(in);
             }   //end if message
         }   //end if ready for read
