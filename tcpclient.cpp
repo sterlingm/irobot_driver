@@ -310,6 +310,4 @@ void TcpClient::communicate() {
 
         }   //end if
     }   //end while
-
-    cout<<"\n\nExiting normally\n";
 }   //END COMMUNICATE

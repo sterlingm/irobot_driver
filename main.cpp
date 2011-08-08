@@ -140,6 +140,8 @@ int main(int argc, char* args[]) {
 
         }   //end if successful connection
     }   //end if client
+
+    cout<<"\n\nExiting normally\n";
     return 0;
 }   //END MAIN
 
