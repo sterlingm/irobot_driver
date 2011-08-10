@@ -320,114 +320,148 @@ void GUIWindow::cb_choice(Fl_Widget* o, void* v) {
  The selected value will change which sensor value is printing
 */
 inline void GUIWindow::cb_choice_i() {
-
+    int sensor;
     //switch for the value selected
     switch(whichSensor->value()) {
 
         case 0:
-            robot->setCurrentSensor(BUMP);
+            sensor = BUMP;
+            robot->setCurrentSensor(sensor);
             break;
         case 1:
-            robot->setCurrentSensor(WALL);
+            sensor = WALL;
+            robot->setCurrentSensor(sensor);
             break;
         case 2:
-            robot->setCurrentSensor(CLIFF_LEFT);
+            sensor = CLIFF_LEFT;
+            robot->setCurrentSensor(sensor);
             break;
         case 3:
-            robot->setCurrentSensor(CLIFF_FRONT_LEFT);
+            sensor = CLIFF_FRONT_LEFT;
+            robot->setCurrentSensor(sensor);
             break;
         case 4:
-            robot->setCurrentSensor(CLIFF_FRONT_RIGHT);
+            sensor = CLIFF_FRONT_RIGHT;
+            robot->setCurrentSensor(sensor);
             break;
         case 5:
-            robot->setCurrentSensor(CLIFF_RIGHT);
+            sensor = CLIFF_RIGHT;
+            robot->setCurrentSensor(sensor);
             break;
         case 6:
-            robot->setCurrentSensor(VIRTUAL_WALL);
+            sensor = VIRTUAL_WALL;
+            robot->setCurrentSensor(sensor);
             break;
         case 7:
-            robot->setCurrentSensor(LOW_SIDE_DRIVER);
+            sensor = LOW_SIDE_DRIVER;
+            robot->setCurrentSensor(sensor);
             break;
         case 8:
-            robot->setCurrentSensor(WHEEL_OVERCURRENT);
+            sensor = WHEEL_OVERCURRENT;
+            robot->setCurrentSensor(sensor);
             break;
         case 9:
-            robot->setCurrentSensor(INFRARED_BYTE);
+            sensor = INFRARED_BYTE;
+            robot->setCurrentSensor(sensor);
             break;
         case 10:
-            robot->setCurrentSensor(BUTTONS);
+            sensor = BUTTONS;
+            robot->setCurrentSensor(sensor);
             break;
         case 11:
-            robot->setCurrentSensor(DISTANCE);
+            sensor = DISTANCE;
+            robot->setCurrentSensor(sensor);
             break;
         case 12:
-            robot->setCurrentSensor(ANGLE);
+            sensor = ANGLE;
+            robot->setCurrentSensor(sensor);
             break;
         case 13:
-            robot->setCurrentSensor(CHARGING_STATE);
+            sensor = CHARGING_STATE;
+            robot->setCurrentSensor(sensor);
             break;
         case 14:
-            robot->setCurrentSensor(VOLTAGE);
+            sensor = VOLTAGE;
+            robot->setCurrentSensor(sensor);
             break;
         case 15:
-            robot->setCurrentSensor(CURRENT);
+            sensor = CURRENT;
+            robot->setCurrentSensor(sensor);
             break;
         case 16:
-            robot->setCurrentSensor(BATTERY_TEMPERATURE);
+            sensor = BATTERY_TEMPERATURE;
+            robot->setCurrentSensor(sensor);
             break;
         case 17:
-            robot->setCurrentSensor(BATTERY_CHARGE);
+            sensor = BATTERY_CHARGE;
+            robot->setCurrentSensor(sensor);
             break;
         case 18:
-            robot->setCurrentSensor(BATTERY_CAPACITY);
+            sensor = BATTERY_CAPACITY;
+            robot->setCurrentSensor(sensor);
             break;
         case 19:
-            robot->setCurrentSensor(WALL_SIGNAL);
+            sensor = WALL_SIGNAL;
+            robot->setCurrentSensor(sensor);
             break;
         case 20:
-            robot->setCurrentSensor(CLIFF_LEFT_SIGNAL);
+            sensor = CLIFF_LEFT_SIGNAL;
+            robot->setCurrentSensor(sensor);
             break;
         case 21:
-            robot->setCurrentSensor(CLIFF_FRONT_LEFT_SIGNAL);
+            sensor = CLIFF_FRONT_LEFT_SIGNAL;
+            robot->setCurrentSensor(sensor);
             break;
         case 22:
-            robot->setCurrentSensor(CLIFF_FRONT_RIGHT_SIGNAL);
+            sensor = CLIFF_FRONT_RIGHT_SIGNAL;
+            robot->setCurrentSensor(sensor);
             break;
         case 23:
-            robot->setCurrentSensor(CLIFF_RIGHT_SIGNAL);
-            break;
+            sensor = CLIFF_RIGHT_SIGNAL;
+            robot->setCurrentSensor(sensor);
         case 24:
-            robot->setCurrentSensor(CARGO_BAY_DIGITAL_INPUTS);
+            sensor = CARGO_BAY_DIGITAL_INPUTS;
+            robot->setCurrentSensor(sensor);
             break;
         case 25:
-            robot->setCurrentSensor(CARGO_BAY_ANALOG_SIGNAL);
+            sensor = CARGO_BAY_ANALOG_SIGNAL;
+            robot->setCurrentSensor(sensor);
             break;
         case 26:
-            robot->setCurrentSensor(CHARGING_SOURCES_AVAILABLE);
+            sensor = CHARGING_SOURCES_AVAILABLE;
+            robot->setCurrentSensor(sensor);
             break;
         case 27:
-            robot->setCurrentSensor(OI_MODE);
+            sensor = OI_MODE;
+            robot->setCurrentSensor(sensor);
             break;
         case 28:
-            robot->setCurrentSensor(SONG_NUMBER);
+            sensor = SONG_NUMBER;
+            robot->setCurrentSensor(sensor);
             break;
         case 29:
-            robot->setCurrentSensor(SONG_PLAYING);
+            sensor = SONG_PLAYING;
+            robot->setCurrentSensor(sensor);
             break;
         case 30:
-            robot->setCurrentSensor(NUMBER_OF_STREAM_PACKETS);
+            sensor = NUMBER_OF_STREAM_PACKETS;
+            robot->setCurrentSensor(sensor);
             break;
         case 31:
-            robot->setCurrentSensor(REQUESTED_VELOCITY);
+            sensor = REQUESTED_VELOCITY;
+            robot->setCurrentSensor(sensor);
             break;
         case 32:
-            robot->setCurrentSensor(REQUESTED_RADIUS);
+            sensor = REQUESTED_RADIUS;
+            robot->setCurrentSensor(sensor);
             break;
         case 33:
-            robot->setCurrentSensor(REQUESTED_RIGHT_VELOCITY);
+            sensor = REQUESTED_RIGHT_VELOCITY;
+            robot->setCurrentSensor(sensor);
             break;
         case 34:
-            robot->setCurrentSensor(REQUESTED_LEFT_VELOCITY);
+            sensor = REQUESTED_LEFT_VELOCITY;
+            robot->setCurrentSensor(sensor);
             break;
         default: break;
     }   //END SWITCH

@@ -45,7 +45,7 @@ bool TcpServer::launchServer() {
 
     //allow reuse of port
     int yes=1;
-    if (setsockopt(fd,SOL_SOCKET,SO_REUSEADDR,&yes,sizeof(int)) == -1) {
+    if (setsockopt(fd,SOL_SOCKET,SO_REUSEADDR,(char*) &yes,sizeof(int)) == -1) {
         perror("setsockopt");
         return false;
     }
