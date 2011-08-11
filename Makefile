@@ -8,8 +8,8 @@ VPATH =  .
 CC=g++ 
 CFLAGS=-w -D LINUX -O3 -fpermissive 
 OBJDIR=obj
-LDFLAGS= -L/usr/X11R6/lib$(LIBSELECT) -lfltk -lXext -lXft -lfontconfig -lXinerama -lpthread -ldl -lm -lX11
-SOURCES_RAW= agent.cpp position.cpp rs232.c priorityqueue.cpp main.cpp tree.cpp grid.cpp path.cpp tcpserver.cpp tcpclient.cpp servercontrol.cpp clientcontrol.cpp Robot.cpp GUIWindow.cpp
+LDFLAGS= #-L/usr/X11R6/lib$(LIBSELECT) -lfltk -lXext -lXft -lfontconfig -lXinerama -lpthread -ldl -lm -lX11
+SOURCES_RAW= agent.cpp position.cpp rs232.c priorityqueue.cpp main.cpp tree.cpp grid.cpp path.cpp tcpserver.cpp tcpclient.cpp servercontrol.cpp clientcontrol.cpp Robot.cpp 
 
 TARGET:= go
 TARGETD:= go_d

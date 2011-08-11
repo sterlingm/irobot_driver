@@ -72,7 +72,7 @@ void TcpClient::updateServerAgent() {
     //hold message to get the length of it
     std::stringstream messagelength;
     //message is 1 prow pcol grow gcol sensorhigh sensorlow
-    messagelength<<"1 "<<myAgent->getPosition().getRow()<<" "<<myAgent->getPosition().getCol()<<" "<<myAgent->getGoal().getRow()<<" "<<myAgent->getGoal().getCol()<<" "<<UTILITY_H::highsv<<" "<<UTILITY_H::lowsv;
+    messagelength<<"1 "<<myAgent->getPosition().getRow()<<" "<<myAgent->getPosition().getCol()<<" "<<myAgent->getGoal().getRow()<<" "<<myAgent->getGoal().getCol()<<" "<<myAgent->getHighSV()<<" "<<myAgent->getLowSV();
     //make it into a string
     std::string tempStrLen = messagelength.str();
 

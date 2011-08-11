@@ -50,6 +50,7 @@ void* ClientControl::get_c_sensor_thread(void* threadid) {
     c->get_c_sensor_thread_i();
 }   //END GET_C_SENSOR_THREAD
 
+
 /*Inline for get sensor thread. Polls the robot for sensor values every 15ms*/
 inline void ClientControl::get_c_sensor_thread_i() {
     //sleep 15ms and grab new sensor value
@@ -57,8 +58,8 @@ inline void ClientControl::get_c_sensor_thread_i() {
         usleep(15000);
         Sensor_Packet temp;
         temp = myClient->getAgent()->getRobot()->getSensorValue(myClient->getAgent()->getRobot()->getCurrentSensor());
-        UTILITY_H::lowsv = temp.values[0];
-        UTILITY_H::highsv = temp.values[1];
+        myClient->getAgent()->setLowSV(temp.values[0]);
+        myClient->getAgent()->setHighSV(temp.values[1]);
     }   //end while
 }   //END GET_C_SENSOR_THREAD_I
 
