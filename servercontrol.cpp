@@ -79,7 +79,7 @@ inline void ServerControl::display_menu_thread_i() {
         //print
         std::cout<<myServer->getAgent()->getGrid()->toString();
         std::cout<<"\nPath: "<<myServer->getAgent()->getPath().toString();
-        std::cout<<"\nSENSOR PACKET "<<myServer->getAgent()->getRobot()->getCurrentSensor()<<": "<<SENSOR_VALUE[1]<<"  "<<SENSOR_VALUE[0];
+        std::cout<<"\nSENSOR PACKET "<<myServer->getAgent()->getRobot()->getCurrentSensor()<<": "<<myServer->getAgent()->getHighSV()<<"  "<<myServer->getAgent()->getLowSV();
         std::cout<<"\nChange goal - 1 ROW COLUMN";
         std::cout<<"\nChange sensor packet - 2 PACKET-ID";
         std::cout<<"\nToggle sensor streaming - 3";

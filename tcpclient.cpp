@@ -25,13 +25,15 @@ bool TcpClient::launchClient() {
     memset(&hints, 0, sizeof hints); //make sure the struct is empty
     hints.ai_family = AF_INET;  //local address
     hints.ai_socktype = SOCK_STREAM; //tcp
-    hints.ai_flags = AI_PASSIVE;     //use local-host address
+    //hints.ai_flags = AI_PASSIVE;     //use local-host address
+
 
     //get server info, put into servinfo
-    if ((status = getaddrinfo("127.0.0.1", port, &hints, &servinfo)) != 0) {
+    if ((status = getaddrinfo("192.168.2.3", port, &hints, &servinfo)) != 0) {
         fprintf(stderr, "getaddrinfo error: %s\n", gai_strerror(status));
         return false;
     }
+
 
     //make socket
     fd = socket(servinfo->ai_family, servinfo->ai_socktype, servinfo->ai_protocol);
@@ -40,14 +42,28 @@ bool TcpClient::launchClient() {
         return false;
     }
 
+
     //connect
     if(connect(fd, servinfo->ai_addr, servinfo->ai_addrlen) < 0) {
         printf("\nclient connection failure %m", errno);
         return false;
     }
 
+
     return true;
 }   //END LAUNCHCLIENT
+
+
+/*Polls the robot for current sensor value every 15ms*/
+void TcpClient::pollSensor() {
+    while(1) {
+        usleep(15000);
+        Sensor_Packet temp;
+        temp = myAgent->getRobot()->getSensorValue(myAgent->getRobot()->getCurrentSensor());
+        UTILITY_H::lowsv = temp.values[0];
+        UTILITY_H::highsv = temp.values[1];
+    }   //end while
+}   //END POLLSENSOR
 
 
 /*Stores current position and goal and sends information to server*/
@@ -55,8 +71,8 @@ void TcpClient::updateServerAgent() {
 
     //hold message to get the length of it
     std::stringstream messagelength;
-    //message is 1 prow pcol grow gcol
-    messagelength<<"1 "<<myAgent->getPosition().getRow()<<" "<<myAgent->getPosition().getCol()<<" "<<myAgent->getGoal().getRow()<<" "<<myAgent->getGoal().getCol();
+    //message is 1 prow pcol grow gcol sensorhigh sensorlow
+    messagelength<<"1 "<<myAgent->getPosition().getRow()<<" "<<myAgent->getPosition().getCol()<<" "<<myAgent->getGoal().getRow()<<" "<<myAgent->getGoal().getCol()<<" "<<UTILITY_H::highsv<<" "<<UTILITY_H::lowsv;
     //make it into a string
     std::string tempStrLen = messagelength.str();
 
@@ -89,20 +105,33 @@ void TcpClient::updateServerAgent() {
     while(isdigit(tempStrLen[length_of_rest]))
         length_of_rest++;
 
+    //increment after gcol
+    length_of_rest++;
+
+    //find number of digits in first sensor value
+    while(isdigit(tempStrLen[length_of_rest]) || tempStrLen[length_of_rest] == '-')
+        length_of_rest++;
+
+    //increment after first sensor value
+    length_of_rest++;
+
+    //find number of digits in second sensor value
+    while(isdigit(tempStrLen[length_of_rest]) || tempStrLen[length_of_rest] == '-')
+        length_of_rest++;
+
 
     //std::cout<<"\ntempStrLen: "<<tempStrLen;
     //std::cout<<"\nlength: "<<length_of_rest;
 
     //create message to send to server
     std::stringstream message;
-    message<<"- "<<length_of_rest<<" "<<messagelength.str();
+    message<<"@ "<<length_of_rest<<" "<<messagelength.str();
 
     //std::cout<<"\nmessage: "<<message.str();
 
 
     int numSent = send(fd, message.str().c_str(), message.str().length(), 0);
 }   //END UPDATESERVERAGENT
-
 
 /*Processes a command from the server*/
 void TcpClient::getCommand(char* command) {
@@ -172,6 +201,8 @@ void TcpClient::getCommand(char* command) {
         //else if valid, set new sensor and send message back to server
         else {
 
+            myAgent->getRobot()->setCurrentSensor(id);
+
             //length of "2 id"
             int l = 2 + temp.length();
             //"- l ..."
@@ -179,9 +210,10 @@ void TcpClient::getCommand(char* command) {
 
             //create message to send back to server
             std::stringstream message;
-            message<<"- "<<l<<" ";
+            message<<"@ "<<l<<" ";
             message<<command;
-            std::cout<<"\nSENSOR message: "<<message.str();
+
+            //std::cout<<"\nSENSOR message: "<<message.str();
 
 
             int numSent = send(fd, message.str().c_str(), message.str().length(), 0);
@@ -199,7 +231,7 @@ void TcpClient::getCommand(char* command) {
     //id 5, quit
     else if(command[0] == '5') {
         char back[6];
-        back[0] = '-';
+        back[0] = '@';
         back[1] = ' ';
         back[2] = '1';
         back[3] = ' ';
@@ -267,7 +299,7 @@ void TcpClient::communicate() {
             }   //end if connection closed
             //if a message, call get command
             else if(in[0] != '\0') {
-                //cout<<"\nServer: "<<in;
+                //std::cout<<"\nServer: "<<in;
                 getCommand(in);
                 memset(&in, 0, 255);
             }   //end if message
@@ -291,7 +323,7 @@ void TcpClient::communicate() {
             temp<<out;
             //count number of headers
             for(int i=0;i<temp.str().length();i++)
-                if(temp.str()[i] == '-')
+                if(temp.str()[i] == '@')
                     numHeaders++;
 
             //check if exactly 1 header

@@ -71,4 +71,8 @@ static int UPDATE_PATH_TIME = 200000;
 
 static int UNIT_SIZE = 335;
 
+static int lowsv = -1;
+static int highsv = -1;
+
+
 #endif

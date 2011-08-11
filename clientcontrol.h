@@ -36,6 +36,9 @@ private:
     static void* driving_thread(void*);
     void driving_thread_i();
 
+    static void* get_c_sensor_thread(void*);
+    void get_c_sensor_thread_i();
+
     TcpClient* myClient;
 };
 #endif

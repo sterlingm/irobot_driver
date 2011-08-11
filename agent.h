@@ -80,7 +80,23 @@ public:
     void setRobot(Robot&);
 
 
-    //! Retruns true if position has been visited
+    //! Getter function for sensor value high byte
+    /*! Returns the value of the sensor value high byte */
+    int getHighSV();
+    //! Setter function for sensor value high byte
+    /*! Sets highsv to v */
+    void setHighSV(int&);
+
+
+    //! Getter function for sensor value low byte
+    /*! Returns the value of the sensor value low byte */
+    int getLowSV();
+    //! Setter function for sensor value low byte
+    /*! Sets lowsv to v */
+    void setLowSV(int&);
+
+
+    //! Returns true if position has been visited
     /*!
      * Returns true if Position reference passed is\n
      * within grid member bounds, not visited, and equal to ' '
@@ -118,6 +134,8 @@ private:
     Position pos;   //current position
     Position goal;  //current goal
     Path path;
+    int highsv;
+    int lowsv;
 
 };
 #endif

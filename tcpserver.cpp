@@ -1,8 +1,8 @@
 #include "tcpserver.h"
 #include "agent.h"
 #include <netinet/tcp.h>
-    int numSent;
-    int numRead;
+int numSent;
+int numRead;
 
 TcpServer::TcpServer(char* p) : port(p), done(false) {}
 
@@ -28,10 +28,9 @@ bool TcpServer::launchServer() {
     memset(&hints, 0, sizeof hints); //make sure the struct is empty
     hints.ai_family = AF_INET;  //local address
     hints.ai_socktype = SOCK_STREAM; //tcp
-    hints.ai_flags = AI_PASSIVE;     //use local-host address
 
     //get server info, put into servinfo
-    if ((status = getaddrinfo("127.0.0.1", port, &hints, &servinfo)) != 0) {
+    if ((status = getaddrinfo("192.168.2.3", port, &hints, &servinfo)) != 0) {
         fprintf(stderr, "getaddrinfo error: %s\n", gai_strerror(status));
         return false;
     }
@@ -50,8 +49,7 @@ bool TcpServer::launchServer() {
         return false;
     }
 
-    //unlink and bind
-    unlink("127.0.0.1");
+    //bind
     if(bind (fd, servinfo->ai_addr, servinfo->ai_addrlen) < 0) {
         printf("\nBind error %m", errno);
         return false;
@@ -86,12 +84,13 @@ void TcpServer::getSendBack(char* command) {
     std::string tempCommand = command;
 
     //if message starts with header
-    if(command[0] == '-') {
+    if(command[0] == '@') {
+
 
         //check for no message stacking
         int numHeaders = 0;
         for(int i=0;i<tempCommand.length();i++)
-            if(tempCommand[i] == '-')
+            if(tempCommand[i] == '@')
                 numHeaders++;
 
         //if no message stacking
@@ -117,12 +116,12 @@ void TcpServer::getSendBack(char* command) {
 
             //get the actual message
             std::string rest = tempCommand.substr(3+length_digit, length);
-            //std::cout<<"\nrest:"<<rest<<"-";
+            //std::cout<<"\nrest:"<<rest<<"@";
 
             //check for the correct length
             if( rest.length() == length ) {
 
-                //if packet id 1 (update pos/goal)
+                //if packet id 1 (update pos/goal/sensorvalues)
                 if(rest[0] == '1') {
 
                     int prowend = 3;
@@ -156,6 +155,19 @@ void TcpServer::getSendBack(char* command) {
                     int gcol = atoi(gc.c_str());
                     //std::cout<<"\ngcol: "<<gcol;
 
+                    int high_sensor_value = gcolend+1;
+                    while(isdigit(rest[high_sensor_value]) || rest[high_sensor_value] == '-')
+                        high_sensor_value++;
+                    std::string h_s_v = rest.substr(gcolend, high_sensor_value-gcolend);
+                    int hsv = atoi(h_s_v.c_str());
+                    //std::cout<<"\nhsv: "<<hsv;
+
+                    int low_sensor_value = high_sensor_value+1;
+                    while(isdigit(rest[low_sensor_value]) || rest[low_sensor_value] == '-')
+                        low_sensor_value++;
+                    std::string l_s_v = rest.substr(high_sensor_value, low_sensor_value - high_sensor_value);
+                    int lsv = atoi(l_s_v.c_str());
+                    //std::cout<<"\nlsv: "<<lsv;
 
                     //lock
                     pthread_mutex_lock(&UTILITY_H::mutex_agent);
@@ -165,6 +177,9 @@ void TcpServer::getSendBack(char* command) {
                     myAgent->getPosition().setCol(pcol);
                     myAgent->getGoal().setRow(grow);
                     myAgent->getGoal().setCol(gcol);
+
+                    myAgent->setHighSV(hsv);
+                    myAgent->setLowSV(lsv);
 
                     //unlock
                     pthread_mutex_unlock(&UTILITY_H::mutex_agent);
@@ -261,7 +276,7 @@ void TcpServer::communicate() {
             }   //end if connection closed
             //if message, call getsendback
             else if(in[0] != '\0') {
-                //cout<<"\nClient: "<<in;
+                //std::cout<<"\nClient: "<<in;
                 getSendBack(in);
             }   //end if message
         }   //end if ready for read
@@ -284,7 +299,8 @@ void TcpServer::communicate() {
                 printf("\nError sending %m", errno);
                 done = true;
             }   //end if error
-            //clear
+            //wait for message to get there, then clear
+            usleep(5000);
             memset(&out, 0, 255);
         }   //end if
     }   //end while

@@ -45,8 +45,12 @@ TcpClient client((char*)PORT);
 
 
 int main(int argc, char* args[]) {
-    //std::cout<<"\nargc: "<<argc;
-    //std::cout<<"\nargs[0]: "<<args[1]<<"\n";
+
+    std::cout<<"\nargc: "<<argc;
+    for(int i=0;i<argc;i++)
+        cout<<"\nargs["<<i<<"]: "<<args[i];
+    cout<<"\n";
+
 
     if(args[1][0] == 's') {
 
@@ -56,12 +60,14 @@ int main(int argc, char* args[]) {
 
             cout<<"\nSuccessful Connection!";
 
+            std::stringstream temp_file;
+            temp_file<<"./"<<args[2];
 
-            std::string file = "/home/sterling/irobot_driver/grid1.txt";
+            std::string filename = temp_file.str();
             //cout<<"\nEnter a path to a grid\n";
             //cin>>file;
-            //cout<<endl<<file;
-            Grid* g = new Grid(file);
+            cout<<endl<<filename;
+            Grid* g = new Grid(filename);
 
             Agent* agent = new Agent(g, robot, 'e');
 

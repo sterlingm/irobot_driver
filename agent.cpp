@@ -37,6 +37,10 @@ void Agent::setGoal(Position& g) {goal = g;}
 void Agent::setPath(Path& p) {path = p;}
 /*Sets robot to r*/
 void Agent::setRobot(Robot& r) {robot = &r;}
+/*Sets highsv to v*/
+void Agent::setHighSV(int& v) {highsv = v;}
+/*Sets lowsv to v*/
+void Agent::setLowSV(int& v) {lowsv = v;}
 
 /*Returns pos*/
 Position& Agent::getPosition() {return pos;}
@@ -50,7 +54,10 @@ Position& Agent::getGoal() {return goal;}
 Robot*& Agent::getRobot() {return robot;}
 /*Returns path*/
 Path& Agent::getPath() {return path;}
-
+/*Returns highsv*/
+int Agent::getHighSV() {return highsv;}
+/*Returns lowsv*/
+int Agent::getLowSV() {return lowsv;}
 
 
 /*Returns if a position is in bounds, unvisited, and accessible*/

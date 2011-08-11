@@ -53,6 +53,9 @@ public:
     /*! Takes in commands from the server and act on them */
     void getCommand(char*);
 
+    //! Polls the robot for sensor values
+    /*! Polls the robot for sensor values every 15 milliseconds */
+    void pollSensor();
 private:
     char* port;
     int fd;
