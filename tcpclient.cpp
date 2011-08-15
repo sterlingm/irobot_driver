@@ -23,9 +23,8 @@ bool TcpClient::launchClient() {
     struct addrinfo *servinfo;  //will point to the results
 
     memset(&hints, 0, sizeof hints); //make sure the struct is empty
-    hints.ai_family = AF_INET;  //local address
+    hints.ai_family = AF_INET;  //ipv4
     hints.ai_socktype = SOCK_STREAM; //tcp
-    //hints.ai_flags = AI_PASSIVE;     //use local-host address
 
 
     //get server info, put into servinfo

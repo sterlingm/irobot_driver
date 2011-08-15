@@ -90,15 +90,15 @@ inline void ServerControl::display_menu_thread_i() {
 }   //END DISPLAY_MENU_THREAD_I
 
 
-
-/*Callback function for get_sensor thread*/
+/*
+/*Callback function for get_sensor thread
 void* ServerControl::get_sensor_thread(void* threadid) {
     ServerControl* s = (ServerControl*)threadid;
     s->get_sensor_thread_i();
 }   //END GET_SENSOR_THREAD
 
 
-/*Inline function for get_sensor. Infinitely grabs the specified sensor every 15 milliseconds*/
+/*Inline function for get_sensor. Infinitely grabs the specified sensor every 15 milliseconds
 inline void ServerControl::get_sensor_thread_i() {
     //sleep 15ms and grab new sensor value
     while(1) {
@@ -109,14 +109,14 @@ inline void ServerControl::get_sensor_thread_i() {
         SENSOR_VALUE[1] = temp.values[1];
     }   //end while
 }   //END GET_SENSOR_THREAD_I
-
+*/
 
 /*Controls the server. Creates three threads and calls communicate*/
 void ServerControl::control() {
 
     //create threads
     pthread_create(&update_path, NULL, update_path_thread, (void*)this);
-    pthread_create(&get_sensor, NULL, get_sensor_thread, (void*)this);
+    //pthread_create(&get_sensor, NULL, get_sensor_thread, (void*)this);
     pthread_create(&display, NULL, display_menu_thread, (void*)this);
     //communicate with client
     myServer->communicate();

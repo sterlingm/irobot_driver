@@ -9,6 +9,8 @@
 #include "tree.h"
 #include "tcpserver.h"
 #include "tcpclient.h"
+#include "udpserver.h"
+#include "udpclient.h"
 #include <pthread.h>
 #include <sys/types.h>
 #include <sys/socket.h>
@@ -30,17 +32,13 @@ using namespace std;
 
 
 
-#define ROBOT_PORT 16
-#define ROBOT_BAUDRATE 57600
-#define VELOCITY 100
-
-
-
 Robot robot(ROBOT_PORT, ROBOT_BAUDRATE);
 ServerControl sc;
 ClientControl cc;
 TcpServer server((char*)PORT);
 TcpClient client((char*)PORT);
+udpserver u_server((char*)PORT);
+udpclient u_client((char*)PORT);
 
 
 
@@ -55,7 +53,7 @@ int main(int argc, char* args[]) {
     if(args[1][0] == 's') {
 
 
-        if(server.launchServer()) {
+        if(server.launchServer() && u_server.launch_server()) {
 
 
             cout<<"\nSuccessful Connection!";
@@ -90,11 +88,13 @@ int main(int argc, char* args[]) {
             agent->setPath(p);
 
             server.setAgent(agent);
+            u_server.setAgent(agent);
 
             sc.setServer(&server);
 
 
             sc.control();
+            u_server.communicate();
 
             robot.pauseSensorStream();
 
@@ -102,7 +102,7 @@ int main(int argc, char* args[]) {
     }   //end if server
 
     else if(args[1][0] == 'c') {
-        if(client.launchClient()) {
+        if(client.launchClient() && u_client.launch_client()) {
 
 
             cout<<"\nSuccessful Connection!";
@@ -139,10 +139,12 @@ int main(int argc, char* args[]) {
             agent->setPath(p);
 
             client.setAgent(agent);
+            u_client.setAgent(agent);
 
             cc.setClient(&client);
 
             cc.control();
+            u_client.communicate();
 
             robot.pauseSensorStream();
 

@@ -52,6 +52,11 @@
 #define PORT "4950"
 
 
+#define ROBOT_PORT 16
+#define ROBOT_BAUDRATE 57600
+#define VELOCITY 100
+
+
 /*
  struct to hold sensor values
  index 0 is the first byte, index 1 is the second byte
