@@ -30,17 +30,13 @@ using namespace std;
 
 
 
-#define ROBOT_PORT 16
-#define ROBOT_BAUDRATE 57600
-#define VELOCITY 100
-
-
-
 Robot robot(ROBOT_PORT, ROBOT_BAUDRATE);
 ServerControl sc;
 ClientControl cc;
 TcpServer server((char*)PORT);
 TcpClient client((char*)PORT);
+udpserver u_server((char*)UDPPORT);
+udpclient u_client((char*)UDPPORT);
 
 
 
@@ -55,7 +51,7 @@ int main(int argc, char* args[]) {
     if(args[1][0] == 's') {
 
 
-        if(server.launchServer()) {
+        if(server.launchServer() && u_server.launch_server()) {
 
 
             cout<<"\nSuccessful Connection!";
@@ -90,8 +86,10 @@ int main(int argc, char* args[]) {
             agent->setPath(p);
 
             server.setAgent(agent);
+            u_server.setAgent(agent);
 
             sc.setServer(&server);
+            sc.setUDP(&u_server);
 
 
             sc.control();
@@ -101,7 +99,7 @@ int main(int argc, char* args[]) {
         }   //end if successful connection
     }   //end if server
 
-    else if(args[1][0] == 'c') {
+    else if(args[1][0] == 'c' && u_client.launch_client()) {
         if(client.launchClient()) {
 
 
@@ -139,8 +137,10 @@ int main(int argc, char* args[]) {
             agent->setPath(p);
 
             client.setAgent(agent);
+            u_client.setAgent(agent);
 
             cc.setClient(&client);
+            cc.setUDP(&u_client);
 
             cc.control();
 

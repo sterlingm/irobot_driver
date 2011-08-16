@@ -1,6 +1,7 @@
 #ifndef CLIENTCONTROL_H
 #define CLIENTCONTROL_H
 #include "tcpclient.h"
+#include "udpclient.h"
 
 class ClientControl {
 public:
@@ -19,6 +20,9 @@ public:
     void setClient(TcpClient*);
 
 
+
+    void setUDP(udpclient*);
+
     //! Controls the client
     /*!
      * Controls the client\n
@@ -29,6 +33,8 @@ public:
 
 
 private:
+    TcpClient* myClient;
+    udpclient* myUDP;
 
     static void* update_server_thread(void*);
     void update_server_thread_i();
@@ -36,9 +42,8 @@ private:
     static void* driving_thread(void*);
     void driving_thread_i();
 
-    static void* get_c_sensor_thread(void*);
-    void get_c_sensor_thread_i();
+    static void* udp_comm_thread(void*);
+    void udp_comm_thread_i();
 
-    TcpClient* myClient;
 };
 #endif

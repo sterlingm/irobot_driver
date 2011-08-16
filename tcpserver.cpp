@@ -26,12 +26,12 @@ bool TcpServer::launchServer() {
 
 
     memset(&hints, 0, sizeof hints); //make sure the struct is empty
-    hints.ai_family = AF_INET;  //local address
+    hints.ai_family = AF_INET;  //ipv4
     hints.ai_socktype = SOCK_STREAM; //tcp
 
     //get server info, put into servinfo
     if ((status = getaddrinfo("192.168.2.3", port, &hints, &servinfo)) != 0) {
-        fprintf(stderr, "getaddrinfo error: %s\n", gai_strerror(status));
+        printf("\ngetaddrinfo error: %m", errno);
         return false;
     }
 

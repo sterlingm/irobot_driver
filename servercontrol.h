@@ -1,6 +1,7 @@
 #ifndef SERVERCONTROL_H
 #define SERVERCONTROL_H
 #include "tcpserver.h"
+#include "udpserver.h"
 
 class ServerControl {
 public:
@@ -18,6 +19,9 @@ public:
 	/*! Sets myServer to s */
     void setServer(TcpServer*);
 
+
+    void setUDP(udpserver*);
+
 	//! Controls the server
 	/*!
 	 * Controls the server\n
@@ -29,6 +33,8 @@ public:
 private:
 
     TcpServer* myServer;
+    udpserver* myUDP;
+
 
     static void* update_path_thread(void*);
     void update_path_thread_i();
@@ -36,8 +42,8 @@ private:
     static void* display_menu_thread(void*);
     void display_menu_thread_i();
 
-    static void* get_sensor_thread(void*);
-    void get_sensor_thread_i();
+    static void* udp_comm_thread(void*);
+    void udp_comm_thread_i();
 
 };
 #endif

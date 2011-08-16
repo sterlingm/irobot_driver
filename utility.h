@@ -50,6 +50,12 @@
 #define TURNCCW 4
 
 #define PORT "4950"
+#define UDPPORT "4951"
+
+
+#define ROBOT_PORT 16
+#define ROBOT_BAUDRATE 57600
+#define VELOCITY 500
 
 
 /*

@@ -3,10 +3,8 @@
 
 pthread_t display;
 pthread_t update_path;
-pthread_t get_sensor;
+pthread_t s_udp_comm;
 
-//hold sensor values
-int SENSOR_VALUE[2];
 
 
 ServerControl::ServerControl() {}
@@ -16,6 +14,9 @@ ServerControl::~ServerControl() {}
 /*Getter and setter for myServer*/
 TcpServer*& ServerControl::getServer() {return myServer;}
 void ServerControl::setServer(TcpServer* s) {myServer = s;}
+
+
+void ServerControl::setUDP(udpserver* us) {myUDP = us;}
 
 
 
@@ -92,22 +93,15 @@ inline void ServerControl::display_menu_thread_i() {
 
 
 /*Callback function for get_sensor thread*/
-void* ServerControl::get_sensor_thread(void* threadid) {
+void* ServerControl::udp_comm_thread(void* threadid) {
     ServerControl* s = (ServerControl*)threadid;
-    s->get_sensor_thread_i();
+    s->udp_comm_thread_i();
 }   //END GET_SENSOR_THREAD
 
 
 /*Inline function for get_sensor. Infinitely grabs the specified sensor every 15 milliseconds*/
-inline void ServerControl::get_sensor_thread_i() {
-    //sleep 15ms and grab new sensor value
-    while(1) {
-        usleep(15000);
-        Sensor_Packet temp;
-        temp = myServer->getAgent()->getRobot()->getSensorValue(myServer->getAgent()->getRobot()->getCurrentSensor());
-        SENSOR_VALUE[0] = temp.values[0];
-        SENSOR_VALUE[1] = temp.values[1];
-    }   //end while
+inline void ServerControl::udp_comm_thread_i() {
+    myUDP->communicate();
 }   //END GET_SENSOR_THREAD_I
 
 
@@ -116,7 +110,7 @@ void ServerControl::control() {
 
     //create threads
     pthread_create(&update_path, NULL, update_path_thread, (void*)this);
-    pthread_create(&get_sensor, NULL, get_sensor_thread, (void*)this);
+    pthread_create(&s_udp_comm, NULL, udp_comm_thread, (void*)this);
     pthread_create(&display, NULL, display_menu_thread, (void*)this);
     //communicate with client
     myServer->communicate();
