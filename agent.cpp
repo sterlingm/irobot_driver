@@ -249,8 +249,9 @@ void Agent::stepPath() {
 
         try {
 
-            pos = path.getPath().at(1);
+
             //set new position and step through first pair
+            pos = path.getPath().at(1);
             robot->step(path.getPath().at(0), path.getPath().at(1), direction);
 
             //delete the first position
