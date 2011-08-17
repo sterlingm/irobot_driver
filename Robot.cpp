@@ -840,23 +840,23 @@ double Robot::adjustTurningTime(int velocity, int angle) {
 
     else if(velocity <=500) {
         if(angle == 90)
-            return 0.01;
+            return 0.05;
         else if(angle == 45)
-            return 0.01;
+            return 0.02;
         else if(angle == -90)
-            return -0.02;
+            return 0.05;
         else if(angle == 180)
-            return 0.04;
+            return 0.075;
         else if(angle == -180)
-            return 0.035;
+            return 0.075;
         else if(angle == 270)
             return 0.0425;
         else if(angle == -270)
             return 0.03;
         else if(angle == 360)
-            return 0.0495;
+            return 0.05;
         else if(angle == -360)
-            return 0.01;
+            return 0.025;
     }   //end velocity<=500
 
     return 0;

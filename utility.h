@@ -50,7 +50,6 @@
 #define TURNCCW 4
 
 #define PORT "4950"
-#define UDPPORT "4951"
 
 
 #define ROBOT_PORT 16

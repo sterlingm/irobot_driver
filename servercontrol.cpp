@@ -39,10 +39,20 @@ inline void ServerControl::update_path_thread_i() {
         //std::cout<<"\nUpdating Path between "<<myServer->getAgent()->getPosition().toString()<<" to "<<myServer->getAgent()->getGoal().toString();
         //traverse
         myServer->getAgent()->getGrid()->clear();
-        Path newPath = myServer->getAgent()->traverse(myServer->getAgent()->getGoal());
-        //set new path
-        newPath.getPath().insert(newPath.getPath().begin(), myServer->getAgent()->getPosition());
-        myServer->getAgent()->setPath(newPath);
+
+        //try to find a path
+        try {
+            //traverse
+            Path newPath = myServer->getAgent()->traverse(myServer->getAgent()->getGoal());
+            //insert duplicate for bug and set new path
+            newPath.getPath().insert(newPath.getPath().begin(), myServer->getAgent()->getPosition());
+            myServer->getAgent()->setPath(newPath);
+
+            //send the path
+            myServer->sendPath(newPath);
+
+        //catch the no path exception and print out the details
+        } catch(Agent::NoPathException* e) {std::cout<<"\nNo path from "<<myServer->getAgent()->getPosition().toString()<<" to "<<myServer->getAgent()->getGoal().toString(); sleep(1);}
 
         //unlock
         pthread_mutex_unlock(&UTILITY_H::mutex_agent);

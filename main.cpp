@@ -35,8 +35,8 @@ ServerControl sc;
 ClientControl cc;
 TcpServer server((char*)PORT);
 TcpClient client((char*)PORT);
-udpserver u_server((char*)UDPPORT);
-udpclient u_client((char*)UDPPORT);
+udpserver u_server((char*)PORT);
+udpclient u_client((char*)PORT);
 
 
 
@@ -48,42 +48,52 @@ int main(int argc, char* args[]) {
     cout<<"\n";
     */
 
-    if(args[1][0] == 's') {
 
+
+
+    /*initialize things*/
+
+    //get grid filename from command line argument 2
+    std::stringstream temp_file;
+    temp_file<<"./"<<args[2];
+    std::string filename = temp_file.str();
+    //cout<<endl<<filename;
+    Grid* g = new Grid(filename);
+    //print grid
+    cout<<endl<<g->toString();
+
+    //set robot members and stream sensors
+    robot.fullMode();
+    robot.setVelocity(VELOCITY);
+    robot.streamSensors();
+
+
+    //make agent and set robot's agent
+    Agent* agent = new Agent(g, robot, 'e');
+    robot.setAgent(agent);
+
+    //make initial start and goal positions
+    Position start(1,1);
+    Position end(1,1);
+    agent->setPosition(start);
+    agent->setGoal(end);
+
+    //set initial path
+    //Position goal = agent->getGoal();
+    Path p = agent->traverse(agent->getGoal());
+    agent->setPath(p);
+
+
+
+
+    //if server
+    if(args[1][0] == 's') {
 
         if(server.launchServer() && u_server.launch_server()) {
 
 
             cout<<"\nSuccessful Connection!";
 
-            std::stringstream temp_file;
-            temp_file<<"./"<<args[2];
-
-            std::string filename = temp_file.str();
-            //cout<<"\nEnter a path to a grid\n";
-            //cin>>file;
-            cout<<endl<<filename;
-            Grid* g = new Grid(filename);
-
-            Agent* agent = new Agent(g, robot, 'e');
-
-
-            cout<<endl<<g->toString();
-
-            robot.setAgent(agent);
-            robot.fullMode();
-            robot.setVelocity(VELOCITY);
-
-
-            Position start(1,1);
-            Position end(1,1);
-            agent->setPosition(start);
-            agent->setGoal(end);
-
-
-            Position goal = agent->getGoal();
-            Path p = agent->traverse(goal);
-            agent->setPath(p);
 
             server.setAgent(agent);
             u_server.setAgent(agent);
@@ -99,42 +109,15 @@ int main(int argc, char* args[]) {
         }   //end if successful connection
     }   //end if server
 
-    else if(args[1][0] == 'c' && u_client.launch_client()) {
-        if(client.launchClient()) {
+    //else if client
+    else if(args[1][0] == 'c') {
+
+        if(client.launchClient() && u_client.launch_client()) {
 
 
             cout<<"\nSuccessful Connection!";
 
-            std::stringstream temp_file;
-            temp_file<<"./"<<args[2];
 
-            std::string filename = temp_file.str();
-            //cout<<"\nEnter a path to a grid\n";
-            //cin>>file;
-            cout<<endl<<filename;
-            Grid* g = new Grid(filename);
-
-            Agent* agent = new Agent(g, robot, 'e');
-
-
-            cout<<endl<<g->toString();
-
-            robot.setAgent(agent);
-            robot.fullMode();
-            robot.setVelocity(VELOCITY);
-
-            agent->getRobot()->streamSensors();
-
-
-            Position start(1,1);
-            Position end(1,1);
-            agent->setPosition(start);
-            agent->setGoal(end);
-
-
-            Position goal = agent->getGoal();
-            Path p = agent->traverse(goal);
-            agent->setPath(p);
 
             client.setAgent(agent);
             u_client.setAgent(agent);

@@ -3,6 +3,7 @@
 #include <string>
 #include <math.h>
 #include <iostream>
+#include <stdexcept>
 #include "agent.h"
 #include "utility.h"
 
@@ -232,7 +233,7 @@ Path Agent::traverse(Position& end) {
     result.add(current->getValue());
 
 
-    result.arrange();
+    result.reverse();
     return result;
 }   //END TRAVERSE
 
@@ -245,14 +246,16 @@ void Agent::stepPath() {
 
         //lock path
         pthread_mutex_lock(&UTILITY_H::mutex_agent);
-        //step through first pair
-        pos = path.getPath().at(1);
+        try {
 
-        robot->step(path.getPath().at(0), path.getPath().at(1), direction);
+            pos = path.getPath().at(1);
+            //set new position and step through first pair
+            robot->step(path.getPath().at(0), path.getPath().at(1), direction).toString();
 
-        //delete the first position
-        path.getPath().erase(path.getPath().begin());
+            //delete the first position
+            path.getPath().erase(path.getPath().begin());
 
+        } catch(std::out_of_range& e) {}
         //unlock
         pthread_mutex_unlock(&UTILITY_H::mutex_agent);
     }   //end while

@@ -28,8 +28,14 @@ void Path::insert(Position& p, int index) {
     add(temp);
 }   //END INSERT
 
+/*Clears the path of all positions*/
+void Path::clear() {
+    while(path.size() >0)
+        path.pop_back();
+}   //END CLEAR
+
 /*Rearranges vector to not be in reverse order*/
-void Path::arrange() {
+void Path::reverse() {
     for(int i=0;i<path.size()/2;i++) {
 
         Position temp = path.at(path.size()-1-i);

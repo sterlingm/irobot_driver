@@ -30,7 +30,7 @@ bool TcpServer::launchServer() {
     hints.ai_socktype = SOCK_STREAM; //tcp
 
     //get server info, put into servinfo
-    if ((status = getaddrinfo("192.168.2.3", port, &hints, &servinfo)) != 0) {
+    if ((status = getaddrinfo("192.168.2.2", port, &hints, &servinfo)) != 0) {
         printf("\ngetaddrinfo error: %m", errno);
         return false;
     }
@@ -80,147 +80,119 @@ bool TcpServer::launchServer() {
 
 /*Gets a message sent back from client in response to a previously sent command*/
 void TcpServer::getSendBack(char* command) {
-
     std::string tempCommand = command;
+    //std::cout<<"\ntempCommand: "<<tempCommand;
 
-    //if message starts with header
-    if(command[0] == '@') {
+    int num_headers = 0;
+    for(int i=0;i<tempCommand.length() && num_headers < 2;i++)
+        if(tempCommand[i] == '@')
+            num_headers++;
 
-
-        //check for no message stacking
-        int numHeaders = 0;
-        for(int i=0;i<tempCommand.length();i++)
-            if(tempCommand[i] == '@')
-                numHeaders++;
-
-        //if no message stacking
-        if(numHeaders == 1) {
-
-            //get the number of digits in the length
-            int length_digit = 0;
-            while(isdigit(command[length_digit+2]))
-                length_digit++;
-            //std::cout<<"\nlength_digit: "<<length_digit;
+    if(num_headers == 1) {
 
 
-            int index = 2;
-            std::stringstream iso_length;
-            for(int i=0;i<length_digit;i++)
-                iso_length<<command[index+i];
-            //std::cout<<"\niso_length: "<<iso_length.str();
+        //if packet id 1 (update pos/goal/sensorvalues)
+        if(tempCommand[2] == '1') {
+
+            //get position row
+            int prowend = 4;
+            while(isdigit(tempCommand[prowend]))
+                prowend++;
+            std::string p = tempCommand.substr(4, prowend-3);
+            int prow = atoi(p.c_str());
+            //std::cout<<"\nprow: "<<prow;
+
+            //get position column
+            int pcolend = prowend+1;
+            while(isdigit(tempCommand[pcolend]))
+                pcolend++;
+            std::string c = tempCommand.substr(prowend, pcolend-prowend);
+            int pcol = atoi(c.c_str());
+            //std::cout<<"\npcol: "<<pcol;
+
+            //get goal row
+            int growend = pcolend+1;
+            while(isdigit(tempCommand[growend]))
+                growend++;
+            std::string gr = tempCommand.substr(pcolend, growend-pcolend);
+            int grow = atoi(gr.c_str());
+            //std::cout<<"\ngrow: "<<grow;
+
+            //get goal column
+            int gcolend = growend+1;
+            while(isdigit(tempCommand[gcolend]))
+                gcolend++;
+            std::string gc = tempCommand.substr(growend, gcolend-growend);
+            int gcol = atoi(gc.c_str());
+            //std::cout<<"\ngcol: "<<gcol;
 
 
-            //get length as int value
-            int length = atoi(iso_length.str().c_str());
-            //std::cout<<"\nlength: "<<length;
+            //lock
+            pthread_mutex_lock(&UTILITY_H::mutex_agent);
 
-            //get the actual message
-            std::string rest = tempCommand.substr(3+length_digit, length);
-            //std::cout<<"\nrest:"<<rest<<"@";
-
-            //check for the correct length
-            if( rest.length() == length ) {
-
-                //if packet id 1 (update pos/goal/sensorvalues)
-                if(rest[0] == '1') {
-
-                    int prowend = 3;
-                    while(isdigit(rest[prowend]))
-                        prowend++;
-                    std::string p = rest.substr(2, prowend-2);
-                    int prow = atoi(p.c_str());
-                    //std::cout<<"\nprow: "<<prow;
+            //update
+            myAgent->getPosition().setRow(prow);
+            myAgent->getPosition().setCol(pcol);
+            myAgent->getGoal().setRow(grow);
+            myAgent->getGoal().setCol(gcol);
 
 
-                    int pcolend = prowend+1;
-                    while(isdigit(rest[pcolend]))
-                        pcolend++;
-                    std::string c = rest.substr(prowend, pcolend-prowend);
-                    int pcol = atoi(c.c_str());
-                    //std::cout<<"\npcol: "<<pcol;
+            //unlock
+            pthread_mutex_unlock(&UTILITY_H::mutex_agent);
+
+        }   //end if new goal
 
 
-                    int growend = pcolend+1;
-                    while(isdigit(rest[growend]))
-                        growend++;
-                    std::string gr = rest.substr(pcolend, growend-pcolend);
-                    int grow = atoi(gr.c_str());
-                    //std::cout<<"\ngrow: "<<grow;
+        //else if packet id 2 (change sensor)
+        else if(tempCommand[2] == '2') {
+            int idend = 4;
+            while(isdigit(tempCommand[idend]))
+                idend++;
+            std::string temp = tempCommand.substr(4, idend-2);
+            std::cout<<"\ntemp: "<<temp;
+            int id = atoi(temp.c_str());
 
 
-                    int gcolend = growend+1;
-                    while(isdigit(rest[gcolend]))
-                        gcolend++;
-                    std::string gc = rest.substr(growend, gcolend-growend);
-                    int gcol = atoi(gc.c_str());
-                    //std::cout<<"\ngcol: "<<gcol;
+            if(id > 6 && id < 43)
+                myAgent->getRobot()->setCurrentSensor(id);
 
-                    int high_sensor_value = gcolend+1;
-                    while(isdigit(rest[high_sensor_value]) || rest[high_sensor_value] == '-')
-                        high_sensor_value++;
-                    std::string h_s_v = rest.substr(gcolend, high_sensor_value-gcolend);
-                    int hsv = atoi(h_s_v.c_str());
-                    //std::cout<<"\nhsv: "<<hsv;
-
-                    int low_sensor_value = high_sensor_value+1;
-                    while(isdigit(rest[low_sensor_value]) || rest[low_sensor_value] == '-')
-                        low_sensor_value++;
-                    std::string l_s_v = rest.substr(high_sensor_value, low_sensor_value - high_sensor_value);
-                    int lsv = atoi(l_s_v.c_str());
-                    //std::cout<<"\nlsv: "<<lsv;
-
-                    //lock
-                    pthread_mutex_lock(&UTILITY_H::mutex_agent);
-
-                    //update
-                    myAgent->getPosition().setRow(prow);
-                    myAgent->getPosition().setCol(pcol);
-                    myAgent->getGoal().setRow(grow);
-                    myAgent->getGoal().setCol(gcol);
-
-                    myAgent->setHighSV(hsv);
-                    myAgent->setLowSV(lsv);
-
-                    //unlock
-                    pthread_mutex_unlock(&UTILITY_H::mutex_agent);
-
-                }   //end if new goal
+            else
+                std::cout<<"\n"<<id<<" is Invalid id";
 
 
-                //else if packet id 2 (change sensor)
-                else if(rest[0] == '2') {
+        }   //end if new sensor
 
-                    int idend = 3;
-                    while(isdigit(rest[idend]))
-                        idend++;
-                    std::string temp = rest.substr(2, idend-2);
-                    int id = atoi(temp.c_str());
+        else if(tempCommand[2] == '5')
+            done = true;
 
-
-                    if(id > 6 && id < 43)
-                        myAgent->getRobot()->setCurrentSensor(id);
-
-                    else
-                        std::cout<<"\n"<<id<<" is Invalid id";
-
-
-                }   //end if new sensor
-
-                else if(rest[0] == '5')
-                    done = true;
-
-
-            }   //end if no stacking
-            else {
-                std::cout<<"\nINCORRECT LENGTH";
-                std::cout<<"\nrest:"<<rest;
-                std::cout<<"\nrest.length(): "<<rest.length();
-                std::cout<<"\nlength: "<<length;
-                std::cout<<"\nlength_digit: "<<length_digit;
-            }
-        }   //end if correct length
-    }   //end if header
+    }   //end if 1 header
+    //else if stacking
+    else {
+        std::cout<<"\nSTACKED MESSAGE: "<<tempCommand;
+    }   //end else
 }   //END GETSENDBACK
+
+
+
+
+void TcpServer::sendPath(Path& p) {
+
+    std::stringstream tosend;
+    tosend<<"@ 6 "<<p.getSize()<<" ";
+
+    std::stringstream list_of_pos;
+    for(int i=0;i<myAgent->getPath().getSize()-1;i++)
+        list_of_pos<<myAgent->getPath().getPath().at(i).toString()<<" ";
+    list_of_pos<<myAgent->getPath().getPath().back().toString();
+
+    //std::cout<<"\nlist_of_pos: "<<list_of_pos.str();
+
+
+    tosend<<list_of_pos.str();
+    //std::cout<<"\ntosend: "<<tosend.str();
+
+    int num_read = send(comm_fd, tosend.str().c_str(), tosend.str().length(), 0);
+}
 
 
 
@@ -292,8 +264,18 @@ void TcpServer::communicate() {
 
             //printf("\nSocket ready for write");
             FD_CLR(comm_fd, &write_flags);
-            //send
-            numSent = send(comm_fd, out, 255, 0);
+
+            //check validity by checking for a digit
+            if(isdigit(out[0])) {
+
+                //create message to send
+                std::stringstream tosend;
+                tosend<<"@ "<<out;
+                //std::cout<<"\ntosend: "<<tosend.str();
+
+                //send
+                numSent = send(comm_fd, tosend.str().c_str(), tosend.str().length(), 0);
+            }
             //if error, exit
             if(numSent < 0) {
                 printf("\nError sending %m", errno);

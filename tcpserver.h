@@ -13,6 +13,7 @@
 
 
 class Agent;
+class Path;
 
 class TcpServer {
 public:
@@ -48,6 +49,9 @@ public:
     //! Communicate with client
     /*! Allows the server to send and receive messages from the client */
     void communicate();
+
+
+    void sendPath(Path&);
 
 
 private:
