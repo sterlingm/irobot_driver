@@ -29,7 +29,7 @@ void* ClientControl::driving_thread(void* threadid) {
 /*Inline for drive thread. Makes the robot drive infinitely*/
 inline void ClientControl::driving_thread_i() {
     while(1)
-        myClient->getAgent()->stepPath();
+        myClient->getAgent()->stepPath(false);
 }   //END DRIVING_THREAD_I
 
 

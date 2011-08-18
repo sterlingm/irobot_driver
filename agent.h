@@ -125,7 +125,7 @@ public:
      * The robot moves through the path member\n
      * If it cannot move to the end, the robot moves as far as it can
      */
-    void stepPath();
+    void stepPath(bool);
 
 private:
     Robot* robot;

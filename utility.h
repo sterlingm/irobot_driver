@@ -54,7 +54,8 @@
 
 #define ROBOT_PORT 16
 #define ROBOT_BAUDRATE 57600
-#define VELOCITY 500
+#define VELOCITY 100
+
 
 
 /*
@@ -68,8 +69,7 @@ struct Sensor_Packet {
 };
 
 static pthread_mutex_t mutex_agent = PTHREAD_MUTEX_INITIALIZER;
-static pthread_mutex_t mutex_send = PTHREAD_MUTEX_INITIALIZER;
-static pthread_mutex_t mutex_read = PTHREAD_MUTEX_INITIALIZER;
+static pthread_mutex_t mutex_sensors = PTHREAD_MUTEX_INITIALIZER;
 
 static int MENU_SLEEP_TIME = 850000;
 static int UPDATE_PATH_TIME = 200000;
@@ -78,6 +78,8 @@ static int UNIT_SIZE = 335;
 
 static int lowsv = -1;
 static int highsv = -1;
+
+static char* IP_ADDR;
 
 
 #endif

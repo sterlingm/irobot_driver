@@ -28,7 +28,7 @@ bool TcpClient::launchClient() {
 
 
     //get server info, put into servinfo
-    if ((status = getaddrinfo("192.168.2.2", port, &hints, &servinfo)) != 0) {
+    if ((status = getaddrinfo(IP_ADDR, port, &hints, &servinfo)) != 0) {
         fprintf(stderr, "getaddrinfo error: %s\n", gai_strerror(status));
         return false;
     }

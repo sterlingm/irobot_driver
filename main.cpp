@@ -74,7 +74,7 @@ int main(int argc, char* args[]) {
 
     //make initial start and goal positions
     Position start(1,1);
-    Position end(1,1);
+    Position end(1,3);
     agent->setPosition(start);
     agent->setGoal(end);
 
@@ -88,6 +88,9 @@ int main(int argc, char* args[]) {
 
     //if server
     if(args[1][0] == 's') {
+
+        //set ip address
+        UTILITY_H::IP_ADDR = args[3];
 
         if(server.launchServer() && u_server.launch_server()) {
 
@@ -112,6 +115,9 @@ int main(int argc, char* args[]) {
     //else if client
     else if(args[1][0] == 'c') {
 
+        //set ip address
+        UTILITY_H::IP_ADDR = args[3];
+
         if(client.launchClient() && u_client.launch_client()) {
 
 
@@ -131,6 +137,14 @@ int main(int argc, char* args[]) {
 
         }   //end if successful connection
     }   //end if client
+
+    //else if own
+    else if(args[1][0] == 'o') {
+
+        agent->stepPath(true);
+
+        robot.pauseSensorStream();
+    }   //end if own
 
     cout<<"\n\nExiting normally\n";
     return 0;

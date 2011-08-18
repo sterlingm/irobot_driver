@@ -240,9 +240,14 @@ Path Agent::traverse(Position& end) {
 
 
 
-void Agent::stepPath() {
+void Agent::stepPath(bool own) {
 
     while( path.getSize() > 1 && goal.equals(path.getPath().at(path.getSize()-1))  ) {
+        //if not using server/client
+        if(own) {
+            grid->markPath(path);
+            std::cout<<grid->toString();
+        }   //end if own
 
         //lock path
         pthread_mutex_lock(&UTILITY_H::mutex_agent);
@@ -256,6 +261,7 @@ void Agent::stepPath() {
 
             //delete the first position
             path.getPath().erase(path.getPath().begin());
+
 
         } catch(std::out_of_range& e) {}
 

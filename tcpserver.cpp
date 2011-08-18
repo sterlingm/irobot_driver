@@ -30,7 +30,7 @@ bool TcpServer::launchServer() {
     hints.ai_socktype = SOCK_STREAM; //tcp
 
     //get server info, put into servinfo
-    if ((status = getaddrinfo("192.168.2.4", port, &hints, &servinfo)) != 0) {
+    if ((status = getaddrinfo(IP_ADDR, port, &hints, &servinfo)) != 0) {
         printf("\ngetaddrinfo error: %m", errno);
         return false;
     }
