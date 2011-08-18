@@ -171,13 +171,14 @@ inline void Robot::get_sensors_thread_i() {
   Defaults the current sensor OI_MODE
 */
 Robot::Robot(int portNo, int br) : port(portNo), baudrate(br), sensorsstreaming(false), currentSensor(OI_MODE), velocity(0) {
-    if(connection.OpenComport(port, baudrate)) {
+    if(connection.OpenComport(port, baudrate))
         printf("port open did not work\n");
+
+
+    else {
+        printf("port open worked\n");
         pthread_create(&get_sensors, NULL, get_sensors_thread, (void*)this);
     }
-
-    else
-        printf("port open worked\n");
 }   //END ROBOT()
 
 /*
