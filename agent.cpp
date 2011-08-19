@@ -239,35 +239,36 @@ Path Agent::traverse(Position& end) {
 
 
 
-
+/*Steps the robot through the path*/
 void Agent::stepPath(bool own) {
 
+    try {
+
+    //while the path contains more than 1 position AND the goal is equal to the agent's goal, move the robot
     while( path.getSize() > 1 && goal.equals(path.getPath().at(path.getSize()-1))  ) {
-        //if not using server/client
+        //if not using server/client, print the grid
         if(own) {
             grid->markPath(path);
             std::cout<<grid->toString();
         }   //end if own
 
         //lock path
-        pthread_mutex_lock(&UTILITY_H::mutex_agent);
-
-        try {
+        pthread_mutex_lock(&mutex_agent);
 
 
-            //set new position and step through first pair
-            pos = path.getPath().at(1);
-            robot->step(path.getPath().at(0), path.getPath().at(1), direction);
+        //set new position and step through first pair
+        pos = path.getPath().at(1);
+        robot->step(path.getPath().at(0), path.getPath().at(1), direction);
 
-            //delete the first position
-            path.getPath().erase(path.getPath().begin());
+        //delete the first position
+        path.getPath().erase(path.getPath().begin());
 
-
-        } catch(std::out_of_range& e) {}
 
         //unlock
-        pthread_mutex_unlock(&UTILITY_H::mutex_agent);
+        pthread_mutex_unlock(&mutex_agent);
     }   //end while
+
+    } catch(std::out_of_range& e) {}
 }   //END STEPPATH
 
 

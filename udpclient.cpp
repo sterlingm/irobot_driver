@@ -16,20 +16,24 @@
 #include <netdb.h>
 
 
-using namespace std;
 
 struct addrinfo *servinfo;  //will point to the results
 
 
-
+/*Constructor and destructor*/
 udpclient::udpclient(char* p) : port(p) {}
 udpclient::~udpclient() {}
 
-
+/*Getter and Setter for myAgent*/
 void udpclient::setAgent(Agent* a) {myAgent = a;}
 Agent*& udpclient::getAgent() {return myAgent;}
 
+/*Getter and setter for ip_addr*/
+char* udpclient::getIP() {return ip_addr;}
+void udpclient::setIP(char* addr) {ip_addr = addr;}
 
+
+/*Launches the client*/
 bool udpclient::launch_client() {
     int status;
 
@@ -44,7 +48,7 @@ bool udpclient::launch_client() {
     hints.ai_socktype = SOCK_DGRAM;     //udp
 
     //get server info, put into servinfo
-    if ((status = getaddrinfo(IP_ADDR, port, &hints, &servinfo)) != 0) {
+    if ((status = getaddrinfo(ip_addr, port, &hints, &servinfo)) != 0) {
         printf("\ngetaddrinfo error: %m", errno);
         return false;
     }
@@ -57,28 +61,37 @@ bool udpclient::launch_client() {
     }
 
     return true;
-}
+}   //END LAUNCH_CLIENT
 
 
+/*Sends messages with sensor info to the sensor every 15ms*/
 void udpclient::communicate() {
 
+    //message to send
     std::ostringstream tosend;
+    //hold return value of sendto
+    int numSent;
+
     while(1) {
 
+        //sleep
         usleep(15000);
-        tosend.str("");
-        Sensor_Packet temp;
-        temp = myAgent->getRobot()->getSensorValue(myAgent->getRobot()->getCurrentSensor());
 
+        //reset tosend
+        tosend.str("");
+        //grab sensor values
+        Sensor_Packet temp = myAgent->getRobot()->getSensorValue(myAgent->getRobot()->getCurrentSensor());
+
+        //put header onto tosend and concatenate the values
         tosend<<"@ "<<temp.values[1]<<" "<<temp.values[0];
 
-        int numSent = sendto(fd, tosend.str().c_str(), tosend.str().length(), 0, servinfo->ai_addr, servinfo->ai_addrlen);
+        //send
+        numSent = sendto(fd, tosend.str().c_str(), tosend.str().length(), 0, servinfo->ai_addr, servinfo->ai_addrlen);
         if(numSent < 0)
             printf("\nError sending %m", errno);
         //else
             //  cout<<"\nSent: "<<tosend.str();
-    }
-
-}
+    }   //end while
+}   //END COMMUNICATE
 
 

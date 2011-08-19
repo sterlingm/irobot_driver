@@ -18,25 +18,16 @@
 
 
 
-#ifndef __linux__
-#define sleep Sleep
-#endif
-
-
-
-
 using namespace std;
 
+    Robot robot(ROBOT_PORT, ROBOT_BAUDRATE);
+    ServerControl sc;
+    ClientControl cc;
+    TcpServer server((char*)PORT);
+    TcpClient client((char*)PORT);
+    udpserver u_server((char*)PORT);
+    udpclient u_client((char*)PORT);
 
-
-
-Robot robot(ROBOT_PORT, ROBOT_BAUDRATE);
-ServerControl sc;
-ClientControl cc;
-TcpServer server((char*)PORT);
-TcpClient client((char*)PORT);
-udpserver u_server((char*)PORT);
-udpclient u_client((char*)PORT);
 
 
 
@@ -47,8 +38,6 @@ int main(int argc, char* args[]) {
         cout<<"\nargs["<<i<<"]: "<<args[i];
     cout<<"\n";
     */
-
-
 
 
     /*initialize things*/
@@ -69,12 +58,12 @@ int main(int argc, char* args[]) {
 
 
     //make agent and set robot's agent
-    Agent* agent = new Agent(g, robot, 'e');
+    Agent* agent = new Agent(g, robot, 'n');
     robot.setAgent(agent);
 
     //make initial start and goal positions
-    Position start(1,1);
-    Position end(1,3);
+    Position start(22,1);
+    Position end(1,2);
     agent->setPosition(start);
     agent->setGoal(end);
 
@@ -83,28 +72,31 @@ int main(int argc, char* args[]) {
     Path p = agent->traverse(agent->getGoal());
     agent->setPath(p);
 
-
+    //set the ip addresses
+    server.setIP(args[3]);
+    client.setIP(args[3]);
+    u_server.setIP(args[3]);
+    u_client.setIP(args[3]);
 
 
     //if server
     if(args[1][0] == 's') {
 
-        //set ip address
-        UTILITY_H::IP_ADDR = args[3];
-
+        //attempt to launch the servers
         if(server.launchServer() && u_server.launch_server()) {
 
 
             cout<<"\nSuccessful Connection!";
 
-
+            //set the agents
             server.setAgent(agent);
             u_server.setAgent(agent);
 
+            //set server control's member
             sc.setServer(&server);
             sc.setUDP(&u_server);
 
-
+            //go
             sc.control();
 
             robot.pauseSensorStream();
@@ -115,22 +107,21 @@ int main(int argc, char* args[]) {
     //else if client
     else if(args[1][0] == 'c') {
 
-        //set ip address
-        UTILITY_H::IP_ADDR = args[3];
-
+        //launch the clients
         if(client.launchClient() && u_client.launch_client()) {
 
 
             cout<<"\nSuccessful Connection!";
 
-
-
+            //set the agents
             client.setAgent(agent);
             u_client.setAgent(agent);
 
+            //set client control's members
             cc.setClient(&client);
             cc.setUDP(&u_client);
 
+            //go
             cc.control();
 
             robot.pauseSensorStream();
@@ -141,7 +132,13 @@ int main(int argc, char* args[]) {
     //else if own
     else if(args[1][0] == 'o') {
 
+        //step through the path
         agent->stepPath(true);
+
+        //mark final position and print grid
+        Path last = agent->getPath();
+        agent->getGrid()->markPath(last);
+        cout<<agent->getGrid()->toString();
 
         robot.pauseSensorStream();
     }   //end if own

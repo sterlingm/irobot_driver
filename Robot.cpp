@@ -19,12 +19,14 @@ void* Robot::get_sensors_thread(void* threadid) {
 inline void Robot::get_sensors_thread_i() {
     while(1) {
 
+        //sleep
         #ifdef linux
-        usleep(15000);
+        usleep(14500);
         #else
-        Sleep(15);
+        Sleep(14.5f);
         #endif
 
+        //if the sensors are streaming
         if(sensorsstreaming) {
 
             unsigned char receive;
@@ -51,8 +53,11 @@ inline void Robot::get_sensors_thread_i() {
                 //std::cout << "  Bytes (" << read << "): ";
 
                 //trylock
-                pthread_mutex_trylock(&UTILITY_H::mutex_sensors);
+                pthread_mutex_trylock(&mutex_sensors);
 
+
+
+                /* ***SET SENSOR VALUES*** */
                 //bump + wheel drop
                 sensor_values[0] = (int)rest[1];
                 sensor_values[1] = -1;
@@ -164,7 +169,7 @@ inline void Robot::get_sensors_thread_i() {
 
 
                 //unlock
-                pthread_mutex_unlock(&UTILITY_H::mutex_sensors);
+                pthread_mutex_unlock(&mutex_sensors);
 
             }   //end if header
         }   //end if sensors streaming
@@ -185,8 +190,9 @@ Robot::Robot(int portNo, int br) : port(portNo), baudrate(br), sensorsstreaming(
 
     else {
         printf("port open worked\n");
+        //make the thread
         pthread_create(&get_sensors, NULL, get_sensors_thread, (void*)this);
-    }
+    }   //end else
 }   //END ROBOT()
 
 /*
@@ -331,11 +337,13 @@ void Robot::toggleSensorStream() {
 Sensor_Packet Robot::getSensorValue(int which) {
     Sensor_Packet result;
 
+    //if the sensors are streaming
     if(sensorsstreaming) {
 
             //lock
-            pthread_mutex_lock(&UTILITY_H::mutex_sensors);
+            pthread_mutex_lock(&mutex_sensors);
 
+            //set the values for the specified sensor
             switch(which) {
                 case BUMP:  //works for wheel drop also
                     result.values[0] = sensor_values[0];
@@ -487,7 +495,7 @@ Sensor_Packet Robot::getSensorValue(int which) {
             }   //end switch
 
             //unlock
-            pthread_mutex_unlock(&UTILITY_H::mutex_sensors);
+            pthread_mutex_unlock(&mutex_sensors);
     }   //end if sensors streaming
     return result;
 }   //END GETSENSORVALUE
@@ -1126,40 +1134,40 @@ Position Robot::step(Position& a, Position& b, char& d) {
             if( (d == 'n') || (d == 'N') ) {
                 d = 'e';
                 turnXDegrees(-90);
-                driveXDistance(UTILITY_H::UNIT_SIZE);
+                driveXDistance(UNIT_SIZE);
             }
             else if( (d == 's') || (d == 'S') ) {
                 d = 'e';
                 turnXDegrees(90);
-                driveXDistance(UTILITY_H::UNIT_SIZE);
+                driveXDistance(UNIT_SIZE);
             }
             else if( (d == 'w') || (d == 'W') ) {
                 d = 'e';
                 turnXDegrees(180);
-                driveXDistance(UTILITY_H::UNIT_SIZE);
+                driveXDistance(UNIT_SIZE);
             }
             else if( (d == 'e') || (d == 'E') )
-                driveXDistance(UTILITY_H::UNIT_SIZE);
+                driveXDistance(UNIT_SIZE);
         }   //end if east
 
         else if( (a.getCol() - b.getCol() == 1) ) {
             if( (d == 'n') || (d == 'N') ) {
                 d = 'w';
                 turnXDegrees(90);
-                driveXDistance(UTILITY_H::UNIT_SIZE);
+                driveXDistance(UNIT_SIZE);
             }
             else if( (d == 's') || (d == 'S') ) {
                 d = 'w';
                 turnXDegrees(-90);
-                driveXDistance(UTILITY_H::UNIT_SIZE);
+                driveXDistance(UNIT_SIZE);
             }
             else if( (d == 'e') || (d == 'E') ) {
                 d = 'w';
                 turnXDegrees(180);
-                driveXDistance(UTILITY_H::UNIT_SIZE);
+                driveXDistance(UNIT_SIZE);
             }
             else if( (d == 'w') || (d == 'W') )
-                driveXDistance(UTILITY_H::UNIT_SIZE);
+                driveXDistance(UNIT_SIZE);
         }   //end if west
 
         return b;
@@ -1173,20 +1181,20 @@ Position Robot::step(Position& a, Position& b, char& d) {
             if( (d == 'w') || (d == 'W') ) {
                 d = 's';
                 turnXDegrees(90);
-                driveXDistance(UTILITY_H::UNIT_SIZE);
+                driveXDistance(UNIT_SIZE);
             }
             else if( (d == 'e') || (d == 'E') ) {
                 d = 's';
                 turnXDegrees(-90);
-                driveXDistance(UTILITY_H::UNIT_SIZE);
+                driveXDistance(UNIT_SIZE);
             }
             else if( (d == 'n') || (d == 'N') ) {
                 d = 's';
                 turnXDegrees(180);
-                driveXDistance(UTILITY_H::UNIT_SIZE);
+                driveXDistance(UNIT_SIZE);
             }
             else if( (d == 's') || (d == 'S') )
-                driveXDistance(UTILITY_H::UNIT_SIZE);
+                driveXDistance(UNIT_SIZE);
 
         }   //end if south
 
@@ -1195,20 +1203,20 @@ Position Robot::step(Position& a, Position& b, char& d) {
             if( (d == 'w') || (d == 'W') ) {
                 d = 'n';
                 turnXDegrees(-90);
-                driveXDistance(UTILITY_H::UNIT_SIZE);
+                driveXDistance(UNIT_SIZE);
             }
             else if( (d == 'e') || (d == 'E') ) {
                 d = 'n';
                 turnXDegrees(90);
-                driveXDistance(UTILITY_H::UNIT_SIZE);
+                driveXDistance(UNIT_SIZE);
             }
             else if( (d == 's') || (d == 'S') ) {
                 d = 'n';
                 turnXDegrees(180);
-                driveXDistance(UTILITY_H::UNIT_SIZE);
+                driveXDistance(UNIT_SIZE);
             }
             else if( (d == 'n') || (d == 'N') )
-                driveXDistance(UTILITY_H::UNIT_SIZE);
+                driveXDistance(UNIT_SIZE);
 
         }   //end if north
 

@@ -32,10 +32,18 @@ public:
     /*! Sets myAgent to a */
     void setAgent(Agent*);
 
-    //! Launches server
+    //! Getter function for ip_addr
+    /*! Returns the value of ip_addr */
+    char* getIP();
+
+    //! Setter function for ip_addr
+    /*! Sets ip_addr to addr*/
+    void setIP(char*);
+
+    //! Launches tcp server
     /*!
-     * Waits for a client to connect\n
-     * Program exits if there is an error when a client connects
+     * Waits for a tcp client to connect\n
+     * Returns true on success and false otherwise
      */
     bool launchServer();
 
@@ -50,11 +58,13 @@ public:
     /*! Allows the server to send and receive messages from the client */
     void communicate();
 
-
+    //! Sends updated path to the client
+    /*! Sends a message to the client containing the updated path*/
     void sendPath(Path&);
 
 
 private:
+    char* ip_addr;
     char* port;
     int fd;
     int comm_fd;

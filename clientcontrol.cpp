@@ -14,8 +14,8 @@ ClientControl::~ClientControl() {}
 TcpClient*& ClientControl::getClient() {return myClient;}
 void ClientControl::setClient(TcpClient* c) {myClient = c;}
 
-
-
+/*Getter and setter for myUDP*/
+udpclient*& ClientControl::getUDP() {return myUDP;}
 void ClientControl::setUDP(udpclient* uc) {myUDP = uc;}
 
 

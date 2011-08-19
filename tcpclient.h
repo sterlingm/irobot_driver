@@ -30,14 +30,18 @@ public:
     /*! Sets myAgent to a */
     void setAgent(Agent*);
 
-    //! Getter function for update_agent member
-    /*! Returns a reference of update_agent member */
-    char*& get_agent_update();
+    //! Setter function for ip_addr member
+    /*! Sets ip_addr to addr*/
+    void setIP(char*);
 
-    //! Launches client
+    //! Getter function for ip_addr member
+    /*! Returns the value of ip_addr member*/
+    char* getIP();
+
+    //! Launches tcp client
     /*!
-     * Tries to connect to a server\n
-     * Program exits if any step of connecting goes wrong
+     * Tries to connect to a tcp server\n
+     * Returns true on success and false otherwise
      */
     bool launchClient();
 
@@ -57,6 +61,7 @@ public:
     /*! Polls the robot for sensor values every 15 milliseconds */
     void pollSensor();
 private:
+    char* ip_addr;
     char* port;
     int fd;
     char* update_agent;

@@ -1,8 +1,7 @@
 #include "tcpserver.h"
 #include "agent.h"
 #include <netinet/tcp.h>
-int numSent;
-int numRead;
+
 
 TcpServer::TcpServer(char* p) : port(p), done(false) {}
 
@@ -11,6 +10,10 @@ TcpServer::~TcpServer() {}
 /*Getter and setter for myAgent*/
 void TcpServer::setAgent(Agent* a) {myAgent = a;}
 Agent*& TcpServer::getAgent() {return myAgent;}
+
+/*Getter and setter for ip_addr*/
+void TcpServer::setIP(char* addr) {ip_addr = addr;}
+char* TcpServer::getIP() {return ip_addr;}
 
 
 /*Waits to connect a client. Returns true if successful*/
@@ -30,7 +33,7 @@ bool TcpServer::launchServer() {
     hints.ai_socktype = SOCK_STREAM; //tcp
 
     //get server info, put into servinfo
-    if ((status = getaddrinfo(IP_ADDR, port, &hints, &servinfo)) != 0) {
+    if ((status = getaddrinfo((const char*)ip_addr, port, &hints, &servinfo)) != 0) {
         printf("\ngetaddrinfo error: %m", errno);
         return false;
     }
@@ -83,11 +86,13 @@ void TcpServer::getSendBack(char* command) {
     std::string tempCommand = command;
     //std::cout<<"\ntempCommand: "<<tempCommand;
 
+    //count the number of headers
     int num_headers = 0;
     for(int i=0;i<tempCommand.length() && num_headers < 2;i++)
         if(tempCommand[i] == '@')
             num_headers++;
 
+    //if no message stacking
     if(num_headers == 1) {
 
 
@@ -128,7 +133,7 @@ void TcpServer::getSendBack(char* command) {
 
 
             //lock
-            pthread_mutex_lock(&UTILITY_H::mutex_agent);
+            pthread_mutex_lock(&mutex_agent);
 
             //update
             myAgent->getPosition().setRow(prow);
@@ -138,7 +143,7 @@ void TcpServer::getSendBack(char* command) {
 
 
             //unlock
-            pthread_mutex_unlock(&UTILITY_H::mutex_agent);
+            pthread_mutex_unlock(&mutex_agent);
 
         }   //end if new goal
 
@@ -152,45 +157,50 @@ void TcpServer::getSendBack(char* command) {
             std::cout<<"\ntemp: "<<temp;
             int id = atoi(temp.c_str());
 
-
+            //if valid id value, set new current sensor
             if(id > 6 && id < 43)
                 myAgent->getRobot()->setCurrentSensor(id);
 
             else
                 std::cout<<"\n"<<id<<" is Invalid id";
 
-
         }   //end if new sensor
 
+        //else if 5, quit
         else if(tempCommand[2] == '5')
             done = true;
 
     }   //end if 1 header
     //else if stacking
-    else {
+    else
         std::cout<<"\nSTACKED MESSAGE: "<<tempCommand;
-    }   //end else
+
 }   //END GETSENDBACK
 
 
 
-
+/*Sends the updated path to the client*/
 void TcpServer::sendPath(Path& p) {
 
+    //message to send
     std::stringstream tosend;
+    //add header and id and number of positions in the path
     tosend<<"@ 6 "<<p.getSize()<<" ";
 
+    //get the list of positions in separate stringstream
     std::stringstream list_of_pos;
     for(int i=0;i<myAgent->getPath().getSize()-1;i++)
         list_of_pos<<myAgent->getPath().getPath().at(i).toString()<<" ";
+    //add last position with no space on the end
     list_of_pos<<myAgent->getPath().getPath().back().toString();
 
     //std::cout<<"\nlist_of_pos: "<<list_of_pos.str();
 
-
+    //concatenate the list
     tosend<<list_of_pos.str();
     //std::cout<<"\ntosend: "<<tosend.str();
 
+    //send
     int num_read = send(comm_fd, tosend.str().c_str(), tosend.str().length(), 0);
 }
 
@@ -202,10 +212,13 @@ void TcpServer::communicate() {
 
     fd_set read_flags,write_flags; // the flag sets to be used
     struct timeval waitd = {10, 0};          // the max wait time for an event
-    int sel;                      // holds return value for select();
-
+    int sel;        // holds return value for select();
+    int numRead;    //holds return value for read()
+    int numSent;    //holds return value for send()
     char in[255];   //in buffer
     char out[255];  //out buffer
+
+    //clear buffersz
     memset(&in, 0, 255);
     memset(&out, 0, 255);
 
@@ -218,7 +231,7 @@ void TcpServer::communicate() {
         FD_SET(STDIN_FILENO, &read_flags);
         FD_SET(STDIN_FILENO, &write_flags);
 
-
+        //call select
         sel = select(comm_fd+1, &read_flags, &write_flags, (fd_set*)0, &waitd);
 
         //if an error with select
@@ -275,7 +288,7 @@ void TcpServer::communicate() {
 
                 //send
                 numSent = send(comm_fd, tosend.str().c_str(), tosend.str().length(), 0);
-            }
+            }   //end if valid message
             //if error, exit
             if(numSent < 0) {
                 printf("\nError sending %m", errno);

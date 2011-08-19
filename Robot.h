@@ -221,6 +221,12 @@ public:
      */
     Position step(Position&, Position&, char&);
 
+    //! Moves the robot through its agent's path
+    /*!
+     * Moves the robot through its agent's path\n
+     * If it cannot complete the whole path, the robot will move as far as it can
+     */
+    Position stepPath();
 
 private:
 

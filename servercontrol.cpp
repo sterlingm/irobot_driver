@@ -15,8 +15,9 @@ ServerControl::~ServerControl() {}
 TcpServer*& ServerControl::getServer() {return myServer;}
 void ServerControl::setServer(TcpServer* s) {myServer = s;}
 
-
+/*Getter and setter for myUDP*/
 void ServerControl::setUDP(udpserver* us) {myUDP = us;}
+udpserver*& ServerControl::getUDP() {return myUDP;}
 
 
 
@@ -31,10 +32,10 @@ void* ServerControl::update_path_thread(void* threadid) {
 inline void ServerControl::update_path_thread_i() {
     for(;;) {
         //sleep for 0.2 seconds
-        usleep(UTILITY_H::UPDATE_PATH_TIME);
+        usleep(UPDATE_PATH_TIME);
 
         //lock goal
-        pthread_mutex_lock(&UTILITY_H::mutex_agent);
+        pthread_mutex_lock(&mutex_agent);
 
         //std::cout<<"\nUpdating Path between "<<myServer->getAgent()->getPosition().toString()<<" to "<<myServer->getAgent()->getGoal().toString();
         //traverse
@@ -55,7 +56,7 @@ inline void ServerControl::update_path_thread_i() {
         } catch(Agent::NoPathException* e) {std::cout<<"\nNo path from "<<myServer->getAgent()->getPosition().toString()<<" to "<<myServer->getAgent()->getGoal().toString(); sleep(1);}
 
         //unlock
-        pthread_mutex_unlock(&UTILITY_H::mutex_agent);
+        pthread_mutex_unlock(&mutex_agent);
 
     }   //end infinite for
 }   //END UPDATE_PATH_THREAD_I
@@ -72,10 +73,10 @@ void* ServerControl::display_menu_thread(void* threadid) {
 inline void ServerControl::display_menu_thread_i() {
     for(;;) {
         //usleep for x time
-        usleep(UTILITY_H::MENU_SLEEP_TIME);
+        usleep(MENU_SLEEP_TIME);
 
         //lock
-        pthread_mutex_lock(&UTILITY_H::mutex_agent);
+        pthread_mutex_lock(&mutex_agent);
 
         //clear the screen
         system("clear");
@@ -85,7 +86,7 @@ inline void ServerControl::display_menu_thread_i() {
         myServer->getAgent()->getGrid()->markPath(myServer->getAgent()->getPath());
 
         //unlock
-        pthread_mutex_unlock(&UTILITY_H::mutex_agent);
+        pthread_mutex_unlock(&mutex_agent);
 
         //print
         std::cout<<myServer->getAgent()->getGrid()->toString();

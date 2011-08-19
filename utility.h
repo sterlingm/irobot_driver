@@ -54,7 +54,7 @@
 
 #define ROBOT_PORT 16
 #define ROBOT_BAUDRATE 57600
-#define VELOCITY 100
+#define VELOCITY 200
 
 
 
@@ -74,12 +74,11 @@ static pthread_mutex_t mutex_sensors = PTHREAD_MUTEX_INITIALIZER;
 static int MENU_SLEEP_TIME = 850000;
 static int UPDATE_PATH_TIME = 200000;
 
-static int UNIT_SIZE = 335;
+//~1ft more than 305 to account for speeding up
+static int UNIT_SIZE = 320;
 
 static int lowsv = -1;
 static int highsv = -1;
-
-static char* IP_ADDR;
 
 
 #endif

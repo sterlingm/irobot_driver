@@ -12,14 +12,19 @@ public:
     ~ServerControl();
 
 	//! Getter function for myServer member
-	/*! Returns reference of myServer member */
+	/*! Returns reference to myServer member */
     TcpServer*& getServer();
 
 	//! Setter function for myServer member
 	/*! Sets myServer to s */
     void setServer(TcpServer*);
 
+    //! Getter function for myUDP member
+    /*! Returns a reference to myUDP member*/
+    udpserver*& getUDP();
 
+    //! Setter function for myUDP member
+    /*! Sets myUDP to us */
     void setUDP(udpserver*);
 
 	//! Controls the server

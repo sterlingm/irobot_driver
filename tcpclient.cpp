@@ -7,12 +7,13 @@ TcpClient::TcpClient(char* p) : port(p), done(false), update_agent(new char[6]),
 
 TcpClient::~TcpClient() {}
 
-/*Getter for update_agent*/
-char*& TcpClient::get_agent_update() {return update_agent;}
-
 /*Getter and setter for myAgent*/
 void TcpClient::setAgent(Agent* a) {myAgent = a;}
 Agent*& TcpClient::getAgent() {return myAgent;}
+
+/*Getter and setter for ip_addr*/
+char* TcpClient::getIP() {return ip_addr;}
+void TcpClient::setIP(char* addr) {ip_addr = addr;}
 
 
 /*Tries to connect to a server. Returns true if successful*/
@@ -28,7 +29,7 @@ bool TcpClient::launchClient() {
 
 
     //get server info, put into servinfo
-    if ((status = getaddrinfo(IP_ADDR, port, &hints, &servinfo)) != 0) {
+    if ((status = getaddrinfo(ip_addr, port, &hints, &servinfo)) != 0) {
         fprintf(stderr, "getaddrinfo error: %s\n", gai_strerror(status));
         return false;
     }
@@ -103,7 +104,7 @@ void TcpClient::updateServerAgent() {
 
     //std::cout<<"\nmessage: "<<message.str();
 
-
+    //send
     int numSent = send(fd, message.str().c_str(), message.str().length(), 0);
 }   //END UPDATESERVERAGENT
 
@@ -113,12 +114,13 @@ void TcpClient::getCommand(char* command) {
     std::string tempCommand = command;
     //std::cout<<"\ncommand: "<<tempCommand;
 
+    //count the number of headers
     int num_headers = 0;
     for(int i=0;i<tempCommand.length() && num_headers < 2;i++)
         if(tempCommand[i] == '@')
             num_headers++;
 
-
+    //if no message stacking
     if(num_headers == 1) {
 
 
@@ -138,7 +140,7 @@ void TcpClient::getCommand(char* command) {
             //std::cout<<"\nlist_of_pos: "<<list_of_pos;
 
             //lock
-            pthread_mutex_lock(&UTILITY_H::mutex_agent);
+            pthread_mutex_lock(&mutex_agent);
 
             //clear the path
             myAgent->getPath().clear();
@@ -181,7 +183,7 @@ void TcpClient::getCommand(char* command) {
             //std::cout<<"\nNEW PATH: "<<myAgent->getPath().toString();
 
             //unlock
-            pthread_mutex_unlock(&UTILITY_H::mutex_agent);
+            pthread_mutex_unlock(&mutex_agent);
         }   //end if id 6
 
 
@@ -217,13 +219,13 @@ void TcpClient::getCommand(char* command) {
             //std::cout<<"\ntemp: "<<temp.toString()<<"\n";
 
             //lock
-            pthread_mutex_lock(&UTILITY_H::mutex_agent);
+            pthread_mutex_lock(&mutex_agent);
 
             //set new goal
             myAgent->setGoal(temp);
 
             //unlock
-            pthread_mutex_unlock(&UTILITY_H::mutex_agent);
+            pthread_mutex_unlock(&mutex_agent);
 
 
         }   //end if 1
@@ -297,12 +299,13 @@ void TcpClient::communicate() {
 
     fd_set read_flags,write_flags; // the flag sets to be used
     struct timeval waitd = {10, 0};          // the max wait time for an event
-    int sel;                      // holds return value for select();
+    int sel;        //holds return value for select();
+    int numSent;    //holds return value for send()
+    int numRead;    //holds return value for read()
+    char in[255];   //in buffer
+    char out[255];  //out buffer
 
-    int numSent;
-    int numRead;
-    char in[255];
-    char out[255];
+    //clear buffers
     memset(&in, 0, 255);
     memset(&out, 0, 255);
 
@@ -316,7 +319,7 @@ void TcpClient::communicate() {
         FD_SET(STDIN_FILENO, &read_flags);
         FD_SET(STDIN_FILENO, &write_flags);
 
-
+        //call select
         sel = select(fd+1, &read_flags, &write_flags, (fd_set*)0, &waitd);
 
 

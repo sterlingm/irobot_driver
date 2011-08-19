@@ -19,10 +19,15 @@ udpserver::udpserver(char* p) : port(p) {}
 udpserver::~udpserver() {}
 
 
+/*Getter and setter for myAgent*/
 void udpserver::setAgent(Agent* a) {myAgent = a;}
 Agent*& udpserver::getAgent() {return myAgent;}
 
+/*Getter and setter for ip_addr*/
+void udpserver::setIP(char* addr) {ip_addr = addr;}
+char* udpserver::getIP() {return ip_addr;}
 
+/*Launches the udp server*/
 bool udpserver::launch_server() {
 
     int status;
@@ -44,7 +49,7 @@ bool udpserver::launch_server() {
 
 
     //get server info, put into servinfo
-    if ((status = getaddrinfo(IP_ADDR, port, &hints, &servinfo)) != 0) {
+    if ((status = getaddrinfo((const char*)ip_addr, port, &hints, &servinfo)) != 0) {
         printf("\ngetaddrinfo error: %m", errno);
         return false;
     }
@@ -70,9 +75,10 @@ bool udpserver::launch_server() {
     }
 
     return true;
-}
+}   //END LAUNCH_SERVER
 
 
+/*Intreprets a message from the client*/
 void udpserver::get_message(char* message) {
     std::string temp_message = message;
     //std::cout<<"\nmessage: "<<temp_message;
