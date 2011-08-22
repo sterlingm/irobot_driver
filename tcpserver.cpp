@@ -33,7 +33,7 @@ bool TcpServer::launchServer() {
     hints.ai_socktype = SOCK_STREAM; //tcp
 
     //get server info, put into servinfo
-    if ((status = getaddrinfo("192.168.2.3", port, &hints, &servinfo)) != 0) {
+    if ((status = getaddrinfo((const char*)ip_addr, port, &hints, &servinfo)) != 0) {
         printf("\ngetaddrinfo error: %m", errno);
         return false;
     }
@@ -213,10 +213,17 @@ void TcpServer::communicate() {
     fd_set read_flags,write_flags; // the flag sets to be used
     struct timeval waitd = {10, 0};          // the max wait time for an event
     int sel;        // holds return value for select();
+<<<<<<< HEAD
     int numRead = 0;    //holds return value for read()
     int numSent = 0;    //holds return value for send()
     char in[255];   //in buffer
     char out[512];  //out buffer
+=======
+    int numRead;    //holds return value for read()
+    int numSent;    //holds return value for send()
+    char in[255];   //in buffer
+    char out[255];  //out buffer
+>>>>>>> ea404a9f386303bbadd3b207982390732e17ae36
 
     //clear buffersz
     memset(&in, 0, 255);
