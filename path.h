@@ -30,9 +30,13 @@ public:
     /*! Inserts p at index of the path */
     void insert(Position&, int);
 
+    //! Empties the path
+    /*! Removes all elements from the vector of Positions */
+    void clear();
+
     //! Reverses order of path vector contents
     /*! Reverses order of path vector contents */
-    void arrange();
+    void reverse();
 
     //! Checks if p is in the path
     /*! Returns true if path vector contains p */

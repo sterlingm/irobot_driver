@@ -19,9 +19,14 @@ public:
     /*! Sets myClient to c */
     void setClient(TcpClient*);
 
+    //! Getter function for myUDP member
+    /*! Returns a reference to myUDP member*/
+    udpclient*& getUDP();
 
-
+    //! Setter function for myUDP member
+    /*! Sets myUDP to uc*/
     void setUDP(udpclient*);
+
 
     //! Controls the client
     /*!

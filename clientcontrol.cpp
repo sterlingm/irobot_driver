@@ -14,8 +14,8 @@ ClientControl::~ClientControl() {}
 TcpClient*& ClientControl::getClient() {return myClient;}
 void ClientControl::setClient(TcpClient* c) {myClient = c;}
 
-
-
+/*Getter and setter for myUDP*/
+udpclient*& ClientControl::getUDP() {return myUDP;}
 void ClientControl::setUDP(udpclient* uc) {myUDP = uc;}
 
 
@@ -29,7 +29,7 @@ void* ClientControl::driving_thread(void* threadid) {
 /*Inline for drive thread. Makes the robot drive infinitely*/
 inline void ClientControl::driving_thread_i() {
     while(1)
-        myClient->getAgent()->stepPath();
+        myClient->getAgent()->stepPath(false);
 }   //END DRIVING_THREAD_I
 
 

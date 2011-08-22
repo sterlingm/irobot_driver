@@ -233,10 +233,15 @@ private:
     double adjustTurningTime(int,int);
     int* getHighAndLowByte(int);
 
+
+    static void* get_sensors_thread(void*);
+    void get_sensors_thread_i();
+
     int port;
     int baudrate;
     int velocity;
     int currentSensor;
+    int sensor_values[72];
     bool sensorsstreaming;
     SerialConnect connection;
     Agent* agent;

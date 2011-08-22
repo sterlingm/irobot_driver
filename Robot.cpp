@@ -5,6 +5,177 @@
 #include "agent.h"
 #include <math.h>
 
+pthread_t get_sensors;
+
+
+/*Callback for get sensors thread*/
+void* Robot::get_sensors_thread(void* threadid) {
+    Robot* r = (Robot*)threadid;
+    r->get_sensors_thread_i();
+}   //END DRIVING_THREAD
+
+
+/*Inline for getting the robots sensors every 15ms.*/
+inline void Robot::get_sensors_thread_i() {
+    while(1) {
+
+        //sleep
+        #ifdef linux
+        usleep(14500);
+        #else
+        Sleep(14.5f);
+        #endif
+
+        //if the sensors are streaming
+        if(sensorsstreaming) {
+
+            unsigned char receive;
+            unsigned char* rest;
+            int read = 0;
+
+            //read a byte
+            read = connection.PollComport(port, &receive, sizeof(unsigned char));
+            //std::cout << "\nBytes (" << read << "): ";
+
+            if((int)receive == 19) {
+                //std::cout<<(int)receive;
+
+                //next byte should be the size of the rest
+                read = connection.PollComport(port, &receive, sizeof(unsigned char));
+                //std::cout << "  Bytes (" << read << "): " << (int)receive;
+
+                //get the size, add 1 for checksum
+                int packet_size = (int)receive + 1;
+                rest = new unsigned char[packet_size];
+
+                //get values
+                read = connection.PollComport(port, rest, (sizeof(unsigned char) * (packet_size)));
+                //std::cout << "  Bytes (" << read << "): ";
+
+                //trylock
+                pthread_mutex_trylock(&mutex_sensors);
+
+
+
+                /* ***SET SENSOR VALUES*** */
+                //bump + wheel drop
+                sensor_values[0] = (int)rest[1];
+                sensor_values[1] = -1;
+                //wall
+                sensor_values[2] = (int)rest[2];
+                sensor_values[3] = -1;
+                //cliff_left
+                sensor_values[4] = (int)rest[3];
+                sensor_values[5] = -1;
+                //cliff_front_left
+                sensor_values[6] = (int)rest[4];
+                sensor_values[7] = -1;
+                //cliff_front_right
+                sensor_values[8] = (int)rest[5];
+                sensor_values[9] = -1;
+                //cliff_right
+                sensor_values[10] = (int)rest[6];
+                sensor_values[11] = -1;
+                //virtual_wall
+                sensor_values[12] = (int)rest[7];
+                sensor_values[13] = -1;
+                //low_side_driver
+                sensor_values[14] = (int)rest[8];
+                sensor_values[15] = -1;
+                //unused_bytes
+                sensor_values[16] = (int)rest[9];
+                sensor_values[17] = -1;
+                //unused_bytes
+                sensor_values[18] = (int)rest[10];
+                sensor_values[19] = -1;
+                //infrared_byte
+                sensor_values[20] = (int)rest[11];
+                sensor_values[21] = -1;
+                //buttons
+                sensor_values[22] = (int)rest[12];
+                sensor_values[23] = -1;
+                //distance
+                sensor_values[24] = (int)rest[13];
+                sensor_values[25] = (int)rest[14];
+                //angle
+                sensor_values[26] = (int)rest[15];
+                sensor_values[27] = (int)rest[16];
+                //charging_state
+                sensor_values[28] = (int)rest[17];
+                sensor_values[29] = -1;
+                //voltage
+                sensor_values[30] = (int)rest[18];
+                sensor_values[31] = (int)rest[19];
+                //current
+                sensor_values[32] = (int)rest[20];
+                sensor_values[33] = (int)rest[21];
+                //battery_temperature
+                sensor_values[34] = (int)rest[22];
+                sensor_values[35] = -1;
+                //battery_charge
+                sensor_values[36] = (int)rest[23];
+                sensor_values[37] = (int)rest[24];
+                //battery_capacity
+                sensor_values[38] = (int)rest[25];
+                sensor_values[39] = (int)rest[26];
+                //wall_signal
+                sensor_values[40] = (int)rest[27];
+                sensor_values[41] = (int)rest[28];
+                //cliff_left_signal
+                sensor_values[42] = (int)rest[29];
+                sensor_values[43] = (int)rest[30];
+                //cliff_front_left_signal
+                sensor_values[44] = (int)rest[31];
+                sensor_values[45] = (int)rest[32];
+                //cliff_front_right_signal
+                sensor_values[46] = (int)rest[33];
+                sensor_values[47] = (int)rest[34];
+                //cliff_right_signal
+                sensor_values[48] = (int)rest[35];
+                sensor_values[49] = (int)rest[36];
+                //cargo_bay_digital_inputs
+                sensor_values[50] = (int)rest[37];
+                sensor_values[51] = -1;
+                //cargo_bay_analog_signal
+                sensor_values[52] = (int)rest[38];
+                sensor_values[53] = (int)rest[39];
+                //charging_sources_available
+                sensor_values[54] = (int)rest[40];
+                sensor_values[55] = -1;
+                //oi_mode
+                sensor_values[56] = (int)rest[41];
+                sensor_values[57] = -1;
+                //song_number
+                sensor_values[58] = (int)rest[42];
+                sensor_values[59] = -1;
+                //song_playing
+                sensor_values[60] = (int)rest[43];
+                sensor_values[61] = -1;
+                //number_of_stream_packets
+                sensor_values[62] = (int)rest[44];
+                sensor_values[63] = -1;
+                //requested_velocity
+                sensor_values[64] = (int)rest[45];
+                sensor_values[65] = (int)rest[46];
+                //requested_radius
+                sensor_values[66] = (int)rest[47];
+                sensor_values[67] = (int)rest[48];
+                //requested_right_velocity
+                sensor_values[68] = (int)rest[49];
+                sensor_values[69] = (int)rest[50];
+                //requested_left_velocity
+                sensor_values[70] = (int)rest[51];
+                sensor_values[71] = (int)rest[52];
+
+
+                //unlock
+                pthread_mutex_unlock(&mutex_sensors);
+
+            }   //end if header
+        }   //end if sensors streaming
+    }   //end while
+}   //END GET_SENSORS_THREAD_I
+
 
 
 /*
@@ -16,8 +187,12 @@ Robot::Robot(int portNo, int br) : port(portNo), baudrate(br), sensorsstreaming(
     if(connection.OpenComport(port, baudrate))
         printf("port open did not work\n");
 
-    else
+
+    else {
         printf("port open worked\n");
+        //make the thread
+        pthread_create(&get_sensors, NULL, get_sensors_thread, (void*)this);
+    }   //end else
 }   //END ROBOT()
 
 /*
@@ -161,181 +336,167 @@ void Robot::toggleSensorStream() {
 /*Returns a Sensor_Packet for which*/
 Sensor_Packet Robot::getSensorValue(int which) {
     Sensor_Packet result;
-    unsigned char receive;
-    unsigned char* rest;
 
-    int read = 0;
+    //if the sensors are streaming
+    if(sensorsstreaming) {
 
-    //read a byte
-    read = connection.PollComport(port, &receive, sizeof(unsigned char));
-    //std::cout << "\nBytes (" << read << "): ";
+            //lock
+            pthread_mutex_lock(&mutex_sensors);
 
-    if((int)receive == 19) {
-        //std::cout<<(int)receive;
+            //set the values for the specified sensor
+            switch(which) {
+                case BUMP:  //works for wheel drop also
+                    result.values[0] = sensor_values[0];
+                    result.values[1] = sensor_values[1];
+                    break;
+                case WALL:
+                    result.values[0] = sensor_values[2];
+                    result.values[1] = sensor_values[3];
+                    break;
+                case CLIFF_LEFT:
+                    result.values[0] = sensor_values[4];
+                    result.values[1] = sensor_values[5];
+                    break;
+                case CLIFF_FRONT_LEFT:
+                    result.values[0] = sensor_values[6];
+                    result.values[1] = sensor_values[7];
+                    break;
+                case CLIFF_FRONT_RIGHT:
+                    result.values[0] = sensor_values[8];
+                    result.values[1] = sensor_values[9];
+                    break;
+                case CLIFF_RIGHT:
+                    result.values[0] = sensor_values[10];
+                    result.values[1] = sensor_values[11];
+                    break;
+                case VIRTUAL_WALL:
+                    result.values[0] = sensor_values[12];
+                    result.values[1] = sensor_values[13];
+                    break;
+                case LOW_SIDE_DRIVER:
+                    result.values[0] = sensor_values[14];
+                    result.values[1] = sensor_values[15];
+                    break;
+                case 15:
+                    result.values[0] = sensor_values[16];
+                    result.values[1] = sensor_values[17];
+                    break;
+                case 16:
+                    result.values[0] = sensor_values[18];
+                    result.values[1] = sensor_values[19];
+                    break;
+                case INFRARED_BYTE:
+                    result.values[0] = sensor_values[20];
+                    result.values[1] = sensor_values[21];
+                    break;
+                case BUTTONS:
+                    result.values[0] = sensor_values[22];
+                    result.values[1] = sensor_values[23];
+                    break;
+                case DISTANCE:
+                    result.values[0] = sensor_values[24];
+                    result.values[1] = sensor_values[25];
+                    break;
+                case ANGLE:
+                    result.values[0] = sensor_values[26];
+                    result.values[1] = sensor_values[27];
+                    break;
+                case CHARGING_STATE:
+                    result.values[0] = sensor_values[28];
+                    result.values[1] = sensor_values[29];
+                    break;
+                case VOLTAGE:
+                    result.values[0] = sensor_values[30];
+                    result.values[1] = sensor_values[31];
+                    break;
+                case CURRENT:
+                    result.values[0] = sensor_values[32];
+                    result.values[1] = sensor_values[33];
+                    break;
+                case BATTERY_TEMPERATURE:
+                    result.values[0] = sensor_values[34];
+                    result.values[1] = sensor_values[35];
+                    break;
+                case BATTERY_CHARGE:
+                    result.values[0] = sensor_values[36];
+                    result.values[1] = sensor_values[37];
+                    break;
+                case BATTERY_CAPACITY:
+                    result.values[0] = sensor_values[38];
+                    result.values[1] = sensor_values[39];
+                    break;
+                case WALL_SIGNAL:
+                    result.values[0] = sensor_values[40];
+                    result.values[1] = sensor_values[41];
+                    break;
+                case CLIFF_LEFT_SIGNAL:
+                    result.values[0] = sensor_values[42];
+                    result.values[1] = sensor_values[43];
+                    break;
+                case CLIFF_FRONT_LEFT_SIGNAL:
+                    result.values[0] = sensor_values[44];
+                    result.values[1] = sensor_values[45];
+                    break;
+                case CLIFF_FRONT_RIGHT_SIGNAL:
+                    result.values[0] = sensor_values[46];
+                    result.values[1] = sensor_values[47];
+                    break;
+                case CLIFF_RIGHT_SIGNAL:
+                    result.values[0] = sensor_values[48];
+                    result.values[1] = sensor_values[49];
+                    break;
+                case CARGO_BAY_DIGITAL_INPUTS:
+                    result.values[0] = sensor_values[50];
+                    result.values[1] = sensor_values[51];
+                    break;
+                case CARGO_BAY_ANALOG_SIGNAL:
+                    result.values[0] = sensor_values[52];
+                    result.values[1] = sensor_values[53];
+                    break;
+                case CHARGING_SOURCES_AVAILABLE:
+                    result.values[0] = sensor_values[54];
+                    result.values[1] = sensor_values[55];
+                    break;
+                case OI_MODE:
+                    result.values[0] = sensor_values[56];
+                    result.values[1] = sensor_values[57];
+                    break;
+                case SONG_NUMBER:
+                    result.values[0] = sensor_values[58];
+                    result.values[1] = sensor_values[59];
+                    break;
+                case SONG_PLAYING:
+                    result.values[0] = sensor_values[60];
+                    result.values[1] = sensor_values[61];
+                    break;
+                case NUMBER_OF_STREAM_PACKETS:
+                    result.values[0] = sensor_values[62];
+                    result.values[1] = sensor_values[63];
+                    break;
+                case REQUESTED_VELOCITY:
+                    result.values[0] = sensor_values[64];
+                    result.values[1] = sensor_values[65];
+                    break;
+                case REQUESTED_RADIUS:
+                    result.values[0] = sensor_values[66];
+                    result.values[1] = sensor_values[67];
+                    break;
+                case REQUESTED_RIGHT_VELOCITY:
+                    result.values[0] = sensor_values[68];
+                    result.values[1] = sensor_values[69];
+                    break;
+                case REQUESTED_LEFT_VELOCITY:
+                    result.values[0] = sensor_values[70];
+                    result.values[1] = sensor_values[71];
+                    break;
+                default:
+                    result.values[0] = -1;
+                    result.values[1] = -1;
+            }   //end switch
 
-        //next byte should be the size of the rest
-        read = connection.PollComport(port, &receive, sizeof(unsigned char));
-        //std::cout << "  Bytes (" << read << "): " << (int)receive;
-
-        //get the size, add 1 for checksum
-        int packet_size = (int)receive + 1;
-        rest = new unsigned char[packet_size];
-
-        //get values
-        read = connection.PollComport(port, rest, (sizeof(unsigned char) * (packet_size)));
-        //std::cout << "  Bytes (" << read << "): ";
-
-
-        switch(which) {
-            case BUMP:  //works for wheel drop also
-                result.values[0] = (int)rest[1];
-                result.values[1] = -1;
-                break;
-            case WALL:
-                result.values[0] = (int)rest[2];
-                result.values[1] = -1;
-                break;
-            case CLIFF_LEFT:
-                result.values[0] = (int)rest[3];
-                result.values[1] = -1;
-                break;
-            case CLIFF_FRONT_LEFT:
-                result.values[0] = (int)rest[4];
-                result.values[1] = -1;
-                break;
-            case CLIFF_FRONT_RIGHT:
-                result.values[0] = (int)rest[5];
-                result.values[1] = -1;
-                break;
-            case CLIFF_RIGHT:
-                result.values[0] = (int)rest[6];
-                result.values[1] = -1;
-                break;
-            case VIRTUAL_WALL:
-                result.values[0] = (int)rest[7];
-                result.values[1] = -1;
-                break;
-            case LOW_SIDE_DRIVER:
-                result.values[0] = (int)rest[8];
-                result.values[1] = -1;
-                break;
-            case 15:
-                result.values[0] = (int)rest[9];
-                result.values[1] = -1;
-                break;
-            case 16:
-                result.values[0] = (int)rest[10];
-                result.values[1] = -1;
-                break;
-            case INFRARED_BYTE:
-                result.values[0] = (int)rest[11];
-                result.values[1] = -1;
-                break;
-            case BUTTONS:
-                result.values[0] = (int)rest[12];
-                result.values[1] = -1;
-                break;
-            case DISTANCE:
-                result.values[0] = (int)rest[13];
-                result.values[1] = (int)rest[14];
-                break;
-            case ANGLE:
-                result.values[0] = (int)rest[15];
-                result.values[1] = (int)rest[16];
-                break;
-            case CHARGING_STATE:
-                result.values[0] = (int)rest[17];
-                result.values[1] = -1;
-                break;
-            case VOLTAGE:
-                result.values[0] = (int)rest[18];
-                result.values[1] = (int)rest[19];
-                break;
-            case CURRENT:
-                result.values[0] = (int)rest[20];
-                result.values[1] = (int)rest[21];
-                break;
-            case BATTERY_TEMPERATURE:
-                result.values[0] = (int)rest[22];
-                result.values[1] = -1;
-                break;
-            case BATTERY_CHARGE:
-                result.values[0] = (int)rest[23];
-                result.values[1] = (int)rest[24];
-                break;
-            case BATTERY_CAPACITY:
-                result.values[0] = (int)rest[25];
-                result.values[1] = (int)rest[26];
-                break;
-            case WALL_SIGNAL:
-                result.values[0] = (int)rest[27];
-                result.values[1] = (int)rest[28];
-                break;
-            case CLIFF_LEFT_SIGNAL:
-                result.values[0] = (int)rest[29];
-                result.values[1] = (int)rest[30];
-                break;
-            case CLIFF_FRONT_LEFT_SIGNAL:
-                result.values[0] = (int)rest[31];
-                result.values[1] = (int)rest[32];
-                break;
-            case CLIFF_FRONT_RIGHT_SIGNAL:
-                result.values[0] = (int)rest[33];
-                result.values[1] = (int)rest[34];
-                break;
-            case CLIFF_RIGHT_SIGNAL:
-                result.values[0] = (int)rest[35];
-                result.values[1] = (int)rest[36];
-                break;
-            case CARGO_BAY_DIGITAL_INPUTS:
-                result.values[0] = (int)rest[37];
-                result.values[1] = -1;
-                break;
-            case CARGO_BAY_ANALOG_SIGNAL:
-                result.values[0] = (int)rest[38];
-                result.values[1] = (int)rest[39];
-                break;
-            case CHARGING_SOURCES_AVAILABLE:
-                result.values[0] = (int)rest[40];
-                result.values[1] = -1;
-                break;
-            case OI_MODE:
-                result.values[0] = (int)rest[41];
-                result.values[1] = -1;
-                break;
-            case SONG_NUMBER:
-                result.values[0] = (int)rest[42];
-                result.values[1] = -1;
-                break;
-            case SONG_PLAYING:
-                result.values[0] = (int)rest[43];
-                result.values[1] = -1;
-                break;
-            case NUMBER_OF_STREAM_PACKETS:
-                result.values[0] = (int)rest[44];
-                result.values[1] = -1;
-                break;
-            case REQUESTED_VELOCITY:
-                result.values[0] = (int)rest[45];
-                result.values[1] = (int)rest[46];
-                break;
-            case REQUESTED_RADIUS:
-                result.values[0] = (int)rest[47];
-                result.values[1] = (int)rest[48];
-                break;
-            case REQUESTED_RIGHT_VELOCITY:
-                result.values[0] = (int)rest[49];
-                result.values[1] = (int)rest[50];
-                break;
-            case REQUESTED_LEFT_VELOCITY:
-                result.values[0] = (int)rest[51];
-                result.values[1] = (int)rest[52];
-                break;
-            default:
-                result.values[0] = -1;
-                result.values[1] = -1;
-        }   //end switch
-    }   //end if
+            //unlock
+            pthread_mutex_unlock(&mutex_sensors);
+    }   //end if sensors streaming
     return result;
 }   //END GETSENSORVALUE
 
@@ -840,23 +1001,23 @@ double Robot::adjustTurningTime(int velocity, int angle) {
 
     else if(velocity <=500) {
         if(angle == 90)
-            return 0.01;
+            return 0.05;
         else if(angle == 45)
-            return 0.01;
+            return 0.02;
         else if(angle == -90)
-            return -0.02;
+            return 0.05;
         else if(angle == 180)
-            return 0.04;
+            return 0.075;
         else if(angle == -180)
-            return 0.035;
+            return 0.075;
         else if(angle == 270)
             return 0.0425;
         else if(angle == -270)
             return 0.03;
         else if(angle == 360)
-            return 0.0495;
+            return 0.05;
         else if(angle == -360)
-            return 0.01;
+            return 0.025;
     }   //end velocity<=500
 
     return 0;
@@ -973,40 +1134,40 @@ Position Robot::step(Position& a, Position& b, char& d) {
             if( (d == 'n') || (d == 'N') ) {
                 d = 'e';
                 turnXDegrees(-90);
-                driveXDistance(UTILITY_H::UNIT_SIZE);
+                driveXDistance(UNIT_SIZE);
             }
             else if( (d == 's') || (d == 'S') ) {
                 d = 'e';
                 turnXDegrees(90);
-                driveXDistance(UTILITY_H::UNIT_SIZE);
+                driveXDistance(UNIT_SIZE);
             }
             else if( (d == 'w') || (d == 'W') ) {
                 d = 'e';
                 turnXDegrees(180);
-                driveXDistance(UTILITY_H::UNIT_SIZE);
+                driveXDistance(UNIT_SIZE);
             }
             else if( (d == 'e') || (d == 'E') )
-                driveXDistance(UTILITY_H::UNIT_SIZE);
+                driveXDistance(UNIT_SIZE);
         }   //end if east
 
         else if( (a.getCol() - b.getCol() == 1) ) {
             if( (d == 'n') || (d == 'N') ) {
                 d = 'w';
                 turnXDegrees(90);
-                driveXDistance(UTILITY_H::UNIT_SIZE);
+                driveXDistance(UNIT_SIZE);
             }
             else if( (d == 's') || (d == 'S') ) {
                 d = 'w';
                 turnXDegrees(-90);
-                driveXDistance(UTILITY_H::UNIT_SIZE);
+                driveXDistance(UNIT_SIZE);
             }
             else if( (d == 'e') || (d == 'E') ) {
                 d = 'w';
                 turnXDegrees(180);
-                driveXDistance(UTILITY_H::UNIT_SIZE);
+                driveXDistance(UNIT_SIZE);
             }
             else if( (d == 'w') || (d == 'W') )
-                driveXDistance(UTILITY_H::UNIT_SIZE);
+                driveXDistance(UNIT_SIZE);
         }   //end if west
 
         return b;
@@ -1020,20 +1181,20 @@ Position Robot::step(Position& a, Position& b, char& d) {
             if( (d == 'w') || (d == 'W') ) {
                 d = 's';
                 turnXDegrees(90);
-                driveXDistance(UTILITY_H::UNIT_SIZE);
+                driveXDistance(UNIT_SIZE);
             }
             else if( (d == 'e') || (d == 'E') ) {
                 d = 's';
                 turnXDegrees(-90);
-                driveXDistance(UTILITY_H::UNIT_SIZE);
+                driveXDistance(UNIT_SIZE);
             }
             else if( (d == 'n') || (d == 'N') ) {
                 d = 's';
                 turnXDegrees(180);
-                driveXDistance(UTILITY_H::UNIT_SIZE);
+                driveXDistance(UNIT_SIZE);
             }
             else if( (d == 's') || (d == 'S') )
-                driveXDistance(UTILITY_H::UNIT_SIZE);
+                driveXDistance(UNIT_SIZE);
 
         }   //end if south
 
@@ -1042,20 +1203,20 @@ Position Robot::step(Position& a, Position& b, char& d) {
             if( (d == 'w') || (d == 'W') ) {
                 d = 'n';
                 turnXDegrees(-90);
-                driveXDistance(UTILITY_H::UNIT_SIZE);
+                driveXDistance(UNIT_SIZE);
             }
             else if( (d == 'e') || (d == 'E') ) {
                 d = 'n';
                 turnXDegrees(90);
-                driveXDistance(UTILITY_H::UNIT_SIZE);
+                driveXDistance(UNIT_SIZE);
             }
             else if( (d == 's') || (d == 'S') ) {
                 d = 'n';
                 turnXDegrees(180);
-                driveXDistance(UTILITY_H::UNIT_SIZE);
+                driveXDistance(UNIT_SIZE);
             }
             else if( (d == 'n') || (d == 'N') )
-                driveXDistance(UTILITY_H::UNIT_SIZE);
+                driveXDistance(UNIT_SIZE);
 
         }   //end if north
 
@@ -1067,34 +1228,3 @@ Position Robot::step(Position& a, Position& b, char& d) {
     }   //end else
 }   //END STEP
 
-
-
-/*Robot steps through a whole path*/
-Position Robot::stepPath() {
-
-
-    pthread_mutex_lock(&UTILITY_H::mutex_agent);
-
-    Path& temp = agent->getPath();
-    Position result = temp.getPath().at(0);
-
-    pthread_mutex_unlock(&UTILITY_H::mutex_agent);
-
-
-
-
-    while(!agent->getPosition().equals(agent->getGoal()) && agent->getPath().getSize() > 1) {
-        Position p = step(temp.getPath().at(0), temp.getPath().at(1), agent->getDirection());
-        agent->setPosition(p);
-        result = p;
-
-        //update the path
-        agent->getGrid()->clear();
-        Path newpath = agent->traverse(agent->getGoal());
-        agent->setPath(newpath);
-    }   //end while
-
-    //stop and return
-    stop();
-    return result;
-}

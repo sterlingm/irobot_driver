@@ -3,6 +3,7 @@
 #include <string>
 #include <math.h>
 #include <iostream>
+#include <stdexcept>
 #include "agent.h"
 #include "utility.h"
 
@@ -232,26 +233,43 @@ Path Agent::traverse(Position& end) {
     result.add(current->getValue());
 
 
-    result.arrange();
+    result.reverse();
     return result;
 }   //END TRAVERSE
 
 
 
 
-void Agent::stepPath() {
-
-    while( path.getSize() > 1 && goal.equals(path.getPath().at(path.getSize()-1))  ) {
-
+void Agent::stepPath(bool own) {
+        std::cout<<"\nbefore while";
         //lock path
         pthread_mutex_lock(&UTILITY_H::mutex_agent);
-        //step through first pair
-        pos = path.getPath().at(1);
+        std::cout<<"\nAGENT'S PATH BEFORE WHILE: "<<path.toString();
+    while( path.getSize() > 1 && goal.equals(path.getPath().at(path.getSize()-1))  ) {
+        std::cout<<"\ninwhile";
+        //unlock
+        pthread_mutex_unlock(&UTILITY_H::mutex_agent);
+        //if not using server/client
+        if(own) {
+            grid->markPath(path);
+            std::cout<<grid->toString();
+        }   //end if own
 
-        robot->step(path.getPath().at(0), path.getPath().at(1), direction);
+        //lock path
+        pthread_mutex_trylock(&UTILITY_H::mutex_agent);
 
-        //delete the first position
-        path.getPath().erase(path.getPath().begin());
+        try {
+
+
+            //set new position and step through first pair
+            pos = path.getPath().at(1);
+            robot->step(path.getPath().at(0), path.getPath().at(1), direction);
+
+            //delete the first position
+            path.getPath().erase(path.getPath().begin());
+
+
+        } catch(std::out_of_range& e) {}
 
         //unlock
         pthread_mutex_unlock(&UTILITY_H::mutex_agent);
