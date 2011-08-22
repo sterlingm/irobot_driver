@@ -242,24 +242,27 @@ Path Agent::traverse(Position& end) {
 /*Steps the robot through the path*/
 void Agent::stepPath(bool own) {
 
-    //lock path
-    pthread_mutex_lock(&UTILITY_H::mutex_agent);
+    try {
+        //trylock path
+        pthread_mutex_trylock(&mutex_agent);
 
-    //std::cout<<"\nAGENT'S PATH BEFORE WHILE: "<<path.toString();
 
-    //while the path contains more than 1 position AND the goal is equal to the agent's goal, move the robot
-    while( path.getSize() > 1 && goal.equals(path.getPath().at(path.getSize()-1))  ) {
-        //if not using server/client, print the grid
-        if(own) {
-            grid->markPath(path);
-            std::cout<<grid->toString();
-        }   //end if own
+        //std::cout<<"\nAGENT'S PATH BEFORE WHILE: "<<path.toString();
+        //std::cout<<"\nAGENT GOAL: "<<goal.toString();
+        //while the path contains more than 1 position AND the goal is equal to the agent's goal, move the robot
+        while( path.getSize() > 1 && goal.equals(path.getPath().at(path.getSize()-1))  ) {
 
-        //lock path
-        pthread_mutex_trylock(&UTILITY_H::mutex_agent);
+            //unlock path
+            pthread_mutex_unlock(&mutex_agent);
 
-        try {
+            //if not using server/client, print the grid
+            if(own) {
+                grid->markPath(path);
+                std::cout<<grid->toString();
+            }   //end if own
 
+            //lock path
+            pthread_mutex_trylock(&mutex_agent);
 
             //set new position and step through first pair
             pos = path.getPath().at(1);
@@ -268,18 +271,10 @@ void Agent::stepPath(bool own) {
             //delete the first position
             path.getPath().erase(path.getPath().begin());
 
-            pthread_mutex_lock(&mutex_agent);
-
-            //set new position and step through first pair
-            pos = path.getPath().at(1);
-            robot->step(path.getPath().at(0), path.getPath().at(1), direction);
-
-        } catch(std::out_of_range& e) {}
-
-
-        //unlock
-        pthread_mutex_unlock(&mutex_agent);
-    }   //end while
+            //unlock
+            pthread_mutex_unlock(&mutex_agent);
+        }   //end while
+    } catch(std::out_of_range& e) {}
 }   //END STEPPATH
 
 

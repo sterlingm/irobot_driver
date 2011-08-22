@@ -73,6 +73,7 @@ static pthread_mutex_t mutex_sensors = PTHREAD_MUTEX_INITIALIZER;
 
 static int MENU_SLEEP_TIME = 850000;
 static int UPDATE_PATH_TIME = 200000;
+static int UPDATE_SERVER_TIME = 100000;
 
 //~1ft more than 305 to account for speeding up
 static int UNIT_SIZE = 320;

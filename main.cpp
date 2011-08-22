@@ -20,14 +20,13 @@
 
 using namespace std;
 
-    Robot robot(ROBOT_PORT, ROBOT_BAUDRATE);
-    ServerControl sc;
-    ClientControl cc;
-    TcpServer server((char*)PORT);
-    TcpClient client((char*)PORT);
-    udpserver u_server((char*)PORT);
-    udpclient u_client((char*)PORT);
-
+Robot robot(ROBOT_PORT, ROBOT_BAUDRATE);
+ServerControl sc;
+ClientControl cc;
+TcpServer server((char*)PORT);
+TcpClient client((char*)PORT);
+udpserver u_server((char*)PORT);
+udpclient u_client((char*)PORT);
 
 
 
@@ -58,12 +57,12 @@ int main(int argc, char* args[]) {
 
 
     //make agent and set robot's agent
-    Agent* agent = new Agent(g, robot, 'w');
+    Agent* agent = new Agent(g, robot, 'e');
     robot.setAgent(agent);
 
     //make initial start and goal positions
-    Position start(22,12);
-    Position end(22,8);
+    Position start(1,1);
+    Position end(1,1);
     agent->setPosition(start);
     agent->setGoal(end);
 
@@ -85,6 +84,7 @@ int main(int argc, char* args[]) {
 
         //attempt to launch the servers
         if(server.launchServer() && u_server.launch_server()) {
+
 
 
             cout<<"\nSuccessful Connection!";

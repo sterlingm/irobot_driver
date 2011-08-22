@@ -154,7 +154,7 @@ void TcpServer::getSendBack(char* command) {
             while(isdigit(tempCommand[idend]))
                 idend++;
             std::string temp = tempCommand.substr(4, idend-2);
-            std::cout<<"\ntemp: "<<temp;
+            //std::cout<<"\ntemp: "<<temp;
             int id = atoi(temp.c_str());
 
             //if valid id value, set new current sensor

@@ -1,6 +1,7 @@
 #include "servercontrol.h"
 #include "agent.h"
 
+
 pthread_t display;
 pthread_t update_path;
 pthread_t s_udp_comm;

@@ -139,7 +139,7 @@ void TcpClient::getCommand(char* command) {
             //std::cout<<"\nlist_of_pos:"<<list_of_pos;
 
             //lock
-            pthread_mutex_lock(&UTILITY_H::mutex_agent);
+            pthread_mutex_lock(&mutex_agent);
 
             //clear the path
             myAgent->getPath().clear();
@@ -185,10 +185,10 @@ void TcpClient::getCommand(char* command) {
                 myAgent->getPath().add(temp);
 
             }   //end for
-            std::cout<<"\nNEW PATH: "<<myAgent->getPath().toString();
+            //std::cout<<"\nNEW PATH: "<<myAgent->getPath().toString();
 
             //unlock
-            pthread_mutex_unlock(&UTILITY_H::mutex_agent);
+            pthread_mutex_unlock(&mutex_agent);
         }   //end if id 6
 
 
@@ -306,11 +306,11 @@ void TcpClient::communicate() {
     int sel;        //holds return value for select();
     int numSent;    //holds return value for send()
     int numRead;    //holds return value for read()
-    char in[255];   //in buffer
+    char in[512];   //in buffer
     char out[255];  //out buffer
 
     //clear buffers
-    memset(&in, 0, 255);
+    memset(&in, 0, 512);
     memset(&out, 0, 255);
 
 
@@ -354,7 +354,7 @@ void TcpClient::communicate() {
             }   //end if connection closed
             //if a message, call get command
             else if(in[0] != '\0') {
-                std::cout<<"\nServer: "<<in;
+                //std::cout<<"\nServer: "<<in;
                 getCommand(in);
                 memset(&in, 0, 512);
             }   //end if message

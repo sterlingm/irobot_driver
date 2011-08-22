@@ -7,6 +7,8 @@ pthread_t drive;
 pthread_t update;
 pthread_t c_udp_comm;
 
+
+
 ClientControl::ClientControl() {}
 ClientControl::~ClientControl() {}
 
@@ -43,7 +45,7 @@ void* ClientControl::update_server_thread(void* threadid) {
 /*Inline for update thread. Updates the server every second*/
 inline void ClientControl::update_server_thread_i() {
     for(;;) {
-        usleep(100000);
+        usleep(UPDATE_SERVER_TIME);
         myClient->updateServerAgent();
     }   //end while
 }   //END UPDATE_AGENT_THREAD_I
