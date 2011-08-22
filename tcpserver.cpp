@@ -213,19 +213,12 @@ void TcpServer::communicate() {
     fd_set read_flags,write_flags; // the flag sets to be used
     struct timeval waitd = {10, 0};          // the max wait time for an event
     int sel;        // holds return value for select();
-<<<<<<< HEAD
     int numRead = 0;    //holds return value for read()
     int numSent = 0;    //holds return value for send()
     char in[255];   //in buffer
     char out[512];  //out buffer
-=======
-    int numRead;    //holds return value for read()
-    int numSent;    //holds return value for send()
-    char in[255];   //in buffer
-    char out[255];  //out buffer
->>>>>>> ea404a9f386303bbadd3b207982390732e17ae36
 
-    //clear buffersz
+    //clear buffers
     memset(&in, 0, 255);
     memset(&out, 0, 512);
 

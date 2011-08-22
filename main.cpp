@@ -39,7 +39,6 @@ int main(int argc, char* args[]) {
     cout<<"\n";
     */
 
-<<<<<<< HEAD
 
     /*initialize things*/
 
@@ -72,46 +71,13 @@ int main(int argc, char* args[]) {
     //Position goal = agent->getGoal();
     Path p = agent->traverse(agent->getGoal());
     agent->setPath(p);
-=======
 
-    /*initialize things*/
-
-    //get grid filename from command line argument 2
-    std::stringstream temp_file;
-    temp_file<<"./"<<args[2];
-    std::string filename = temp_file.str();
-    //cout<<endl<<filename;
-    Grid* g = new Grid(filename);
-    //print grid
-    cout<<endl<<g->toString();
-
-    //set robot members and stream sensors
-    robot.fullMode();
-    robot.setVelocity(VELOCITY);
-    robot.streamSensors();
-
-
-    //make agent and set robot's agent
-    Agent* agent = new Agent(g, robot, 'n');
-    robot.setAgent(agent);
-
-    //make initial start and goal positions
-    Position start(22,1);
-    Position end(1,2);
-    agent->setPosition(start);
-    agent->setGoal(end);
-
-    //set initial path
-    //Position goal = agent->getGoal();
-    Path p = agent->traverse(agent->getGoal());
-    agent->setPath(p);
 
     //set the ip addresses
     server.setIP(args[3]);
     client.setIP(args[3]);
     u_server.setIP(args[3]);
     u_client.setIP(args[3]);
->>>>>>> ea404a9f386303bbadd3b207982390732e17ae36
 
 
     //if server
@@ -141,17 +107,10 @@ int main(int argc, char* args[]) {
 
     //else if client
     else if(args[1][0] == 'c') {
-<<<<<<< HEAD
+
 
         //launch the clients
         if(client.launchClient() && u_client.launch_client()) {
-
-=======
-
-        //launch the clients
-        if(client.launchClient() && u_client.launch_client()) {
-
->>>>>>> ea404a9f386303bbadd3b207982390732e17ae36
 
             cout<<"\nSuccessful Connection!";
 
