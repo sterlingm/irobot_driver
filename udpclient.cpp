@@ -1,40 +1,31 @@
 #include "udpclient.h"
-#include "agent.h"
+#include "robot_driver_agent.h"
 
-#include <iostream>
-#include <string.h>
-#include <cstdlib>
-#include <unistd.h>
-#include <stdio.h>
 #include <errno.h>
-#include <signal.h>
-#include <fcntl.h>
-#include <assert.h>
-#include <iostream>
-#include <sys/types.h>
-#include <sys/socket.h>
 #include <netdb.h>
-
-
 
 struct addrinfo *servinfo;  //will point to the results
 
 
 /*Constructor and destructor*/
-udpclient::udpclient(char* p) : port(p) {}
-udpclient::~udpclient() {}
+Udpclient::Udpclient(char* p, char* ip, char ID) : port(p), ip_addr(ip), done(false), myAgent(0), id(ID) {}
+Udpclient::~Udpclient() {freeaddrinfo(servinfo);}
+
+/*Getter and setter for done*/
+void Udpclient::setDone(bool d) {done = d;}
+bool Udpclient::getDone() {return done;}
 
 /*Getter and Setter for myAgent*/
-void udpclient::setAgent(Agent* a) {myAgent = a;}
-Agent*& udpclient::getAgent() {return myAgent;}
+void Udpclient::setAgent(Agent* a) {myAgent = a;}
+Agent*& Udpclient::getAgent() {return myAgent;}
 
 /*Getter and setter for ip_addr*/
-char* udpclient::getIP() {return ip_addr;}
-void udpclient::setIP(char* addr) {ip_addr = addr;}
+char* Udpclient::getIP() {return ip_addr;}
+void Udpclient::setIP(char* addr) {ip_addr = addr;}
 
 
 /*Launches the client*/
-bool udpclient::launch_client() {
+bool Udpclient::launch_client() {
     int status;
 
     struct addrinfo hints;
@@ -65,32 +56,37 @@ bool udpclient::launch_client() {
 
 
 /*Sends messages with sensor info to the sensor every 15ms*/
-void udpclient::communicate() {
+void Udpclient::communicate() {
 
     //message to send
-    std::ostringstream tosend;
+    std::stringstream tosend;
     //hold return value of sendto
     int numSent;
 
-    while(1) {
+    while(!done) {
 
-        //sleep
-        usleep(15000);
+        //sleep for 15ms
+        usleep(14500);
 
         //reset tosend
         tosend.str("");
+
         //grab sensor values
-        Sensor_Packet temp = myAgent->getRobot()->getSensorValue(myAgent->getRobot()->getCurrentSensor());
+        sensor_packet temp = myAgent->getRobot()->get_sensor_value(myAgent->getCurrentSensor());
+        //std::cout<<"\nsensor high byte value: "<<temp.values[1]<<"\n";
+        //std::cout<<"\nsensor low byte value: "<<temp.values[0]<<"\n";
 
-        //put header onto tosend and concatenate the values
-        tosend<<"@ "<<temp.values[1]<<" "<<temp.values[0];
+        if(temp.values[1] > -256 && temp.values[1] < 256) {
+            //put header onto tosend and concatenate the values
+            tosend<<"@ "<<myAgent->getRobot()->getID()<<" "<<temp.values[1]<<" "<<temp.values[0];
 
-        //send
-        numSent = sendto(fd, tosend.str().c_str(), tosend.str().length(), 0, servinfo->ai_addr, servinfo->ai_addrlen);
-        if(numSent < 0)
-            printf("\nError sending %m", errno);
-        //else
-            //  cout<<"\nSent: "<<tosend.str();
+            //send
+            numSent = sendto(fd, tosend.str().c_str(), 10, 0, servinfo->ai_addr, servinfo->ai_addrlen);
+            if(numSent < 0)
+                printf("\nError sending message: %s\nError message: %m", tosend.str().c_str(), errno);
+            //else
+                //std::cout<<"\nUDP Sent: "<<tosend.str();
+        }   //end if
     }   //end while
 }   //END COMMUNICATE
 

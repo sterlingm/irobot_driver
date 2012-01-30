@@ -2,12 +2,13 @@
 #define SERVERCONTROL_H
 #include "tcpserver.h"
 #include "udpserver.h"
+#include "robot_driver_agent.h"
 
 class ServerControl {
 public:
 
 	//! A Constructor
-	ServerControl();
+	ServerControl(TcpServer*, Udpserver*);
     //! A Destructor
     ~ServerControl();
 
@@ -21,11 +22,11 @@ public:
 
     //! Getter function for myUDP member
     /*! Returns a reference to myUDP member*/
-    udpserver*& getUDP();
+    Udpserver*& getUDP();
 
     //! Setter function for myUDP member
     /*! Sets myUDP to us */
-    void setUDP(udpserver*);
+    void setUDP(Udpserver*);
 
 	//! Controls the server
 	/*!
@@ -38,11 +39,14 @@ public:
 private:
 
     TcpServer* myServer;
-    udpserver* myUDP;
+    Udpserver* myUDP;
 
+    pthread_t display;
+    pthread_t* update_path;
+    pthread_t s_udp_comm;
 
     static void* update_path_thread(void*);
-    void update_path_thread_i();
+    void update_path_thread_i(char);
 
     static void* display_menu_thread(void*);
     void display_menu_thread_i();

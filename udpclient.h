@@ -1,18 +1,25 @@
 #ifndef UDPCLIENT_H
 #define UDPCLIENT_H
+#include "robot_driver_utility.h"
 
 
-class Agent;
-
-class udpclient {
+class Udpclient {
 public:
 
     //! Constructor
-    /*! Constructor\nSets port to p*/
-    udpclient(char*);
+    /*! Constructor\nSets port to p, ip_adds to ip, and done to false */
+    Udpclient(char*, char*, char);
     //! Destructor
-    /*! Destructor */
-    ~udpclient();
+    /*! Calls freeaddrinfo */
+    ~Udpclient();
+
+    //! Setter function for done member
+    /*! Sets done to d */
+    void setDone(bool);
+
+    //! Getter function for done member
+    /*! Returns the value of done member */
+    bool getDone();
 
     //! Setter function for myAgent member
     /*! Sets myAgent to a */
@@ -43,8 +50,10 @@ public:
 
 private:
     int fd;
+    char id;
     char* ip_addr;
     char* port;
+    bool done;
     Agent* myAgent;
 };
 
