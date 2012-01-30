@@ -1,12 +1,10 @@
 
 
-#include "Robot.h"
+#include "robot.h"
 #include "rs232.h"
-#include "agent.h"
-#include <math.h>
 
 pthread_t get_sensors;
-
+int result_high_low_byte[2];
 
 /*Callback for get sensors thread*/
 void* Robot::get_sensors_thread(void* threadid) {
@@ -30,7 +28,6 @@ inline void Robot::get_sensors_thread_i() {
         if(sensorsstreaming) {
 
             unsigned char receive;
-            unsigned char* rest;
             int read = 0;
 
             //read a byte
@@ -44,17 +41,11 @@ inline void Robot::get_sensors_thread_i() {
                 read = connection.PollComport(port, &receive, sizeof(unsigned char));
                 //std::cout << "  Bytes (" << read << "): " << (int)receive;
 
-                //get the size, add 1 for checksum
-                int packet_size = (int)receive + 1;
-                rest = new unsigned char[packet_size];
+                unsigned char rest[54];
 
                 //get values
-                read = connection.PollComport(port, rest, (sizeof(unsigned char) * (packet_size)));
+                read = connection.PollComport(port, rest, 54);
                 //std::cout << "  Bytes (" << read << "): ";
-
-                //trylock
-                pthread_mutex_trylock(&mutex_sensors);
-
 
 
                 /* ***SET SENSOR VALUES*** */
@@ -167,31 +158,38 @@ inline void Robot::get_sensors_thread_i() {
                 sensor_values[70] = (int)rest[51];
                 sensor_values[71] = (int)rest[52];
 
-
-                //unlock
-                pthread_mutex_unlock(&mutex_sensors);
-
             }   //end if header
         }   //end if sensors streaming
     }   //end while
 }   //END GET_SENSORS_THREAD_I
-
-
 
 /*
   Constructor for a Robot
   Takes in a port number and a baudrate
   Defaults the current sensor OI_MODE
 */
-Robot::Robot(int portNo, int br) : port(portNo), baudrate(br), sensorsstreaming(false), currentSensor(OI_MODE), velocity(0) {
+Robot::Robot(int portNo, int br) : port(portNo), baudrate(br), sensorsstreaming(false), velocity(0) {
     if(connection.OpenComport(port, baudrate))
         printf("port open did not work\n");
-
-
     else {
-        printf("port open worked\n");
+        //printf("port open worked\n");
         //make the thread
-        pthread_create(&get_sensors, NULL, get_sensors_thread, (void*)this);
+        pthread_create(&get_sensors, 0, get_sensors_thread, (void*)this);
+    }   //end else
+}   //END ROBOT()
+
+/*
+  Constructor for a Robot
+  Takes in a port number and a baudrate
+  Defaults the current sensor OI_MODE
+*/
+Robot::Robot(int portNo, int br, char ID) : port(portNo), baudrate(br), sensorsstreaming(false), id(ID), velocity(0) {
+    if(connection.OpenComport(port, baudrate))
+        printf("port open did not work\n");
+    else {
+        //printf("port open worked\n");
+        //make the thread
+        pthread_create(&get_sensors, 0, get_sensors_thread, (void*)this);
     }   //end else
 }   //END ROBOT()
 
@@ -199,40 +197,26 @@ Robot::Robot(int portNo, int br) : port(portNo), baudrate(br), sensorsstreaming(
  Destructor for a Robot
  Closes the serial comport
 */
-Robot::~Robot() {
-    connection.CloseComport(port);
-}   //END ~ROBOT()
+Robot::~Robot() {connection.CloseComport(port);}
 
 /* Closes the serial comport*/
 void Robot::close() {connection.CloseComport(port);}
 
-/*Sets the port number to p*/
-void Robot::setPort(int& p) {port = p;}
-/*Sets the baud rate to br*/
-void Robot::setBaudRate(int& br) {baudrate = br;}
 /*Sets the default velocity to v*/
 void Robot::setVelocity(int v) {velocity = v;}
-/*Sets the current sensor to s*/
-void Robot::setCurrentSensor(int& s) {currentSensor = s;}
-/*Sets agent to a*/
-void Robot::setAgent(Agent*& a) {agent = a;}
 /*Sets connection to c*/
 void Robot::setConnection(SerialConnect& c) {connection = c;}
 
 /*Returns the serial port connection*/
 SerialConnect& Robot::getConnection() {return connection;}
 /*Returns the port number*/
-int& Robot::getPort() {return port;}
+ int& Robot::getPort() {return port;}
 /*Returns the baud rate*/
-int& Robot::getBaudRate() {return baudrate;}
+ int& Robot::getBaudRate() {return baudrate;}
 /*Returns the default velocity*/
 int& Robot::getVelocity() {return velocity;}
-/*Returns the current sensor*/
-int& Robot::getCurrentSensor() {return currentSensor;}
-/*Returns agent*/
-Agent*& Robot::getAgent() {return agent;}
-
-
+/*Returns id*/
+ char Robot::getID() {return id;}
 
 /*
  Sends a single byte to the robot
@@ -279,7 +263,7 @@ void Robot::start() {
 void Robot::fullMode() {
     unsigned char fullmode[2] = {128, 132};
     if(!sendBytes(fullmode, 2))
-        std::cout<<"\nCould not send bytes for full mode\n";
+        std::cout<<"\nCould not send bytes to robot for full mode\n";
     sleep(1);
 }   //END FULLMODE
 
@@ -288,7 +272,7 @@ void Robot::fullMode() {
 void Robot::safeMode() {
     unsigned char safemode[2] = {128, 131};
     if(!sendBytes(safemode, 2))
-        std::cout<<"\nCould not send bytes for safe mode\n";
+        std::cout<<"\nCould not send bytes to robot for safe mode\n";
     sleep(1);
 }   //END SAFEMODE
 
@@ -298,7 +282,7 @@ void Robot::streamSensors() {
     if(!sensorsstreaming) {
         unsigned char stream[3] = {148, 1, 6};
         if(!sendBytes(stream, 3))
-            std::cout<<"\nCould not send bytes for sensor streaming\n";
+            std::cout<<"\nCould not send bytes to robot for sensor streaming\n";
         else
             sensorsstreaming = true;
     }
@@ -309,7 +293,7 @@ void Robot::pauseSensorStream() {
     if(sensorsstreaming) {
         unsigned char stop[2] = {150, 0};
         if(!sendBytes(stop, 2))
-            std::cout<<"\nCould not send bytes for pausing the sensor stream\n";
+            std::cout<<"\nCould not send bytes to robot for pausing the sensor stream\n";
         else
             sensorsstreaming = false;
     }
@@ -329,19 +313,15 @@ void Robot::toggleSensorStream() {
     sensorsstreaming = !sensorsstreaming;
     unsigned char command[2] = {150, a};
     if(!sendBytes(command, 2))
-        std::cout<<"\nCould not send bytes to toggle the sensor stream";
+        std::cout<<"\nCould not send bytes to robot to toggle the sensor stream";
 }   //END TOGGLESENSORSTREAM
 
 
 /*Returns a Sensor_Packet for which*/
-Sensor_Packet Robot::getSensorValue(int which) {
-    Sensor_Packet result;
-
+sensor_packet Robot::get_sensor_value(int which) {
+    sensor_packet result;
     //if the sensors are streaming
     if(sensorsstreaming) {
-
-            //lock
-            pthread_mutex_lock(&mutex_sensors);
 
             //set the values for the specified sensor
             switch(which) {
@@ -493,10 +473,11 @@ Sensor_Packet Robot::getSensorValue(int which) {
                     result.values[0] = -1;
                     result.values[1] = -1;
             }   //end switch
-
-            //unlock
-            pthread_mutex_unlock(&mutex_sensors);
     }   //end if sensors streaming
+    else {
+        result.values[0] = -1;
+        result.values[1] = -1;
+    }   //end else
     return result;
 }   //END GETSENSORVALUE
 
@@ -507,21 +488,21 @@ Sensor_Packet Robot::getSensorValue(int which) {
  index 0 is the high byte and index 1 is the low byte
 */
 int* Robot::getHighAndLowByte(int v) {
-    int* result = new int[2];
 
     //if a low value, just use the low byte
     if(v > 0 && v < 256) {
-        result[0] = 0;
-        result[1] = v;
+        result_high_low_byte[0] = 0;
+        result_high_low_byte[1] = v;
     }   //end if
 
     //else use both the bytes
     else {
-        result[0] = (v>>8) & 0xff;
-        result[1] = v & 0xff;
+        result_high_low_byte[0] = (v>>8) & 0xff;
+        result_high_low_byte[1] = v & 0xff;
     }
 
-    return result;
+    usleep(1000);
+    return result_high_low_byte;
 }   //END GETHIGHANDLOWBYTE
 
 /*
@@ -545,7 +526,7 @@ void Robot::drive(int velocity, int radius) {
 
     unsigned char command[5] = {137, vhigh, vlow, rhigh, rlow};
     if(!sendBytes(command, 5))
-        std::cout<<"\nCould not send bytes to drive";
+        std::cout<<"\nCould not send bytes to robot to drive";
 }   //END DRIVE
 
 
@@ -571,7 +552,7 @@ void Robot::drive_straight(int velocity) {
 
     unsigned char command[5] = {137, vhigh, vlow, 127, 255};
     if(!sendBytes(command, 5))
-        std::cout<<"\nCould not send bytes to drive straight";
+        std::cout<<"\nCould not send bytes to robot to drive straight";
 }   //END DRIVESTRAIGHT
 
 /*Calls drive_straight with the velocity variable as the velocity*/
@@ -584,16 +565,18 @@ void Robot::drive_straight() {
 /*Drives the robot the specified distance (in mm) at the specified speed*/
 void Robot::driveXDistance(int distance, int velocity) {
     bool backwards = false;
+    int tVelocity = velocity;
+    int tDistance = distance;
     if(velocity < 0) {
-        velocity = velocity * -1;
-        backwards = true;
+        backwards = backwards ^ true;
+        tVelocity = tVelocity * -1;
     }
     if(distance < 0) {
-        distance = distance * -1;
-        backwards = true;
+        backwards = backwards ^ true;
+        tDistance = tDistance * -1;
     }
 
-    double time = (double)distance / velocity;
+    double time = (double)tDistance / tVelocity;
 
     //ADJUST TIME
     if(velocity<= 125)
@@ -613,7 +596,9 @@ void Robot::driveXDistance(int distance, int velocity) {
 
     time = time * 1000000;
 
-    if(backwards)
+    if(velocity < 0 && backwards)
+        drive_straight(velocity);
+    else if(backwards)
         drive_straight((velocity*-1));
     else
         drive_straight(velocity);
@@ -646,7 +631,7 @@ void Robot::turnClockwise(int velocity) {
     //create and send drive command
     unsigned char command[5] = {137, vhigh, vlow, 255, 255};
     if(!sendBytes(command, 5))
-        std::cout<<"\nCould not send bytes to turn clockwise";
+        std::cout<<"\nCould not send bytes to robot to turn clockwise";
 }   //END TURNCLOCKWISE
 
 
@@ -665,16 +650,15 @@ void Robot::turnCounterClockwise(int velocity) {
     //create and send drive command
     unsigned char command[5] = {137, vhigh, vlow, 0, 1};
     if(!sendBytes(command, 5))
-        std::cout<<"\nCould not send bytes to turn counter clockwise";
+        std::cout<<"\nCould not send bytes to robot to turn counter clockwise";
 }   //END TURNCOUNTERCLOCKWISE
 
 
 
-
-
+/*Returns the amount of adjusting the time needs based on the angle and velocity*/
 double Robot::adjustTurningTime(int velocity, int angle) {
 
-    if(velocity <= 25) {
+    if( (velocity <= 25 && velocity > 0) || (velocity >= -25 && velocity < 0)) {
         if(angle == 90 || angle == -90)
             return -0.8;
         else if(angle == 180)
@@ -691,7 +675,7 @@ double Robot::adjustTurningTime(int velocity, int angle) {
             return -3.25;
     }   //end velocity<=25
 
-    else if(velocity <=50) {
+    else if( (velocity <=50 && velocity > 0) || (velocity >= -50 && velocity < -25)) {
         if(angle == 90)
             return -0.4;
         else if(angle == -90)
@@ -710,7 +694,7 @@ double Robot::adjustTurningTime(int velocity, int angle) {
             return -0.935;
     }   //end velocity<=50
 
-    else if(velocity <=75) {
+    else if( (velocity <=75 && velocity > 0) || (velocity >= -75 && velocity < -50)) {
         if(angle == 90)
             return -0.0975;
         else if(angle == 45)
@@ -729,7 +713,7 @@ double Robot::adjustTurningTime(int velocity, int angle) {
             return -0.46;
     }   //end velocity<=75
 
-    else if(velocity <=100) {
+    else if( (velocity <=100 && velocity > 0) || (velocity >= -100 && velocity < -75)) {
         if(angle == 90 || angle == -90)
             return -0.1;
         else if(angle == 180)
@@ -746,7 +730,7 @@ double Robot::adjustTurningTime(int velocity, int angle) {
             return -0.485;
     }   //end velocity<=100
 
-    else if(velocity <=125) {
+    else if( (velocity <=125 && velocity > 0) || (velocity >= -125 && velocity < -100)) {
         if(angle == 90)
             return -0.0875;
         else if(angle == -90)
@@ -763,7 +747,7 @@ double Robot::adjustTurningTime(int velocity, int angle) {
             return -0.4;
     }   //end velocity<=125
 
-    else if(velocity <=150) {
+    else if( (velocity <=150 && velocity > 0) || (velocity >= -150 && velocity < -125)) {
         if(angle == 90)
             return -0.08;
         else if(angle == -90)
@@ -780,7 +764,7 @@ double Robot::adjustTurningTime(int velocity, int angle) {
             return -0.375;
     }   //end velocity<=150
 
-    else if(velocity <=175) {
+    else if( (velocity <=175 && velocity > 0) || (velocity >= -175 && velocity < -150)) {
         if(angle == 90)
             return -0.0675;
         else if(angle == -90)
@@ -797,7 +781,7 @@ double Robot::adjustTurningTime(int velocity, int angle) {
             return -0.3275;
     }   //end velocity<=175
 
-    else if(velocity <=200) {
+    else if( (velocity <=200 && velocity > 0) || (velocity >= -200 && velocity < -175)) {
         if(angle == 90)
             return -0.0685;
         else if(angle == -90)
@@ -812,7 +796,7 @@ double Robot::adjustTurningTime(int velocity, int angle) {
             return -0.3;
     }   //end velocity<=200
 
-    else if(velocity <=225) {
+    else if( (velocity <=225 && velocity > 0) || (velocity >= -225 && velocity < -200)) {
         if(angle == 90 || angle == -90)
             return -0.0585;
         else if(angle == 180)
@@ -827,7 +811,7 @@ double Robot::adjustTurningTime(int velocity, int angle) {
             return -0.285;
     }   //end velocity<=225
 
-    else if(velocity <=250) {
+    else if( (velocity <=250 && velocity > 0) || (velocity >= -250 && velocity < -225)) {
         if(angle == 90)
             return -0.05;
         else if(angle == -90)
@@ -844,7 +828,7 @@ double Robot::adjustTurningTime(int velocity, int angle) {
             return -0.25;
     }   //end velocity<=250
 
-    else if(velocity <=275) {
+    else if( (velocity <=275 && velocity > 0) || (velocity >= -275 && velocity < -250)) {
         if(angle == 90 || angle == -90)
             return -0.0475;
         else if(angle == 180)
@@ -859,7 +843,7 @@ double Robot::adjustTurningTime(int velocity, int angle) {
             return -0.225;
     }   //end velocity<=275
 
-    else if(velocity <=300) {
+    else if( (velocity <=300 && velocity > 0) || (velocity >= -300 && velocity < -275)) {
         if(angle == 90 || angle == -90)
             return -0.04;
         else if(angle == 180)
@@ -874,7 +858,7 @@ double Robot::adjustTurningTime(int velocity, int angle) {
             return -0.225;
     }   //end velocity<=300
 
-    else if(velocity <=325) {
+    else if( (velocity <=325 && velocity > 0) || (velocity >= -325 && velocity < -300)) {
         if(angle == 90)
             return -0.04;
         else if(angle == -90)
@@ -891,7 +875,7 @@ double Robot::adjustTurningTime(int velocity, int angle) {
             return -0.2;
     }   //end velocity<=325
 
-    else if(velocity <=350) {
+    else if( (velocity <=350 && velocity > 0) || (velocity >= -350 && velocity < -325)) {
         if(angle == 90)
             return -0.0375;
         else if(angle == -90)
@@ -908,7 +892,7 @@ double Robot::adjustTurningTime(int velocity, int angle) {
             return -0.18;
     }   //end velocity<=350
 
-    else if(velocity <=375) {
+    else if( (velocity <=375 && velocity > 0) || (velocity >= -375 && velocity < -350)) {
         if(angle == 90)
             return -0.035;
         else if(angle == -90)
@@ -923,7 +907,7 @@ double Robot::adjustTurningTime(int velocity, int angle) {
             return -0.18;
     }   //end velocity<=375
 
-    else if(velocity <=400) {
+    else if( (velocity <=400 && velocity > 0) || (velocity >= -400 && velocity < -375)) {
         if(angle == 90)
             return -0.02;
         else if(angle == -90)
@@ -942,7 +926,7 @@ double Robot::adjustTurningTime(int velocity, int angle) {
             return -0.15;
     }   //end velocity<=400
 
-    else if(velocity <=425) {
+    else if( (velocity <=425 && velocity > 0) || (velocity >= -425 && velocity < -400)) {
         if(angle == 90)
             return -0.015;
         else if(angle == -90)
@@ -961,7 +945,7 @@ double Robot::adjustTurningTime(int velocity, int angle) {
             return -0.13;
     }   //end velocity<=425
 
-    else if(velocity <=450) {
+    else if( (velocity <=450 && velocity > 0) || (velocity >= -450 && velocity < -425)) {
         if(angle == 90)
             return -0.015;
         else if(angle == -90)
@@ -980,7 +964,7 @@ double Robot::adjustTurningTime(int velocity, int angle) {
             return -0.12;
     }   //end velocity<=450
 
-    else if(velocity <=475) {
+    else if( (velocity <=475 && velocity > 0) || (velocity >= -475 && velocity < -450)) {
         if(angle == 90)
             return -0.015;
         else if(angle == -90)
@@ -999,7 +983,7 @@ double Robot::adjustTurningTime(int velocity, int angle) {
             return -0.06;
     }   //end velocity<=475
 
-    else if(velocity <=500) {
+    else if( (velocity <=500 && velocity > 0) || (velocity >= -500 && velocity < -475)) {
         if(angle == 90)
             return 0.05;
         else if(angle == 45)
@@ -1021,7 +1005,7 @@ double Robot::adjustTurningTime(int velocity, int angle) {
     }   //end velocity<=500
 
     return 0;
-}
+}   //END ADJUSTTIME
 
 
 
@@ -1051,19 +1035,24 @@ void Robot::turnXDegrees(int degree, int velocity) {
         }
 
         double p = (tDegree * (double)100 / 360) / 100;  //percent of 180
+        //std::cout<<"\np:"<<p;
         double distance = p * 900; //how far to move (mm)
+        //std::cout<<"\ndistance:"<<distance;
 
         double time = distance / tVelocity; //how long to turn
-
+        //std::cout<<"\ntime:"<<time;
+        //std::cout<<"\nadjustment:"<<adjustTurningTime(velocity,degree);
         time += adjustTurningTime(velocity,degree);
-
+        //std::cout<<"\nadjusted time:"<<time;
         //set time to microseconds
         time = time * 1000000;
 
         if(!negative)
             turnCounterClockwise(velocity);
+
         else
             turnClockwise(velocity);
+
 
         usleep(time);
         stop();
@@ -1100,7 +1089,7 @@ void Robot::turnXDegreesInYSeconds(int degree, double seconds) {
 void Robot::stop() {
     unsigned char command[5] = {137, 0, 0, 0, 0};
     if(!sendBytes(command, 5))
-        std::cout<<"\nCould not send bytes to stop";
+        std::cout<<"\nCould not send bytes to robot to stop";
 }   //END STOP
 
 
@@ -1119,112 +1108,6 @@ void Robot::leds(bool play, bool advance, unsigned char value, unsigned char int
         which = which | 0x08;
     unsigned char command[4] = {139, which, value, intensity};
     if(!sendBytes(command, 4))
-        std::cout<<"\nCould not send bytes to change the leds";
+        std::cout<<"\nCould not send bytes to robot to change the leds";
 }   //END LEDS
-
-
-
-/*Robot moves from one position to another*/
-Position Robot::step(Position& a, Position& b, char& d) {
-
-    //std::cout<<"\nStepping from "<<a.toString()<<" to "<<b.toString()<<" with direction "<<d;
-
-    if(a.getRow() == b.getRow()) {
-        if( (a.getCol() - b.getCol() == -1) ) {
-            if( (d == 'n') || (d == 'N') ) {
-                d = 'e';
-                turnXDegrees(-90);
-                driveXDistance(UNIT_SIZE);
-            }
-            else if( (d == 's') || (d == 'S') ) {
-                d = 'e';
-                turnXDegrees(90);
-                driveXDistance(UNIT_SIZE);
-            }
-            else if( (d == 'w') || (d == 'W') ) {
-                d = 'e';
-                turnXDegrees(180);
-                driveXDistance(UNIT_SIZE);
-            }
-            else if( (d == 'e') || (d == 'E') )
-                driveXDistance(UNIT_SIZE);
-        }   //end if east
-
-        else if( (a.getCol() - b.getCol() == 1) ) {
-            if( (d == 'n') || (d == 'N') ) {
-                d = 'w';
-                turnXDegrees(90);
-                driveXDistance(UNIT_SIZE);
-            }
-            else if( (d == 's') || (d == 'S') ) {
-                d = 'w';
-                turnXDegrees(-90);
-                driveXDistance(UNIT_SIZE);
-            }
-            else if( (d == 'e') || (d == 'E') ) {
-                d = 'w';
-                turnXDegrees(180);
-                driveXDistance(UNIT_SIZE);
-            }
-            else if( (d == 'w') || (d == 'W') )
-                driveXDistance(UNIT_SIZE);
-        }   //end if west
-
-        return b;
-    }   //end same row
-
-
-    else if(a.getCol() == b.getCol()) {
-
-        if( (a.getRow() - b.getRow() == -1) ) {
-
-            if( (d == 'w') || (d == 'W') ) {
-                d = 's';
-                turnXDegrees(90);
-                driveXDistance(UNIT_SIZE);
-            }
-            else if( (d == 'e') || (d == 'E') ) {
-                d = 's';
-                turnXDegrees(-90);
-                driveXDistance(UNIT_SIZE);
-            }
-            else if( (d == 'n') || (d == 'N') ) {
-                d = 's';
-                turnXDegrees(180);
-                driveXDistance(UNIT_SIZE);
-            }
-            else if( (d == 's') || (d == 'S') )
-                driveXDistance(UNIT_SIZE);
-
-        }   //end if south
-
-        else if( (a.getRow() - b.getRow() == 1) ) {
-
-            if( (d == 'w') || (d == 'W') ) {
-                d = 'n';
-                turnXDegrees(-90);
-                driveXDistance(UNIT_SIZE);
-            }
-            else if( (d == 'e') || (d == 'E') ) {
-                d = 'n';
-                turnXDegrees(90);
-                driveXDistance(UNIT_SIZE);
-            }
-            else if( (d == 's') || (d == 'S') ) {
-                d = 'n';
-                turnXDegrees(180);
-                driveXDistance(UNIT_SIZE);
-            }
-            else if( (d == 'n') || (d == 'N') )
-                driveXDistance(UNIT_SIZE);
-
-        }   //end if north
-
-        return b;
-    }   //end same column
-    else {
-        std::cout<<"\nCannot step from "<<a.toString()<<" to "<<b.toString();
-        return a;
-    }   //end else
-}   //END STEP
 

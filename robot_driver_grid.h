@@ -1,18 +1,17 @@
 
-#ifndef GRID_H
-#define GRID_H
+#ifndef ROBOT_DRIVER_GRID_H
+#define ROBOT_DRIVER_GRID_H
 #include <string>
 #include <string.h>
 #include <stdio.h>
 #include <exception>
-#include "path.h"
+#include "robot_driver_path.h"
 
 class Grid {
 public:
 
 
 	const static char PATH = '.';
-	const static char LOC = 'X';
 
     //! Exception class for a file that does not exist
 	class FileNotFoundException: public std::exception {
@@ -23,12 +22,14 @@ public:
 	};  //end class EmptyTreeException
 
 
+    Grid();
+
     //! A constructor
     /*!
      * Constructor that takes in a filename for a grid\n
      * Determines and sets map, numRows, numCols, and accessible
      */
-	Grid(std::string&);
+	explicit Grid(std::string&);
     //! A constructor
     /*! Constructor that sets map to themap, numRows to r, and numCols to c */
 	Grid(char**&, int&, int&);
@@ -38,8 +39,8 @@ public:
 	~Grid();
 
     //! Getter function for themap member
-    /*! Returns a char**& reference of map member */
-	char**& getMap();
+    /*! Returns the value of map member */
+	char** getMap();
 
     //! Getter function for numRows member
     /*! Returns numRows member value */
@@ -49,17 +50,19 @@ public:
     /*! Returns numCols member value */
 	int getNumOfCols();
 
-    //! Getter function for accessible member
-    /*! Returns accessible member value */
-	std::vector<Position> getAccessiblePos();
+
+	//! Getter function for f_name member
+	/*! Returns the value of f_name */
+	const std::string& getFilename();;
 
     //! Returns value at specific index
     /*! Returns the value of map at r,c */
-	char getPos(int, int);
+	char getPos(int&, int&);
 
     //! Set an index of map to specified char
     /*! Set map[row][col] to value */
-	void setPos(int, int, char);
+	void setPos(int&, int&, char);
+
 
     //! Clears grid
     /*! Sets all accessible positions to ' ' */
@@ -70,16 +73,16 @@ public:
      * Clears grid and marks only positions in p on grid\n
      * First position is marked as 'x' and rest as '.'
      */
-    void markPath(Path&);
+    void markPath(Path&, char);
 
     //! Returns a printable string of the grid
-	std::string toString();
+	const std::string toString();
 
 private:
+    const std::string f_name;
 	char** map;
-	int numOfRows;
-	int numOfCols;
-	std::vector<Position> accessible;
+	int num_rows;
+	int num_cols;
 };
 
 #endif

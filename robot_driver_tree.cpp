@@ -1,6 +1,7 @@
 #include <sstream>
 #include <stdlib.h>
-#include "tree.h"
+#include "robot_driver_tree.h"
+
 
 
 /*Constructor*/
@@ -9,6 +10,9 @@ Tree::Node::Node(Position& v, Node*& p) : value(v), parent(p), gvalue(0), hvalue
 
 /*Destructor*/
 Tree::Node::~Node() {}
+
+Tree::Node Tree::Node::clone() {return *this;}
+
 
 /*Returns true if the node has no children*/
 bool Tree::Node::isLeaf() {return getChildren().size() == 0;}
@@ -38,10 +42,11 @@ void Tree::Node::setHValue(double v) {hvalue = v;}
 void Tree::Node::setFValue() {fvalue = gvalue + hvalue;}
 
 
+
 /*Returns a string of the Node's value, it's parent, and it's children*/
 std::string Tree::Node::toString() {
 	std::ostringstream result;
-	result<<getValue().toString();
+	result<<getValue().toString()<<" ("<<this<<")";
 	result<<"		Parent - "<<getParent()->getValue().toString()<<"		Children - ";
 
 	for(int i=0;i<children.size();i++) {
@@ -70,10 +75,17 @@ Tree::Tree(Position& p) {
 }   //END CONSTRUCTOR
 
 /*Destructor*/
-Tree::~Tree() {}
+Tree::~Tree() {
+    for(int i=0;i<nodes.size();i++) {
+        delete nodes.at(i);
+        nodes.at(i) = 0;
+    }
+}
 
 /*Returns root*/
 Tree::Node*& Tree::getRoot() {return root;}
+
+std::vector<Tree::Node*> Tree::getNodes() {return nodes;}
 
 /*Returns true if p is in the tree*/
 bool Tree::contains(Position& p) {
@@ -84,25 +96,19 @@ bool Tree::contains(Position& p) {
 }   //END CONTAINS
 
 
-/*Creates a node with value and parent and adds it to the tree*/
 Tree::Node* Tree::add(Position& value, Node*& parent) {
 	Node* temp = new Node(value, parent);
 	parent->getChildren().push_back(temp);
+	//std::cout<<"\n"<<temp->getValue().toString()<<" added to "<<parent->getValue().toString();
 	nodes.push_back(temp);
     return temp;
 }   //END ADD
 
-/*Adds a group of values to the tree using add(Position&, Node*&)*/
-void Tree::addGroup(std::vector<Position>& group, Node*& parent) {
-	for(int i=0;i<group.size();i++)
-		add(group.at(i), parent);
-}   //END ADDGROUP
-
 /*Returns a string of the root node and it's children*/
-std::string Tree::rootToString() {
+const std::string Tree::rootToString() {
 	std::ostringstream result;
 
-	result<<getRoot()->getValue().toString()<<"          (ROOT NODE)";
+	result<<getRoot()->getValue().toString()<<" ("<<getRoot()<<") "<<"          (ROOT NODE)";
 	result<<"       	Children - ";
 
 	//print children
@@ -118,7 +124,8 @@ std::string Tree::rootToString() {
 
 
 /*Returns a string of the tree values from t down*/
-std::string Tree::toString(Node*& t) {
+const std::string Tree::toString(Node*& t) {
+
 	std::ostringstream result;
 
 	//if null, print empty line
@@ -133,11 +140,11 @@ std::string Tree::toString(Node*& t) {
 
 	//if its not a leaf, print the children
 	if(!t->isLeaf()) {
+
 		std::vector<Node*> ctemp = t->getChildren();
 
 		while(ctemp.size() > 0) {
-			result<<std::endl;
-
+			result<<"\n";
 
 			//pop off a child and recurse
 			Node* temp = ctemp.front();
@@ -145,13 +152,24 @@ std::string Tree::toString(Node*& t) {
 			result<<toString(temp);
 
 		}	//end while
-
 	}	//end if not a leaf
-
 	return result.str();
 }   //END TOSTRING
 
 /*Returns a string of the whole tree*/
-std::string Tree::toString() {
+const std::string Tree::toString() {
     return toString(root);
 }   //END TOSTRING
+
+
+
+Tree::Node* Tree::find(Position& a) {
+
+    for(int i=0;i<nodes.size();i++)
+        if(nodes.at(i)->getValue().equals(a))
+            return nodes.at(i);
+
+}   //END FIND
+
+
+

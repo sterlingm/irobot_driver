@@ -1,8 +1,9 @@
 
 #ifndef GUIWINDOW_H
 #define GUIWINDOW_H
-#include "Robot.h"
-#include<FL/Fl.H>
+#include "robot_driver_agent.h"
+#include <cstdlib>
+#include <FL/Fl.H>
 #include <FL/Fl_Window.H>
 #include <FL/Fl_Button.H>
 #include <FL/Fl_Check_Button.H>
@@ -11,22 +12,22 @@
 #include <FL/Fl_Choice.H>
 
 
-class GUIWindow : public Fl_Window{
+class GUIWindow : public Fl_Window {
 public:
 
     //! A constructor
     /*! Sets robot to r */
-    GUIWindow(Robot&);
+    GUIWindow(Agent&);
 
     //! Destructor
     ~GUIWindow();
 
     //! Getter function for robot member
     /*! Returns reference of robot member */
-    Robot*& getRobot();
+    Agent*& getAgent();
 
 private:
-    Robot* robot;
+    Agent* agent;
 
     Fl_Button* fullMode;
     Fl_Button* safeMode;

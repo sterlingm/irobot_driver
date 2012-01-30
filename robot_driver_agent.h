@@ -1,12 +1,12 @@
-#ifndef AGENT_H
-#define AGENT_H
+#ifndef ROBOT_DRIVER_AGENT_H
+#define ROBOT_DRIVER_AGENT_H
 
 #include <vector>
-#include "grid.h"
-#include "path.h"
-#include "Robot.h"
-#include "tree.h"
-#include "priorityqueue.h"
+#include "robot.h"
+#include "robot_driver_grid.h"
+#include "robot_driver_path.h"
+#include "robot_driver_tree.h"
+#include "robot_driver_priorityqueue.h"
 
 class Agent {
 
@@ -18,10 +18,15 @@ public:
 		virtual const char* what() const throw();
 	};	//end exception
 
+    Agent();
+
+    Agent(Robot&);
+
+    Agent(Robot&, int);
 
     //! A constructor
     /*! Initializes grid, robot, and direction to parameters */
-    Agent(Grid*&, Robot&, char);
+    Agent(Grid*&, Robot&, int);
 
     //! Destructor
     ~Agent();
@@ -29,13 +34,12 @@ public:
 
     //! Getter function for direction
     /*! Returns reference to direction member */
-    char& getDirection();
+    int& getDirection();
     //! Setter function for direction
     /*!
      * Sets direction member to d\n
-     * if d is e(east), E(east), w(west), W(west), s(south), S(south), n(north), or N(north)
      */
-    void setDirection(char);
+    void setDirection(int);
 
 
     //! Getter function for pos
@@ -62,27 +66,23 @@ public:
     void setPath(Path&);
 
 
-
     //! Getter function for grid
     /*! Returns a reference to grid member */
     Grid*& getGrid();
-    //! Setter function for grid
-    /*! Sets grid member to g */
-    void setGrid(Grid*&);
 
+    //! Setter function for grid
+    /*! Sets grid member to g*/
+    void setGrid(Grid*);
 
 
     //! Getter function for robot
     /*! Returns a reference to robot member */
     Robot*& getRobot();
-    //! Setter function for robot
-    /*! Sets robot member to r */
-    void setRobot(Robot&);
 
 
     //! Getter function for sensor value high byte
     /*! Returns the value of the sensor value high byte */
-    int getHighSV();
+    int& getHighSV();
     //! Setter function for sensor value high byte
     /*! Sets highsv to v */
     void setHighSV(int&);
@@ -90,10 +90,36 @@ public:
 
     //! Getter function for sensor value low byte
     /*! Returns the value of the sensor value low byte */
-    int getLowSV();
+    int& getLowSV();
     //! Setter function for sensor value low byte
     /*! Sets lowsv to v */
     void setLowSV(int&);
+
+    //! Getter function for spinning member\nReturns true if robot is spinning
+    /*! Returns true if the robot is spinning */
+    bool is_spinning();
+    //! Setter function for spinning member
+    void set_spinning(bool);
+
+    //! Getter function for driving member\nReturns true if robot is driving
+    bool is_driving();
+    //! Setter function for driving member
+    void set_driving(bool);
+
+    //! Getter for currentSensor member
+    /*! Returns a reference to currentSensor member */
+    int& getCurrentSensor();
+    //! Setter for currentSensor member
+    /*! Sets currentSensor to s */
+    void setCurrentSensor(int&);
+
+    //! Getter for mode member
+    /*! Returns f for full mode, s for safe mode, or p for passive mode*/
+    char& get_mode();
+
+    //! Setter for mode member
+    /*! Sets mode to m*/
+    void set_mode(char&);
 
 
     //! Returns true if position has been visited
@@ -117,7 +143,7 @@ public:
      * Returns a Path from pos member to the Position reference passed\n
      * Throws a NoPathException if no path exists
      */
-    Path traverse(Position&);
+    Path astar_path(Position&);
 
 
     //! Moves the robot through path
@@ -127,15 +153,37 @@ public:
      */
     void stepPath(bool);
 
+    //! Changes the robot's direction
+    /*!
+     *  Changes the robot's direction
+     *  Returns true on success, false on failure
+     */
+    void change_direction(int);
+
+
+    //! Moves the robot from one position to another
+    /*!
+     * Moves the robot from Position a to Position b, if possible\n
+     * First parameter is Position a\n
+     * Second Parameter is Position b\n
+     * If move is successful, the new Position is set\n
+     */
+    void step(Position&, Position&);
+
 private:
     Robot* robot;
     Grid* grid;
-    char direction;
-    Position pos;   //current position
-    Position goal;  //current goal
+    int direction;
+    Position pos;
+    Position goal;
     Path path;
+    int currentSensor;
     int highsv;
     int lowsv;
+    bool spinning;
+    bool driving;
+    char mode;
 
+    Position find_next_best(Tree&, Position);
 };
 #endif

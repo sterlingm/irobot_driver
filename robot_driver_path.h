@@ -1,16 +1,22 @@
-#ifndef PATH_H
-#define PATH_H
+#ifndef ROBOT_DRIVER_PATH_H
+#define ROBOT_DRIVER_PATH_H
 
 #include <vector>
-#include "position.h"
+#include "robot_driver_position.h"
 
 class Path {
 public:
-    //! A Constructor
+    //! Constructor
+    /*! Defaults the vector to reserve 20 elements */
     Path();
+
+    //! Constructor
+    /*! Reserves s elements in the vector */
+    explicit Path(int&);
+
     //! A Constructor
     /*! Sets path member to p */
-    Path(std::vector<Position>&);
+    explicit Path(std::vector<Position>&);
     //! A destructor
     ~Path();
 
@@ -30,6 +36,12 @@ public:
     /*! Inserts p at index of the path */
     void insert(Position&, int);
 
+    //! Removes the front Position of the Path
+    void pop_front();
+
+    //! Removes the last Position of the Path
+    void pop_back();
+
     //! Empties the path
     /*! Removes all elements from the vector of Positions */
     void clear();
@@ -43,10 +55,11 @@ public:
     bool contains(Position&);
 
     //! Returns a printable string of the path
-    std::string toString();
+    const std::string toString();
 
 private:
     std::vector<Position> path;
     int size;
+    int capacity;
 };
 #endif

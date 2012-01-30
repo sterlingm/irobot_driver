@@ -1,7 +1,7 @@
 
 
-#ifndef POSITION_H
-#define POSITION_H
+#ifndef ROBOT_DRIVER_POSITION_H
+#define ROBOT_DRIVER_POSITION_H
 
 #include <string>
 
@@ -26,7 +26,7 @@ public:
 
 	//! Setter function for row
 	/*! Sets row to r */
-	void setRow(int);
+	void setRow(int&);
 
 	//! Getter function for col
 	/*! Returns a reference of col member */
@@ -34,7 +34,7 @@ public:
 
 	//! Setter function for col
 	/*! Sets col to c */
-	void setCol(int);
+	void setCol(int&);
 
 	//! Checks if this position is equal to specified Position
 	/*! Returns true if row and col are equal in both Positions */
@@ -45,7 +45,7 @@ public:
     Position clone();
 
 	//! Returns a printable string of the Position
-	std::string toString();
+	const std::string toString();
 private:
 	int row;
 	int col;

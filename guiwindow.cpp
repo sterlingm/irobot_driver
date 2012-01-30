@@ -1,4 +1,4 @@
-#include "GUIWindow.h"
+#include "guiwindow.h"
 
 /*
  Callback function to loop
@@ -9,8 +9,8 @@ void IdleCallback(void* v) {
     GUIWindow* window = (GUIWindow*)v;
     //sleep for x milliseconds
     usleep(15000);
-    Sensor_Packet temp;
-    temp = window->getRobot()->getSensorValue(window->getRobot()->getCurrentSensor());
+    sensor_packet temp;
+    temp = window->getAgent()->getRobot()->get_sensor_value(window->getAgent()->getCurrentSensor());
     std::cout<<"\n---";
     std::cout<<"\n"<<temp.values[0]<<"\n"<<temp.values[1];
     std::cout<<"\n"<<"---"<<"\n";
@@ -23,7 +23,7 @@ void IdleCallback(void* v) {
  Takes in a specified robot
  By default, the sensors begin streaming when the window is created and the OI_MODE sensor is printed
 */
-GUIWindow::GUIWindow(Robot& r) : Fl_Window(500, 400, "iRobot Create"), robot(&r) {
+GUIWindow::GUIWindow(Agent& a) : Fl_Window(500, 400, "iRobot Create"), agent(&a) {
     begin();    //make the widgets, button for each option
 
         fullMode = new Fl_Button(25, 300, 90, 30, "Full Mode");
@@ -102,8 +102,8 @@ GUIWindow::GUIWindow(Robot& r) : Fl_Window(500, 400, "iRobot Create"), robot(&r)
         quit->shortcut(FL_CTRL + 'q');
 
     end();  //end making widgets
-    robot->fullMode();
-    robot->streamSensors();
+    agent->getRobot()->fullMode();
+    agent->getRobot()->streamSensors();
     Fl::add_idle(IdleCallback, this);
     resizable(this);
     show(); //show it
@@ -111,10 +111,33 @@ GUIWindow::GUIWindow(Robot& r) : Fl_Window(500, 400, "iRobot Create"), robot(&r)
 }   //END CONSTRUCTOR
 
 /*Destructor*/
-GUIWindow::~GUIWindow() {}
+GUIWindow::~GUIWindow() {
+    delete fullMode;
+    delete safeMode;
+    delete drive;
+    delete turn;
+    delete turnCW;
+    delete turnCCW;
+    delete stop;
+    delete leds;
+    delete toggleSensorStream;
+    delete quit;
+
+    delete playLED;
+    delete advanceLED;
+
+    delete velocity;
+    delete driveRadius;
+    delete turnAngle;
+    delete turnSeconds;
+
+    delete powerColor;
+    delete powerIntensity;
+
+}
 
 /*Returns a reference to the robot*/
-Robot*& GUIWindow::getRobot() {return robot;}
+Agent*& GUIWindow::getAgent() {return agent;}
 
 /*Adds items to the sensor Fl_Choice*/
 void GUIWindow::setSensorItems() {
@@ -169,7 +192,7 @@ void GUIWindow::cb_fullmode(Fl_Widget* o, void* v) {
  Puts the robot into full mode
 */
 inline void GUIWindow::cb_fullmode_i() {
-    robot->fullMode();
+    agent->getRobot()->fullMode();
 }   //END CBFULLMODE_I
 
 /*Callback function for the safe mode button*/
@@ -183,7 +206,7 @@ void GUIWindow::cb_safemode(Fl_Widget* o, void* v) {
  Puts the robot in safe mode
 */
 inline void GUIWindow::cb_safemode_i() {
-    robot->safeMode();
+    agent->getRobot()->safeMode();
 }   //END CBSAFEMODE_I
 
 
@@ -201,10 +224,10 @@ void GUIWindow::cb_drive(Fl_Widget* o, void* v) {
 inline void GUIWindow::cb_drive_i() {
     //if the radius has a value, drive at a radius
     if(driveRadius->size() > 0)
-        robot->drive(atoi(velocity->value()), atoi(driveRadius->value()));
+        agent->getRobot()->drive(atoi(velocity->value()), atoi(driveRadius->value()));
     //if not, drive straight
     else
-        robot->drive_straight(atoi(velocity->value()));
+        agent->getRobot()->drive_straight(atoi(velocity->value()));
 }   //END CBDRIVE_I
 
 
@@ -223,10 +246,10 @@ void GUIWindow::cb_turn(Fl_Widget* o, void* v) {
 inline void GUIWindow::cb_turn_i() {
     //if seconds has a value, turn x degrees in y seconds
     if(atoi(turnSeconds->value()) == 0)
-        robot->turnXDegrees(atoi(turnAngle->value()), atoi(velocity->value()));
+        agent->getRobot()->turnXDegrees(atoi(turnAngle->value()), atoi(velocity->value()));
     //if not, turn x degrees
     else
-        robot->turnXDegreesInYSeconds(atoi(turnAngle->value()), atoi(turnSeconds->value()));
+        agent->getRobot()->turnXDegreesInYSeconds(atoi(turnAngle->value()), atoi(turnSeconds->value()));
 }   //END CBTURN_I
 
 
@@ -242,7 +265,7 @@ void GUIWindow::cb_turnCW(Fl_Widget* o, void* v) {
 */
 inline void GUIWindow::cb_turnCW_i() {
     int v = atoi(velocity->value());
-    robot->turnClockwise(v);
+    agent->getRobot()->turnClockwise(v);
 }   //END CBTURNCLOCKWISE_I
 
 /*Callback function for the turn counter clockwise button*/
@@ -257,7 +280,7 @@ void GUIWindow::cb_turnCCW(Fl_Widget* o, void* v) {
 */
 inline void GUIWindow::cb_turnCCW_i() {
     int v = atoi(velocity->value());
-    robot->turnCounterClockwise(v);
+    agent->getRobot()->turnCounterClockwise(v);
 }   //END CBTURNCOUNTERCLOCKWISE_I
 
 /*Callback function for the stop button*/
@@ -271,7 +294,7 @@ void GUIWindow::cb_stop(Fl_Widget* o, void* v) {
  Stops the robot
 */
 inline void GUIWindow::cb_stop_i() {
-    robot->stop();
+    agent->getRobot()->stop();
 }   //END CBSTOP_I
 
 
@@ -290,7 +313,7 @@ void GUIWindow::cb_leds(Fl_Widget* o, void* v) {
  Sliding the intensity slider to the right makes the power led light brighter and sliding to the left makes it darker
 */
 inline void GUIWindow::cb_leds_i() {
-    robot->leds(playLED->value(),advanceLED->value(),powerColor->value(),powerIntensity->value());
+    agent->getRobot()->leds(playLED->value(),advanceLED->value(),powerColor->value(),powerIntensity->value());
 }   //END CBLEDS_I
 
 /*Callback function for the toggle sensor stream button*/
@@ -304,7 +327,7 @@ void GUIWindow::cb_toggleSensorStream(Fl_Widget* o, void* v) {
  Toggles sensor streaming on and off
 */
 inline void GUIWindow::cb_toggleSensorStream_i() {
-    robot->toggleSensorStream();
+    agent->getRobot()->toggleSensorStream();
 }   //END CBTOGGLESENSORSTREAM_I
 
 
@@ -326,142 +349,142 @@ inline void GUIWindow::cb_choice_i() {
 
         case 0:
             sensor = BUMP;
-            robot->setCurrentSensor(sensor);
+            agent->setCurrentSensor(sensor);
             break;
         case 1:
             sensor = WALL;
-            robot->setCurrentSensor(sensor);
+            agent->setCurrentSensor(sensor);
             break;
         case 2:
             sensor = CLIFF_LEFT;
-            robot->setCurrentSensor(sensor);
+            agent->setCurrentSensor(sensor);
             break;
         case 3:
             sensor = CLIFF_FRONT_LEFT;
-            robot->setCurrentSensor(sensor);
+            agent->setCurrentSensor(sensor);
             break;
         case 4:
             sensor = CLIFF_FRONT_RIGHT;
-            robot->setCurrentSensor(sensor);
+            agent->setCurrentSensor(sensor);
             break;
         case 5:
             sensor = CLIFF_RIGHT;
-            robot->setCurrentSensor(sensor);
+            agent->setCurrentSensor(sensor);
             break;
         case 6:
             sensor = VIRTUAL_WALL;
-            robot->setCurrentSensor(sensor);
+            agent->setCurrentSensor(sensor);
             break;
         case 7:
             sensor = LOW_SIDE_DRIVER;
-            robot->setCurrentSensor(sensor);
+            agent->setCurrentSensor(sensor);
             break;
         case 8:
             sensor = WHEEL_OVERCURRENT;
-            robot->setCurrentSensor(sensor);
+            agent->setCurrentSensor(sensor);
             break;
         case 9:
             sensor = INFRARED_BYTE;
-            robot->setCurrentSensor(sensor);
+            agent->setCurrentSensor(sensor);
             break;
         case 10:
             sensor = BUTTONS;
-            robot->setCurrentSensor(sensor);
+            agent->setCurrentSensor(sensor);
             break;
         case 11:
             sensor = DISTANCE;
-            robot->setCurrentSensor(sensor);
+            agent->setCurrentSensor(sensor);
             break;
         case 12:
             sensor = ANGLE;
-            robot->setCurrentSensor(sensor);
+            agent->setCurrentSensor(sensor);
             break;
         case 13:
             sensor = CHARGING_STATE;
-            robot->setCurrentSensor(sensor);
+            agent->setCurrentSensor(sensor);
             break;
         case 14:
             sensor = VOLTAGE;
-            robot->setCurrentSensor(sensor);
+            agent->setCurrentSensor(sensor);
             break;
         case 15:
             sensor = CURRENT;
-            robot->setCurrentSensor(sensor);
+            agent->setCurrentSensor(sensor);
             break;
         case 16:
             sensor = BATTERY_TEMPERATURE;
-            robot->setCurrentSensor(sensor);
+            agent->setCurrentSensor(sensor);
             break;
         case 17:
             sensor = BATTERY_CHARGE;
-            robot->setCurrentSensor(sensor);
+            agent->setCurrentSensor(sensor);
             break;
         case 18:
             sensor = BATTERY_CAPACITY;
-            robot->setCurrentSensor(sensor);
+            agent->setCurrentSensor(sensor);
             break;
         case 19:
             sensor = WALL_SIGNAL;
-            robot->setCurrentSensor(sensor);
+            agent->setCurrentSensor(sensor);
             break;
         case 20:
             sensor = CLIFF_LEFT_SIGNAL;
-            robot->setCurrentSensor(sensor);
+            agent->setCurrentSensor(sensor);
             break;
         case 21:
             sensor = CLIFF_FRONT_LEFT_SIGNAL;
-            robot->setCurrentSensor(sensor);
+            agent->setCurrentSensor(sensor);
             break;
         case 22:
             sensor = CLIFF_FRONT_RIGHT_SIGNAL;
-            robot->setCurrentSensor(sensor);
+            agent->setCurrentSensor(sensor);
             break;
         case 23:
             sensor = CLIFF_RIGHT_SIGNAL;
-            robot->setCurrentSensor(sensor);
+            agent->setCurrentSensor(sensor);
         case 24:
             sensor = CARGO_BAY_DIGITAL_INPUTS;
-            robot->setCurrentSensor(sensor);
+            agent->setCurrentSensor(sensor);
             break;
         case 25:
             sensor = CARGO_BAY_ANALOG_SIGNAL;
-            robot->setCurrentSensor(sensor);
+            agent->setCurrentSensor(sensor);
             break;
         case 26:
             sensor = CHARGING_SOURCES_AVAILABLE;
-            robot->setCurrentSensor(sensor);
+            agent->setCurrentSensor(sensor);
             break;
         case 27:
             sensor = OI_MODE;
-            robot->setCurrentSensor(sensor);
+            agent->setCurrentSensor(sensor);
             break;
         case 28:
             sensor = SONG_NUMBER;
-            robot->setCurrentSensor(sensor);
+            agent->setCurrentSensor(sensor);
             break;
         case 29:
             sensor = SONG_PLAYING;
-            robot->setCurrentSensor(sensor);
+            agent->setCurrentSensor(sensor);
             break;
         case 30:
             sensor = NUMBER_OF_STREAM_PACKETS;
-            robot->setCurrentSensor(sensor);
+            agent->setCurrentSensor(sensor);
             break;
         case 31:
             sensor = REQUESTED_VELOCITY;
-            robot->setCurrentSensor(sensor);
+            agent->setCurrentSensor(sensor);
             break;
         case 32:
             sensor = REQUESTED_RADIUS;
-            robot->setCurrentSensor(sensor);
+            agent->setCurrentSensor(sensor);
             break;
         case 33:
             sensor = REQUESTED_RIGHT_VELOCITY;
-            robot->setCurrentSensor(sensor);
+            agent->setCurrentSensor(sensor);
             break;
         case 34:
             sensor = REQUESTED_LEFT_VELOCITY;
-            robot->setCurrentSensor(sensor);
+            agent->setCurrentSensor(sensor);
             break;
         default: break;
     }   //END SWITCH
@@ -480,8 +503,8 @@ void GUIWindow::cb_quit(Fl_Widget* o, void* v) {
  Stops the robot, pausing sensor streaming, turns off all leds, and hides the window
 */
 inline void GUIWindow::cb_quit_i() {
-    robot->stop();
-    robot->pauseSensorStream();
-    robot->leds(false, false, 0, 0);
+    agent->getRobot()->stop();
+    agent->getRobot()->pauseSensorStream();
+    agent->getRobot()->leds(false, false, 0, 0);
     hide();
 }   //END CBQUIT_I

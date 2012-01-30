@@ -1,13 +1,15 @@
-#ifndef PRIORITYQUEUE_H
-#define PRIORITYQUEUE
+
+#ifndef ROBOT_DRIVER_PRIORITYQUEUE_H
+#define ROBOT_DRIVER_PRIORITYQUEUE
 #include <string>
-#include "tree.h"
+#include "robot_driver_tree.h"
+
 
 class PriorityQueue {
 
 public:
 
-	//! Exception for when the queue is empty
+    //! Exception for when the queue is empty
 	class EmptyQueueException : public std::exception {
 	public:
 		virtual const char* what() const throw();
@@ -19,8 +21,12 @@ public:
 		virtual const char* what() const throw();
 	};	//end exception
 
-	//! A Constructor
+	//! Constructor
+	/*! Defaults the max_size to 50 */
     PriorityQueue();
+    //! Constructor
+    /*! Sets max_size to size */
+    explicit PriorityQueue(int&);
     //! A Destructor
     ~PriorityQueue();
 
@@ -53,16 +59,17 @@ public:
     void remove(Tree::Node*&);
 
 	//! Clear the queue
-	/*! Removes all nodes from the queue */
     void clear();
 
 	//! Returns a printable string of the queue
-    std::string toString();
+    const std::string toString();
 
 private:
     int findIndex(Tree::Node*&);
-    std::vector<Tree::Node*> nodes;
-    int count;
+    void grow();
 
+    Tree::Node** nodes;
+    int count;
+    int max_size;
 };
 #endif

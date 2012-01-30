@@ -1,18 +1,23 @@
 #ifndef ROBOT_H
 #define ROBOT_H
 #include "rs232.h"
-#include "utility.h"
-#include "path.h"
-
-class Agent;
+#include "robot_driver_utility.h"
+#include "robot_driver_path.h"
 
 class Robot
 {
 public:
 
+    Robot() {}
+
+
     //! A constructor
     /*! Sets port member to first parameter passed and baudrate member to second parameter passed */
     Robot(int, int);
+
+    //! A constructor
+    /*! Sets port member to first parameter passed, baudrate member to second parameter passed, and id to third parameter */
+    Robot(int, int, char);
 
     //! A destructor
     /*! Closes communication port */
@@ -32,16 +37,10 @@ public:
     //! Getter for port member
     /*! Returns a reference to port member */
     int& getPort();
-    //! Setter for port member
-    /*! Sets port member to p */
-    void setPort(int&);
 
     //! Getter for baudrate member
     /*! Returns a reference to baudrate member */
     int& getBaudRate();
-    //! Setter for baudrate member
-    /*! Sets baudrate member to br */
-    void setBaudRate(int&);
 
     //! Getter for velocity member
     /*! Returns a reference to velocity member */
@@ -50,20 +49,10 @@ public:
     /*! Sets velocity member to v */
     void setVelocity(int);
 
-    //! Getter for currentSensor member
-    /*! Returns a reference to currentSensor member */
-    int& getCurrentSensor();
-    //! Setter for currentSensor member
-    /*! Sets currentSensor to s */
-    void setCurrentSensor(int&);
 
-
-    //! Getter for agent member
-    /*! Returns a reference to agent member */
-    Agent*& getAgent();
-    //! Setter for agent member
-    /*! Sets agent to a */
-    void setAgent(Agent*&);
+    //! Getter for id member
+    /*! Returns the value of id member */
+    char getID();
 
 
     //! Sends a byte over the port
@@ -112,7 +101,7 @@ public:
 
     //! Returns a Sensor_Packet for requested sensor id
     /*! Returns a Sensor_Packet of the sensor whose id is passed through parameter */
-    Sensor_Packet getSensorValue(int);
+    sensor_packet get_sensor_value(int);
 
     //! Drives robot at specified velocity and radius
     /*!
@@ -212,21 +201,6 @@ public:
      */
     void leds(bool,bool,unsigned char,unsigned char);
 
-    //! Moves the robot from one position to another
-    /*!
-     * Moves the robot from Position a to Position b, if possible\n
-     * First parameter is Position a\n
-     * Second Parameter is Position b\n
-     * Third parameter is the robot's direction\n
-     */
-    Position step(Position&, Position&, char&);
-
-    //! Moves the robot through its agent's path
-    /*!
-     * Moves the robot through its agent's path\n
-     * If it cannot complete the whole path, the robot will move as far as it can
-     */
-    Position stepPath();
 
 private:
 
@@ -244,8 +218,8 @@ private:
     int sensor_values[72];
     bool sensorsstreaming;
     SerialConnect connection;
-    Agent* agent;
-
+    char id;
+    char mode;
 };
 
 #endif

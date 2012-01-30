@@ -1,4 +1,4 @@
-#include "position.h"
+#include "robot_driver_position.h"
 #include <sstream>
 
 /*Constructor that sets values to -1 and false*/
@@ -16,9 +16,9 @@ int& Position::getRow() {return row;}
 int& Position::getCol() {return col;}
 
 /*Sets row to r*/
-void Position::setRow(int r) {row = r;}
+void Position::setRow(int& r) {row = r;}
 /*Sets col to c*/
-void Position::setCol(int c) {col = c;}
+void Position::setCol(int& c) {col = c;}
 
 /*Returns true if all members equal the members in b*/
 bool Position::equals(Position& b) {
@@ -29,14 +29,11 @@ bool Position::equals(Position& b) {
 
 /*Returns a Position with all the same values*/
 Position Position::clone() {
-    Position result;
-    result.row = row;
-    result.col = col;
-    return result;
+    return *this;
 }   //END CLONE
 
 /*Returns a string in the form of (row,col)*/
-std::string Position::toString() {
+const std::string Position::toString() {
 	std::ostringstream result;
 	result<<"("<<row<<","<<col<<")";
 	return result.str();
