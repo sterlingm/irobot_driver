@@ -1,5 +1,4 @@
 
-
 #include "robot_driver_utility.h"
 #include "robot_driver_grid.h"
 #include "guiwindow.h"
@@ -36,7 +35,7 @@ string serial_port = "/dev/ttyUSB0";
 string initial_sensor = "35";
 string velocity = "200";
 string robot_mode = "f";
-int robot_port;
+int robot_port = 16;
 bool v_read = false;
 bool v_sent = false;
 bool simple = false;
@@ -214,10 +213,10 @@ int main(int argc, char* args[]) {
         return Fl::run();
         */
 
-        //Robot robot(robot_port, ROBOT_BAUDRATE, direction[0]);
-        //Agent a_temp(grid, robot, direction[0]);
-        //GUIWindow window(a_temp);
-        //return Fl::run();
+        Robot robot(robot_port, ROBOT_BAUDRATE, direction[0]);
+        Agent a_temp(robot, direction[0]);
+        GUIWindow window(a_temp);
+        return Fl::run();
 
     }   //end if --gui
 
