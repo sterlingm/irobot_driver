@@ -145,6 +145,8 @@ public:
      */
     Path astar_path(Position&);
 
+    Path rrt_path(Position&);
+
 
     //! Moves the robot through path
     /*!
