@@ -172,7 +172,7 @@ Path Agent::astar_path(Position& init, Position& end) {
     tree->getRoot()->setFValue();
     tree->getRoot()->setParent(tree->getRoot());
 
-    //make priority queue of todo nodes and add root
+    //make priority queue of todo nodes and add the root to queue
     PriorityQueue nodes;
     nodes.push(tree->getRoot());
 
@@ -182,8 +182,11 @@ Path Agent::astar_path(Position& init, Position& end) {
     //flag to stop
     bool done = false;
 
-    Tree::Node* parent = tree->getRoot();    //the parent to current for robot tracing
-    Tree::Node* current = tree->getRoot();  //best node
+    //the parent to current for robot tracing
+    Tree::Node* parent = tree->getRoot();
+
+    //best node
+    Tree::Node* current = tree->getRoot();
     //**grid->setPos(current->getValue().getRow(), current->getValue().getCol(), 'x');  //set initial spot on grid
 
     //start traversing
@@ -236,6 +239,7 @@ Path Agent::astar_path(Position& init, Position& end) {
                 //std::cout<<"\nPositions adjacent to "<<current->getValue().toString();
                 //for(int i=0;i<successors.size();i++)
                     //std::cout<<"\n"<<successors.at(i).toString();
+
                 //for each successor
                 for(int i=0;i<successors.size();i++) {
 
@@ -272,7 +276,7 @@ Path Agent::astar_path(Position& init, Position& end) {
     while(!(current->getValue().equals(tree->getRoot()->getValue()))) {
         result.add(current->getValue());
         current = current->getParent();
-    }
+    }   //end while
 
     //push root position
     result.add(current->getValue());
@@ -280,9 +284,9 @@ Path Agent::astar_path(Position& init, Position& end) {
     //reverse the path vector so first position is vector.at(0), last position is vector.at(vector_length-1)
     result.reverse();
     delete tree;
-    //std::cout<<"\nTRAVERSE RETURNING:"<<result.toString();
+    //std::cout<<"\nASTAR RETURNING:"<<result.toString();
     return result;
-}   //END TRAVERSE
+}   //END ASTAR
 
 
 
