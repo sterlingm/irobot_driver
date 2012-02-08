@@ -32,7 +32,7 @@ public:
 	explicit Grid(std::string&);
     //! A constructor
     /*! Constructor that sets map to themap, numRows to r, and numCols to c */
-	Grid(char**&, int&, int&);
+	Grid(char**, int&, int&);
 
     //! Destructor
     /*! Deletes map */

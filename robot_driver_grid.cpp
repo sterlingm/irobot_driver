@@ -8,7 +8,7 @@
 
 Grid::Grid() {}
 
-
+Grid::Grid(char** m, int& r, int& c) : map(m), num_rows(r), num_cols(c) {}
 /*
   Constructor
   Reads in a file, creates a 2D char array from file contents
