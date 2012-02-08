@@ -9,6 +9,8 @@ public:
 
 	//! A Constructor
 	ServerControl(TcpServer*, Udpserver*);
+	//! A Constructor
+	ServerControl(TcpServer*, Udpserver*, int&);
     //! A Destructor
     ~ServerControl();
 
@@ -43,10 +45,15 @@ private:
 
     pthread_t display;
     pthread_t* update_path;
+    pthread_t rrt_update;
     pthread_t s_udp_comm;
+
 
     static void* update_path_thread(void*);
     void update_path_thread_i(char);
+
+    static void* rrt_update_thread(void*);
+    void rrt_update_thread_i();
 
     static void* display_menu_thread(void*);
     void display_menu_thread_i();

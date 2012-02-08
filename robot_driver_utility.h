@@ -53,6 +53,10 @@
 #define SOUTHEAST 7
 #define SOUTHWEST 8
 
+
+#define ASTAR 1
+#define RRT 2
+
 #define PORT "4950"
 
 

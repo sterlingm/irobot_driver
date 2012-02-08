@@ -22,7 +22,7 @@ public:
 
     //! Getter function for path member
     /*! Returns a reference to path member */
-    std::vector<Position>& getPath();
+    std::vector<Position>& getPathVector();
 
     //! Getter for size member
     /*! Returns value of size member */

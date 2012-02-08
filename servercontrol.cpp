@@ -7,6 +7,8 @@ typedef struct {
 } myStruct;
 
 ServerControl::ServerControl(TcpServer* ts, Udpserver* us) : myServer(ts), myUDP(us), update_path(new pthread_t[ts->get_num_clients()]) {}
+ServerControl::ServerControl(TcpServer* ts, Udpserver* us, int& al) : myServer(ts), myUDP(us),
+                                                                    update_path(new pthread_t[ts->get_num_clients()]) {}
 ServerControl::~ServerControl() {delete [] update_path; update_path = 0;}
 
 
@@ -24,6 +26,38 @@ void* ServerControl::update_path_thread(void* threadid) {
     f->sc->update_path_thread_i(f->id);
 }   //END UPDATE_PATH_THREAD
 
+void* ServerControl::rrt_update_thread(void* threadid) {
+    ServerControl* s = (ServerControl*)threadid;
+    s->rrt_update_thread_i();
+}
+
+inline void ServerControl::rrt_update_thread_i() {
+
+//*********1 is client_id***************//
+
+    int client_id = 1;
+    Position goal(1,1);
+
+    while(!myServer->getDone()) {
+        if(!myServer->get_client(client_id).agent->getGoal().equals(goal)) {
+
+            Path newPath = myServer->get_client(client_id).agent->
+                                rrt_path(myServer->get_client(client_id).agent->getPosition(),
+                                         myServer->get_client(client_id).agent->getGoal());
+
+            //insert duplicate front position for bug
+            newPath.insert(myServer->get_client(client_id).agent->getPosition(), 0);
+
+            //set new path
+            myServer->get_client(client_id).agent->setPath(newPath);
+
+            //send path
+            myServer->sendPath(newPath, client_id);
+
+        }   //end if
+    }   //end while
+
+}
 
 /*Inline function for update_path. Infinitely updates the agent's path every 0.2 seconds*/
 inline void ServerControl::update_path_thread_i(char client_id) {
@@ -51,8 +85,20 @@ inline void ServerControl::update_path_thread_i(char client_id) {
 
         //try to find a path
         try {
-            //set newPath to the path traverse returns
-            Path newPath = myServer->get_client(client_id).agent->astar_path(myServer->get_client(client_id).agent->getGoal());
+
+            //okay, check with algorithm and set path
+            Path newPath;
+            if(myServer->get_client(client_id).agent->get_algorithm() == ASTAR)
+                //set newPath to the path astar returns
+                newPath = myServer->get_client(client_id).agent->astar_path(myServer->get_client(client_id).agent->getPosition(),
+                    myServer->get_client(client_id).agent->getGoal());
+
+
+            else if(myServer->get_client(client_id).agent->get_algorithm() == RRT)
+                //set newPath to the path rrt returns
+                newPath = myServer->get_client(client_id).agent->rrt_path(myServer->get_client(client_id).agent->getPosition(),
+                    myServer->get_client(client_id).agent->getGoal());
+
 
             //insert duplicate front position for bug
             newPath.insert(myServer->get_client(client_id).agent->getPosition(), 0);
@@ -98,6 +144,7 @@ inline void ServerControl::display_menu_thread_i() {
 
         //mark chosen robot's path
         myServer->get_client(display).agent->getGrid()->markPath(myServer->get_client(display).agent->getPath(), display);
+
         //display the rest
         for(int i=0;i<myServer->get_num_clients();i++) {
             //if not this client

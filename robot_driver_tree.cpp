@@ -153,6 +153,7 @@ const std::string Tree::toString(Node*& t) {
 
 		}	//end while
 	}	//end if not a leaf
+	result<<"\n";
 	return result.str();
 }   //END TOSTRING
 
@@ -163,7 +164,7 @@ const std::string Tree::toString() {
 
 
 
-Tree::Node* Tree::find(Position& a) {
+Tree::Node*& Tree::find(Position& a) {
 
     for(int i=0;i<nodes.size();i++)
         if(nodes.at(i)->getValue().equals(a))

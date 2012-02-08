@@ -29,12 +29,13 @@ string id;
 string direction = "e";
 string row = "1";
 string col = "1";
-string goal_row;
-string goal_col;
+string goal_row = "-1";
+string goal_col = "-1";
 string serial_port = "/dev/ttyUSB0";
 string initial_sensor = "35";
 string velocity = "200";
 string robot_mode = "f";
+string algo = "a*";
 int robot_port = 16;
 bool v_read = false;
 bool v_sent = false;
@@ -59,9 +60,9 @@ void get_command_line_args(int count, char** args) {
             //cout<<"\ngrid_filename:"<<grid_filename;
         }
 
-        else if(strcmp(temp.substr(0,10).c_str(), "--ip-addr=") == 0) {
+        else if(strcmp(temp.substr(0,5).c_str(), "--ip=") == 0) {
             //cout<<"\nargs["<<i<<"]:"<<args[i];
-            ip = temp.substr(10,strlen(temp.c_str())-10);
+            ip = temp.substr(5,strlen(temp.c_str())-5);
             //cout<<"\nip:"<<ip;
         }
 
@@ -121,6 +122,11 @@ void get_command_line_args(int count, char** args) {
         else if(strcmp(temp.substr(0,13).c_str(), "--robot-mode=") == 0) {
             //cout<<"\nargs["<<i<<"]:"<<args[i];
             robot_mode = temp.substr(13, strlen(temp.c_str())-13);
+        }
+
+        else if(strcmp(temp.substr(0,7).c_str(), "--algo=") == 0) {
+            //cout<<"\nargs["<<i<<"]:"<<args[i];
+            algo = temp.substr(7, strlen(temp.c_str())-7);
         }
 
         else if(strcmp(temp.c_str(), "--view-sent-messages") == 0) {
@@ -219,13 +225,6 @@ int main(int argc, char* args[]) {
         return Fl::run();
 
     }   //end if --gui
-
-
-    else if(simple) {
-
-
-
-    }
 
 
     //else
@@ -384,6 +383,12 @@ int main(int argc, char* args[]) {
             else
                 d = EAST;
 
+            int al;
+            if(strcmp(algo.c_str(), "rrt") == 0)
+                al = RRT;
+            else
+                al = ASTAR;
+
 
             robot.streamSensors();
             robot.setVelocity(v);
@@ -399,6 +404,7 @@ int main(int argc, char* args[]) {
 
             //can set current sensor with no further info, so set it now
             agent->setCurrentSensor(cs);
+            agent->set_algorithm(al);
 
             //set the client's agent
             client.setAgent(agent);
@@ -412,7 +418,6 @@ int main(int argc, char* args[]) {
 
                 //make initial start and goal positions
                 Position start(atoi(row.c_str()), atoi(col.c_str()));
-                Position end(atoi(row.c_str()), atoi(col.c_str()));
 
                 //check bounds for starting position
                 if(agent->positionValid(start))
@@ -433,9 +438,19 @@ int main(int argc, char* args[]) {
                         }   //end inner for
                 }   //end else invalid starting position
 
-                //set initial path
-                //Position goal = agent->getGoal();
-                Path p = agent->astar_path(agent->getGoal());
+                if( (strcmp(goal_row.c_str(), "-1") == 0) || (strcmp(goal_col.c_str(), "-1") == 0) )
+                    agent->setGoal(start);
+                else {
+                    Position end(atoi(goal_row.c_str()), atoi(goal_col.c_str()));
+                    agent->setGoal(end);
+                }
+
+
+                Path p;
+                if(al == RRT)
+                    p = agent->rrt_path(agent->getPosition(), agent->getGoal());
+                else
+                    p = agent->astar_path(agent->getPosition(), agent->getGoal());
                 agent->setPath(p);
 
                 //std::cout<<"\nID: "<<agent->getRobot()->getID()<<"\n";

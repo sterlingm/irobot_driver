@@ -107,13 +107,14 @@ bool TcpServer::launchServer(std::string g) {
 }   //END LAUNCHSERVER
 
 
-/*Gets the id from a client*/
+/*Gets the init from a client*/
 void TcpServer::recv_client_init_info(int& i) {
-    char temp[8];
-    int num_read = recv(clients[i].fd, temp, 5, 0);
+    char temp[11];
+    int num_read = recv(clients[i].fd, temp, 10, 0);
+    temp[10] = '\0';
+    std::cout<<"\ntemp:"<<temp;
     if(num_read < 0)
         printf("\nError reading client %i's id: %m", i, errno);
-
     else {
 
         //set id
@@ -138,13 +139,21 @@ void TcpServer::recv_client_init_info(int& i) {
             v_index++;
         std::string v = hold.substr(is_index+1, v_index-is_index);
         velocities.push_back(atoi(v.c_str()));
+
+        int a_index = v_index+1;
+        while(isdigit(temp[a_index]))
+            a_index++;
+        std::string a = hold.substr(v_index+1, a_index-v_index);
+        std::cout<<"\na:"<<a;
+        algos.push_back(atoi(a.c_str()));
+        int al = atoi(a.c_str());
     }
     //else
         //std::cout<<"\nclient "<<i<<"'s id:"<<clients[i].id;
 }   //END RECVCLIENTID
 
 
-/*Sends the grid filename to a client*/
+/*Sends the grid filename to client at index i*/
 void TcpServer::send_grid_filename(int& i, std::string g) {
     int num_sent = send(clients[i].fd, g.c_str(), 255, 0);
     if(num_sent < 0)
@@ -191,6 +200,7 @@ void TcpServer::set_agents(std::vector<Agent>& a_vec) {
             clients[i].agent = &a_vec.at(i);
             clients[i].agent->setCurrentSensor(cs.at(i));
             clients[i].agent->getRobot()->setVelocity(velocities.at(i));
+            clients[i].agent->set_algorithm(algos.at(i));
         }
 }   //END SETAGENTS
 
@@ -332,9 +342,9 @@ void TcpServer::sendPath(Path& p, char client_id) {
     //get the list of positions in separate stringstream
     std::stringstream list_of_pos;
     for(int i=0;i<p.getSize()-1;i++)
-        list_of_pos<<p.getPath().at(i).toString()<<" ";
+        list_of_pos<<p.getPathVector().at(i).toString()<<" ";
     //add last position with no space on the end
-    list_of_pos<<p.getPath().back().toString();
+    list_of_pos<<p.getPathVector().back().toString();
 
     //std::cout<<"\nlist_of_pos: "<<list_of_pos.str()<<"\n";
 

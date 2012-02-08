@@ -121,6 +121,9 @@ public:
     /*! Sets mode to m*/
     void set_mode(char&);
 
+    int get_algorithm();
+
+    void set_algorithm(int&);
 
     //! Returns true if position has been visited
     /*!
@@ -143,9 +146,9 @@ public:
      * Returns a Path from pos member to the Position reference passed\n
      * Throws a NoPathException if no path exists
      */
-    Path astar_path(Position&);
+    Path astar_path(Position&,Position&);
 
-    Path rrt_path(Position&);
+    Path rrt_path(Position&, Position&);
 
 
     //! Moves the robot through path
@@ -173,19 +176,22 @@ public:
     void step(Position&, Position&);
 
 private:
-    Robot* robot;
-    Grid* grid;
     int direction;
-    Position pos;
-    Position goal;
-    Path path;
     int currentSensor;
     int highsv;
     int lowsv;
+    int algorithm;
     bool spinning;
     bool driving;
     char mode;
+    Robot* robot;
+    Grid* grid;
+    Position pos;
+    Position goal;
+    Path path;
 
+    Tree::Node* find_closest_node_in_tree(Tree*&, Position&);
     Position find_next_best(Tree&, Position);
+    std::vector<Position> get_potential_samples(int&, int&);
 };
 #endif

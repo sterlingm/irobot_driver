@@ -12,7 +12,7 @@ Path::Path(std::vector<Position>& p) : path(p), size(p.size()), capacity(p.capac
 Path::~Path() {}
 
 /*Returns path*/
-std::vector<Position>& Path::getPath() {return path;};
+std::vector<Position>& Path::getPathVector() {return path;};
 /*Returns the size of the path vector*/
 int Path::getSize() {return size;}
 
@@ -86,7 +86,7 @@ bool Path::contains(Position& p) {
 const std::string Path::toString() {
     std::ostringstream result;
 
-    for(int i=1;i<size;i++)
+    for(int i=0;i<size;i++)
         result<<" "<<path[i].toString();
 
     return result.str();

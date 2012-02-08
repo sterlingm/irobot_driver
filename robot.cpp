@@ -187,7 +187,7 @@ Robot::Robot(int portNo, int br, char ID) : port(portNo), baudrate(br), sensorss
     if(connection.OpenComport(port, baudrate))
         printf("port open did not work\n");
     else {
-        //printf("port open worked\n");
+        printf("port open worked\n");
         //make the thread
         pthread_create(&get_sensors, 0, get_sensors_thread, (void*)this);
     }   //end else
@@ -564,6 +564,7 @@ void Robot::drive_straight() {
 
 /*Drives the robot the specified distance (in mm) at the specified speed*/
 void Robot::driveXDistance(int distance, int velocity) {
+    std::cout<<"\ndriving\n";
     bool backwards = false;
     int tVelocity = velocity;
     int tDistance = distance;

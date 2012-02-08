@@ -141,7 +141,6 @@ int SerialConnect::OpenComport(int comport_number, int baudrate)
     perror("unable to adjust portsettings ");
     return(1);
   }
-
   return(0);
 }   //END OPENCOMPORT
 

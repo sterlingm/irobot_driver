@@ -97,14 +97,14 @@ void Grid::clear() {
 void Grid::markPath(Path& p, char id) {
     //std::cout<<"\nmarking path "<<p.toString();
     clear();
-    setPos(p.getPath().at(0).getRow(), p.getPath().at(0).getCol(), id);
+    setPos(p.getPathVector().at(0).getRow(), p.getPathVector().at(0).getCol(), id);
 
     for(int i=1;i<p.getSize();i++)
         //check for duplicate at beginning
-        if( (i == 1) && (p.getPath().at(0).equals(p.getPath().at(1))) ) {}
+        if( (i == 1) && (p.getPathVector().at(0).equals(p.getPathVector().at(1))) ) {}
 
         else
-            setPos(p.getPath().at(i).getRow(), p.getPath().at(i).getCol(), PATH);
+            setPos(p.getPathVector().at(i).getRow(), p.getPathVector().at(i).getCol(), PATH);
 
 }   //END MARKPATH
 

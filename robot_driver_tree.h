@@ -106,7 +106,7 @@ public:
     /*! Returns true if a Position in the tree is equal to p */
     bool contains(Position&);
 
-    Tree::Node* find(Position&);
+    Tree::Node*& find(Position&);
 
     //! Add a Position to the tree
     /*! Makes a node for value and adds that node to the tree as one of parent's children */

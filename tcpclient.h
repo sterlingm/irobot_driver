@@ -20,6 +20,7 @@ public:
 	//! A Constructor
 	/*! Sets port to p, ip_addr to ip, and done to false */
     TcpClient(char*, char*, char);
+
     //! A Destructor
     ~TcpClient();
 
@@ -57,13 +58,14 @@ public:
     /*! Sets myAgent to a */
     void setAgent(Agent*);
 
-    //! Setter function for ip_addr member
-    /*! Sets ip_addr to addr*/
-    void setIP(char*);
 
     //! Getter function for ip_addr member
     /*! Returns the value of ip_addr member*/
     char* getIP();
+
+    //! Setter function for ip_addr member
+    /*! Sets ip_addr to addr*/
+    void setIP(char*);
 
     //! Launches tcp client
     /*!
