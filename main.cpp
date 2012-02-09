@@ -27,6 +27,7 @@ string mode;
 string grid_filename;
 string ip;
 string id;
+string client_count;
 string direction = "e";
 string row = "1";
 string col = "1";
@@ -128,6 +129,11 @@ void get_command_line_args(int count, char** args) {
         else if(strcmp(temp.substr(0,7).c_str(), "--algo=") == 0) {
             //cout<<"\nargs["<<i<<"]:"<<args[i];
             algo = temp.substr(7, strlen(temp.c_str())-7);
+        }
+
+        else if(strcmp(temp.substr(0,8).c_str(), "--count=") == 0) {
+            //cout<<"\nargs["<<i<<"]:"<<args[i];
+            client_count = temp.substr(8, strlen(temp.c_str())-8);
         }
 
         else if(strcmp(temp.c_str(), "--view-sent-messages") == 0) {
@@ -260,9 +266,13 @@ int main(int argc, char* args[]) {
             //cout<<"\nTHE GRID_ANALYZER GRID MEMBER:\n"<<grid_analyzer->getGrid()->toString()<<"\n\n";
 
             //get how many clients to accept
-            int num_clients;
-            cout<<"\nHow many clients should be accepted?\n";
-            cin>>num_clients;
+            int num_clients = atoi(client_count.c_str());
+            if(num_clients < 1) {
+                printf("\nError! Number of clients specified is less than one! Exiting...\n");
+                exit(1);
+            }
+            //cout<<"\nHow many clients should be accepted?\n";
+            //cin>>num_clients;
 
             TcpServer server((char*)PORT, ip.c_str(), num_clients);
 
