@@ -10,6 +10,7 @@
 #include "tcpserver.h"
 #include "tcpclient.h"
 #include "owncontrol.h"
+#include "grid_analyzer.h"
 #include <pthread.h>
 #include <sys/types.h>
 #include <sys/socket.h>
@@ -253,6 +254,10 @@ int main(int argc, char* args[]) {
 
             //create grid
             Grid* grid = new Grid(grid_filename);
+            Grid_Analyzer* grid_analyzer = new Grid_Analyzer(grid);
+
+            cout<<"\nTHE GRID OBJECT:\n"<<grid->toString()<<"\n\n";
+            //cout<<"\nTHE GRID_ANALYZER GRID MEMBER:\n"<<grid_analyzer->getGrid()->toString()<<"\n\n";
 
             //get how many clients to accept
             int num_clients;
@@ -313,6 +318,7 @@ int main(int argc, char* args[]) {
 
                         //temp agent
                         Agent a_temp(grid, robots.at(i), d);
+                        a_temp.setGridAnalyzer(grid_analyzer);
 
                         //push onto the vector
                         agents.push_back(a_temp);
@@ -420,8 +426,9 @@ int main(int argc, char* args[]) {
                 Position start(atoi(row.c_str()), atoi(col.c_str()));
 
                 //check bounds for starting position
-                if(agent->positionValid(start))
+                if(agent->getGridAnalyzer()->positionValid(start))
                     agent->setPosition(start);
+
                 //if not a valid position, start at top left of grid
                 //assign the first valid position
                 else {
@@ -430,7 +437,7 @@ int main(int argc, char* args[]) {
                     for(int r=0;r<big_r;r++)
                         for(int c=0;c<big_c;c++) {
                             Position temp(r,c);
-                            if(agent->positionValid(temp)) {
+                            if(agent->getGridAnalyzer()->positionValid(temp)) {
                                 agent->setPosition(temp);
                                 r = big_r;
                                 c = big_c;
@@ -448,9 +455,9 @@ int main(int argc, char* args[]) {
 
                 Path p;
                 if(al == RRT)
-                    p = agent->rrt_path(agent->getPosition(), agent->getGoal());
+                    p = agent->getGridAnalyzer()->rrt_path(agent->getPosition(), agent->getGoal());
                 else
-                    p = agent->astar_path(agent->getPosition(), agent->getGoal());
+                    p = agent->getGridAnalyzer()->astar_path(agent->getPosition(), agent->getGoal());
                 agent->setPath(p);
 
                 //std::cout<<"\nID: "<<agent->getRobot()->getID()<<"\n";

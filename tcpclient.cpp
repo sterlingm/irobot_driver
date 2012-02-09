@@ -6,7 +6,7 @@
 
 TcpClient::TcpClient(char* p, char* ip, char ID) : port(p), ip_addr(ip), done(false), myAgent(0), id(ID) {}
 
-TcpClient::~TcpClient() {delete grid;}
+TcpClient::~TcpClient() {delete grid; delete grid_analyzer;}
 
 /*Getter and Setter for done*/
 void TcpClient::setDone(bool d) {done = d;}
@@ -96,7 +96,13 @@ void TcpClient::receive_grid_filename() {
         std::string filename(receive);
         //std::cout<<"\nreceived "<<filename<<" as the filename";
         grid = new Grid(filename);
+        std::cout<<"\ngrid in tcpClient:\n"<<grid->toString();
+        grid_analyzer = new Grid_Analyzer(grid);
         myAgent->setGrid(grid);
+        std::cout<<"\ngrid set to agent:\n"<<myAgent->getGrid()->toString();
+        grid_analyzer->setGrid(grid);
+        std::cout<<"\ngrid_analyzer grid:\n"<<grid_analyzer->getGrid()->toString();
+        myAgent->setGridAnalyzer(grid_analyzer);
     }   //end else
 }   //END RECEIVE_GRID_FILENAME
 

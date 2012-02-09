@@ -564,7 +564,7 @@ void Robot::drive_straight() {
 
 /*Drives the robot the specified distance (in mm) at the specified speed*/
 void Robot::driveXDistance(int distance, int velocity) {
-    std::cout<<"\ndriving\n";
+
     bool backwards = false;
     int tVelocity = velocity;
     int tDistance = distance;
@@ -596,6 +596,8 @@ void Robot::driveXDistance(int distance, int velocity) {
         time += 0.125;
 
     time = time * 1000000;
+
+    //std::cout<<"\ndriving at velocity:"<<velocity<<" time:"<<time<<" distance: "<<distance<<"\n";
 
     if(velocity < 0 && backwards)
         drive_straight(velocity);

@@ -41,7 +41,7 @@ inline void ServerControl::rrt_update_thread_i() {
     while(!myServer->getDone()) {
         if(!myServer->get_client(client_id).agent->getGoal().equals(goal)) {
 
-            Path newPath = myServer->get_client(client_id).agent->
+            Path newPath = myServer->get_client(client_id).agent->getGridAnalyzer()->
                                 rrt_path(myServer->get_client(client_id).agent->getPosition(),
                                          myServer->get_client(client_id).agent->getGoal());
 
@@ -88,20 +88,21 @@ inline void ServerControl::update_path_thread_i(char client_id) {
 
             //okay, check with algorithm and set path
             Path newPath;
+            myServer->get_client(client_id).agent->getGridAnalyzer()->setGrid(myServer->get_client(client_id).agent->getGrid());
             if(myServer->get_client(client_id).agent->get_algorithm() == ASTAR)
                 //set newPath to the path astar returns
-                newPath = myServer->get_client(client_id).agent->astar_path(myServer->get_client(client_id).agent->getPosition(),
+                newPath = myServer->get_client(client_id).agent->getGridAnalyzer()->astar_path(myServer->get_client(client_id).agent->getPosition(),
                     myServer->get_client(client_id).agent->getGoal());
 
 
             else if(myServer->get_client(client_id).agent->get_algorithm() == RRT)
                 //set newPath to the path rrt returns
-                newPath = myServer->get_client(client_id).agent->rrt_path(myServer->get_client(client_id).agent->getPosition(),
+                newPath = myServer->get_client(client_id).agent->getGridAnalyzer()->rrt_path(myServer->get_client(client_id).agent->getPosition(),
                     myServer->get_client(client_id).agent->getGoal());
 
 
             //insert duplicate front position for bug
-            newPath.insert(myServer->get_client(client_id).agent->getPosition(), 0);
+            //newPath.insert(myServer->get_client(client_id).agent->getPosition(), 0);
 
             //set new path
             myServer->get_client(client_id).agent->setPath(newPath);

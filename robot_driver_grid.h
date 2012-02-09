@@ -42,6 +42,8 @@ public:
     /*! Returns the value of map member */
 	char** getMap();
 
+	void setMap(char**, int&, int&);
+
     //! Getter function for numRows member
     /*! Returns numRows member value */
 	int getNumOfRows();

@@ -5,8 +5,7 @@
 #include "robot.h"
 #include "robot_driver_grid.h"
 #include "robot_driver_path.h"
-#include "robot_driver_tree.h"
-#include "robot_driver_priorityqueue.h"
+#include "grid_analyzer.h"
 
 class Agent {
 
@@ -74,6 +73,9 @@ public:
     /*! Sets grid member to g*/
     void setGrid(Grid*);
 
+    Grid_Analyzer*& getGridAnalyzer();
+    void setGridAnalyzer(Grid_Analyzer*);
+
 
     //! Getter function for robot
     /*! Returns a reference to robot member */
@@ -130,25 +132,25 @@ public:
      * Returns true if Position reference passed is\n
      * within grid member bounds, not visited, and equal to ' '
      */
-    bool positionValid(Position&);
+    //bool positionValid(Position&);
 
 
     //! Returns straight line distance between two Positions
     /*! Returns straight line distance between two Position references passed */
-    double getSLDistance(Position&,Position&);
+    //double getSLDistance(Position&,Position&);
 
     //! Returns vector of adjacent positions to the parameter position
     /*! Returns a vector of Positions that are adjacent to the Position reference passed */
-    std::vector<Position> adjacentPositions(Position&);
+    //std::vector<Position> adjacentPositions(Position&);
 
     //! Returns a path from pos to the parameter
     /*!
      * Returns a Path from pos member to the Position reference passed\n
      * Throws a NoPathException if no path exists
      */
-    Path astar_path(Position&,Position&);
+    //Path astar_path(Position&,Position&);
 
-    Path rrt_path(Position&, Position&);
+    //Path rrt_path(Position&, Position&);
 
 
     //! Moves the robot through path
@@ -186,12 +188,13 @@ private:
     char mode;
     Robot* robot;
     Grid* grid;
+    Grid_Analyzer* ga;
     Position pos;
     Position goal;
     Path path;
 
-    Position find_next_best(Tree&, Position);
-    Tree::Node* find_closest_node_in_tree(Tree*&, Position&);
-    std::vector<Position> get_potential_samples(int&, int&);
+    //Position find_next_best(Tree&, Position);
+    //Tree::Node* find_closest_node_in_tree(Tree*&, Position&);
+    //std::vector<Position> get_potential_samples(int&, int&);
 };
 #endif

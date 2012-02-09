@@ -6,9 +6,9 @@
 #include <iostream>
 
 
-Grid::Grid() {}
+Grid::Grid() : map(0) {}
 
-Grid::Grid(char** m, int& r, int& c) : map(m), num_rows(r), num_cols(c) {}
+Grid::Grid(char** m, int& r, int& c) {setMap(m,r,c);}
 /*
   Constructor
   Reads in a file, creates a 2D char array from file contents
@@ -67,6 +67,48 @@ Grid::~Grid() {
 
 /*Returns map*/
 char** Grid::getMap() {return map;}
+/*Sets the map to m*/
+void Grid::setMap(char** map, int& max_r, int& max_c) {
+
+    /*std::cout<<"\nMap passed to setMap:\n";
+    std::cout<<"\n"<<map;
+    for(int r=0;r<max_r;r++)
+        std::cout<<"\nr:"<<r<<" map["<<r<<"]:"<<map[r];
+    std::cout<<"\n";*/
+
+    for(int r=0;r<max_r;r++)
+        for(int c=0;c<max_c;c++) {
+            std::cout<<map[r][c];
+            if(c==max_c-1) std::cout<<"\n";
+        }
+
+    //std::cout<<"\ndeleting:"<<this->map;
+    //delete map
+    if(this->map != 0) {
+        for(int r=0;r<num_rows;r++) {
+            delete [] this->map[r];
+            this->map[r] = 0;
+        }
+        delete [] this->map;
+        this->map = 0;
+    }
+
+    //remake 2d char array with new dimensions
+	this->map = new char*[max_r];
+	for(int r=0;r<max_r;r++)
+		this->map[r] = new char[max_c];
+
+
+
+    //set map
+    for(int r=0;r<max_r;r++)
+        for(int c=0;c<max_c;c++)
+            this->map[r][c] = map[r][c];
+
+    //set dimensions
+    num_rows = max_r;
+    num_cols = max_c;
+}   //END SETMAP
 
 /*Returns num_rows*/
 int Grid::getNumOfRows() {return num_rows;}
@@ -95,7 +137,7 @@ void Grid::clear() {
 
 /*Clears the grid and then marks path p on the grid*/
 void Grid::markPath(Path& p, char id) {
-    //std::cout<<"\nmarking path "<<p.toString();
+    //std::cout<<"\nmarking path "<<p.toString()<<"\n";
     clear();
     setPos(p.getPathVector().at(0).getRow(), p.getPathVector().at(0).getCol(), id);
 

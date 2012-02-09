@@ -13,16 +13,16 @@ const char* Agent::NoPathException::what() const throw() {
 	return "A path cannot be found!\n";
 }
 
-Agent::Agent() : grid(0), robot(0), spinning(false) {}
+Agent::Agent() : grid(0), robot(0), spinning(false), ga(0) {}
 
 
-Agent::Agent(Robot& r) : grid(0), robot(&r), direction(0), highsv(-1), lowsv(-1), spinning(false) {}
-
-/*Constructor, sets grid to g, robot to r, direction to d*/
-Agent::Agent(Robot& r, int d) : grid(0), robot(&r), direction(d), highsv(-1), lowsv(-1), spinning(false) {}
+Agent::Agent(Robot& r) : grid(0), robot(&r), direction(0), highsv(-1), lowsv(-1), spinning(false), ga(0) {}
 
 /*Constructor, sets grid to g, robot to r, direction to d*/
-Agent::Agent(Grid*& g, Robot& r, int d) : grid(g), robot(&r), direction(d), highsv(-1), lowsv(-1), spinning(false) {}
+Agent::Agent(Robot& r, int d) : grid(0), robot(&r), direction(d), highsv(-1), lowsv(-1), spinning(false), ga(0) {}
+
+/*Constructor, sets grid to g, robot to r, direction to d*/
+Agent::Agent(Grid*& g, Robot& r, int d) : grid(g), robot(&r), direction(d), highsv(-1), lowsv(-1), spinning(false), ga(0) {}
 
 /*Destructor*/
 Agent::~Agent() {}
@@ -45,6 +45,8 @@ void Agent::set_spinning(bool s) {spinning = s;}
 void Agent::set_driving(bool d) {driving = d;}
 /*Sets grid to g*/
 void Agent::setGrid(Grid* g) {grid = g;}
+
+void Agent::setGridAnalyzer(Grid_Analyzer* grida) {ga = grida;}
 /*Sets the current sensor to s*/
 void Agent::setCurrentSensor(int& s) {currentSensor = s;}
 /*Sets the mode to m*/
@@ -56,6 +58,8 @@ void Agent::set_algorithm(int& a) {algorithm = a;}
 Position& Agent::getPosition() {return pos;}
 /*Returns grid*/
 Grid*& Agent::getGrid() {return grid;}
+
+Grid_Analyzer*& Agent::getGridAnalyzer() {return ga;}
 /*Returns direction*/
 int& Agent::getDirection() {return direction;}
 /*Returns goal*/
@@ -80,20 +84,20 @@ bool Agent::is_driving() {return driving;}
 int Agent::get_algorithm() {return algorithm;}
 
 
-/*Returns if a position is in bounds, unvisited, and accessible*/
+/*Returns if a position is in bounds, unvisited, and accessible*/ /*
 bool Agent::positionValid(Position& p) {
     if( (p.getRow() < grid->getNumOfRows()) && (p.getCol() < grid->getNumOfCols()) &&  ((grid->getPos(p.getRow(), p.getCol()) == ' ')) )
         return true;
     return false;
-}   //END POSITIONVALID
+}   //END POSITIONVALID */
 
 
-/*Returns the straight line distance between two positions*/
+/*Returns the straight line distance between two positions*/ /*
 double Agent::getSLDistance(Position& a, Position& b) {
     return sqrt( pow(a.getRow()-b.getRow(), 2) + pow(a.getCol()-b.getCol(),2) );
-}   //END GETSLDISTANCE
+}   //END GETSLDISTANCE */
 
-/*Returns a vector of the valid positions adjacent to given position*/
+/*Returns a vector of the valid positions adjacent to given position*/ /*
 std::vector<Position> Agent::adjacentPositions(Position& p) {
     std::vector<Position> result;
     int startr, endr, startc, endc;
@@ -153,13 +157,13 @@ std::vector<Position> Agent::adjacentPositions(Position& p) {
 
 
     return result;
-}   //END GETADJACENTPOSITIONS
+}   //END GETADJACENTPOSITIONS */
 
 
 /*
   Returns a path from pos to end
   Throws exception if a path cannot be found
-*/
+*/ /*
 Path Agent::astar_path(Position& init, Position& end) {
     //std::cout<<"\nTraversing from "<<pos.toString()<<" to "<<end.toString()<<"\n";
 
@@ -286,10 +290,10 @@ Path Agent::astar_path(Position& init, Position& end) {
     delete tree;
     //std::cout<<"\nASTAR RETURNING:"<<result.toString();
     return result;
-}   //END ASTAR
+}   //END ASTAR */
 
 
-
+/*
 Tree::Node* Agent::find_closest_node_in_tree(Tree*& tree, Position& ver) {
     Tree::Node* result = tree->getRoot();
     //loop through tree nodes, compare distance
@@ -300,14 +304,13 @@ Tree::Node* Agent::find_closest_node_in_tree(Tree*& tree, Position& ver) {
     }   //end for
 
     return result;
-}
+}   //END FIND_CLOSEST_IN_TREE */
 
 
-
+/*Gets surrounding positions of the position to form a group to pick a random sample from*/ /*
 std::vector<Position> Agent::get_potential_samples(int& rk, int& ck) {
 
     std::vector<Position> result;
-
     int startr;
     int startc;
     int endr;
@@ -339,12 +342,11 @@ std::vector<Position> Agent::get_potential_samples(int& rk, int& ck) {
             result.push_back(temp);
         }
     }
-
     return result;
-}
+}   //END GET_POTENTIAL_SAMPLES */
 
 
-
+/*
 Path Agent::rrt_path(Position& init, Position& end) {
 
     //make tree with pos as the init state
@@ -354,6 +356,8 @@ Path Agent::rrt_path(Position& init, Position& end) {
     int r_samp = 2;
     int c_samp = 2;
     srand(time(NULL));
+
+    //while the goal is not found
     while(!tree->contains(end)) {
 
 
@@ -366,7 +370,7 @@ Path Agent::rrt_path(Position& init, Position& end) {
         int col = (rand() % grid->getNumOfCols())+1;
         Position rand_state(row, col);
         //std::cout<<"\nrand_state: "<<rand_state.toString();
-        */
+
 
         //get list of potential samples
         std::vector<Position> potential_samples = get_potential_samples(r_samp, c_samp);
@@ -421,12 +425,13 @@ Path Agent::rrt_path(Position& init, Position& end) {
     delete tree;
     return result;
 }   //END RRT_PATH
+ */
 
 
 
 
 
-/*Finds the closest position in tree to position e*/
+/*Finds the closest position in tree to position e*/ /*
 Position Agent::find_next_best(Tree& tree, Position e) {
 
     //std::cout<<"tree in find_next_best for "<<e.toString()<<":"<<tree.toString()<<"\n";
@@ -453,7 +458,7 @@ Position Agent::find_next_best(Tree& tree, Position e) {
 
     //std::cout<<"\nFIND NEXT BEST RETURNING: "<<result.toString();
     return result;
-}
+}*/
 
 
 
@@ -476,7 +481,7 @@ void Agent::stepPath(bool own) {
 
             //std::cout<<"\npath.getPathVector.at(1):"<<path.getPathVector().at(1).toString()<<" spinning:"<<spinning<<" robot velocity:"<<robot->getVelocity();
             //make sure position is still valid
-            if( (positionValid(path.getPathVector().at(1))) && (!spinning) && (robot->getVelocity() != 0) ) {
+            if( (!spinning) && (robot->getVelocity() != 0) ) {
 
                 driving = true;
 
@@ -664,7 +669,7 @@ void Agent::change_direction(int after) {
   Sets the agent position to b*/
 void Agent::step(Position& a, Position& b) {
 
-    std::cout<<"\nStepping from "<<a.toString()<<" to "<<b.toString()<<"\n";
+    //std::cout<<"\nStepping from "<<a.toString()<<" to "<<b.toString()<<"\n";
 
     //if positions not connected
     if( (abs(a.getCol() - b.getCol()) > 1) || (abs(a.getRow() - b.getRow()) > 1) )
@@ -721,6 +726,7 @@ void Agent::step(Position& a, Position& b) {
                 change_direction(NORTH);
             else
                 change_direction(SOUTH);
+            pos = b;
             robot->driveXDistance(UNIT_SIZE);
         }   //end if moving north
 

@@ -14,6 +14,7 @@
 
 class Agent;
 class Grid;
+class Grid_Analyzer;
 
 class TcpClient {
 public:
@@ -100,6 +101,7 @@ private:
     bool sent_mess;
     Agent* myAgent;
     Grid* grid;     //needed to persist myAgent's grid member
+    Grid_Analyzer* grid_analyzer;
 
     void send_init_info();
     void receive_grid_filename();
