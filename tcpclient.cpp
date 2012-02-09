@@ -96,12 +96,9 @@ void TcpClient::receive_grid_filename() {
         std::string filename(receive);
         //std::cout<<"\nreceived "<<filename<<" as the filename";
         grid = new Grid(filename);
-        std::cout<<"\ngrid in tcpClient:\n"<<grid->toString();
         grid_analyzer = new Grid_Analyzer(grid);
         myAgent->setGrid(grid);
-        std::cout<<"\ngrid set to agent:\n"<<myAgent->getGrid()->toString();
         grid_analyzer->setGrid(grid);
-        std::cout<<"\ngrid_analyzer grid:\n"<<grid_analyzer->getGrid()->toString();
         myAgent->setGridAnalyzer(grid_analyzer);
     }   //end else
 }   //END RECEIVE_GRID_FILENAME

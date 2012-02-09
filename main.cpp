@@ -256,7 +256,7 @@ int main(int argc, char* args[]) {
             Grid* grid = new Grid(grid_filename);
             Grid_Analyzer* grid_analyzer = new Grid_Analyzer(grid);
 
-            cout<<"\nTHE GRID OBJECT:\n"<<grid->toString()<<"\n\n";
+            //cout<<"\nTHE GRID OBJECT:\n"<<grid->toString()<<"\n\n";
             //cout<<"\nTHE GRID_ANALYZER GRID MEMBER:\n"<<grid_analyzer->getGrid()->toString()<<"\n\n";
 
             //get how many clients to accept
