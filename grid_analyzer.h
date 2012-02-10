@@ -4,6 +4,7 @@
 #include "robot_driver_path.h"
 #include "robot_driver_tree.h"
 #include "robot_driver_priorityqueue.h"
+#include "robot_driver_stack.h"
 #include <math.h>
 
 class Grid_Analyzer {
@@ -48,6 +49,8 @@ public:
      */
     Path astar_path(Position&, Position&);
 
+    Path astar_path_decomposed(Position&, Position&, Tree*);
+
     //! Returns an RRT Path
     /*! Returns an RRT Path from init to goal based on grid member*/
     Path rrt_path(Position&, Position&);
@@ -58,5 +61,6 @@ private:
     Position find_next_best(Tree&, Position);
     Tree::Node* find_closest_node_in_tree(Tree*&, Position&);
     std::vector<Position> get_potential_samples(Position&, int&, int&);
+    Path connect_for_rrt(Position&, Position&);
 };
 #endif

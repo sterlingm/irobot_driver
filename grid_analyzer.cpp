@@ -2,6 +2,7 @@
 #include <time.h>
 #include <stdlib.h>
 #include <iostream>
+#include <vector>
 
 Grid_Analyzer::Grid_Analyzer() : grid(0) {}
 Grid_Analyzer::Grid_Analyzer(Grid* g) : grid(g) {}
@@ -184,9 +185,7 @@ Path Grid_Analyzer::astar_path(Position& init, Position& goal) {
             //**grid->setPos(current->getValue().getRow(), current->getValue().getCol(), 'x');
             //**std::cout<<grid->toString();
 
-            //if agreed to best move, pop off node
-            if(current == nodes.top())
-                nodes.pop();
+            nodes.pop();
 
             //if we are at the goal, end loop
             if(current->getValue().equals(goal))
@@ -252,6 +251,88 @@ Path Grid_Analyzer::astar_path(Position& init, Position& goal) {
 
 
 
+Path Grid_Analyzer::astar_path_decomposed(Position& init, Position& goal, Tree* tree) {
+    //std::cout<<"\nDECOMPOSED TREE:\n"<<tree->toString();
+    //make path to return
+    Path result;
+
+    //the parent to current for robot tracing
+    Tree::Node* parent = tree->getRoot();
+    Tree::Node* current = tree->getRoot();
+    PriorityQueue nodes;
+    nodes.push(current);
+
+    //flag to stop
+    bool done = false;
+
+    while(!done) {
+
+        //if the queue is empty, there is no path
+        if(nodes.isEmpty()) {
+            //call find_next_best
+            Position temp = find_next_best(*tree, goal);
+
+            //set end to the next best position
+            goal = temp;
+
+            //set current to the next_best node to end the traversal
+            current = tree->find(temp);
+
+            //repush current onto queue so we don't come into this block again
+            nodes.push(current);
+        }   //end if queue empty
+
+        //else there are more positions to try
+        else {
+
+            //std::cout<<"\nTREE WHEN CURRENT IS "<<current->getValue().toString()<<tree->toString()<<"\n";
+            //set the new parent
+            parent = current;
+
+            //set current to the top
+            current = nodes.top();
+
+            //pop off node
+            nodes.pop();
+
+            //if we are at the goal, end loop
+            if(current->getValue().equals(goal))
+                done = true;
+
+            //else, traverse further
+            else {
+                //get child nodes for current
+                std::vector<Tree::Node*> successors = current->getChildren();
+                //std::cout<<"\nPositions adjacent to "<<current->getValue().toString();
+                //for(int i=0;i<successors.size();i++)
+                    //std::cout<<"\n"<<successors.at(i).toString();
+
+                //push on all successors
+                for(int i=0;i<successors.size();i++) {
+                    //push into queue
+                    nodes.push(successors.at(i));
+                }   //end for
+            }   //end else traversre further
+        }   //end else still positions to try
+    }   //end while
+
+    //trace back up the nodes to get the path
+    while(!(current->getValue().equals(tree->getRoot()->getValue()))) {
+        result.add(current->getValue());
+        current = current->getParent();
+    }   //end while
+
+    //push root position
+    result.add(current->getValue());
+
+    //reverse the path vector so first position is vector.at(0), last position is vector.at(vector_length-1)
+    result.reverse();
+
+    return result;
+}   //END A*_DECOMPOSED
+
+
+
 Tree::Node* Grid_Analyzer::find_closest_node_in_tree(Tree*& tree, Position& ver) {
     Tree::Node* result = tree->getRoot();
     //loop through tree nodes, compare distance
@@ -304,6 +385,51 @@ std::vector<Position> Grid_Analyzer::get_potential_samples(Position& pos, int& r
 }   //END GET_POTENTIAL_SAMPLES
 
 
+Path Grid_Analyzer::connect_for_rrt(Position& near_neigh, Position& sample) {
+    //std::cout<<"\nnn:"<<near_neigh.toString()<<" s:"<<sample.toString();
+    Path result;
+    Position current=near_neigh;
+    Stack s;
+    s.push(near_neigh);
+    std::vector<Position> local;
+    bool done=false;
+
+    grid->setPos(sample.getRow(), sample.getCol(), ' ');
+    //get adjacent pos
+    //push on one with lowest sld
+    while(!done) {
+
+        current = s.pop();
+        result.add(current);
+        grid->setPos(current.getRow(),current.getCol(),'.');
+        //std::cout<<"\ncurrent:"<<current.toString();
+        if(current.equals(sample)) {
+            done = true;
+        }
+        else {
+            local = adjacentPositions(current);
+            //std::cout<<"\nadjacent pos to "<<current.toString()<<":";
+            //for(int i=0;i<local.size();i++)
+                //std::cout<<" "<<local.at(i).toString();
+            int min_index=0;
+            for(int i=1;i<local.size();i++) {
+                if(getSLDistance(local.at(i), sample) < getSLDistance(local.at(min_index), sample)) {
+                    //std::cout<<"\n"<<local.at(i).toString()<<":"<<getSLDistance(local.at(i), sample);
+                    //std::cout<<"\n"<<local.at(min_index).toString()<<":"<<getSLDistance(local.at(min_index), sample);
+                    min_index = i;
+                }
+            }   //end for
+            //std::cout<<"\n"<<local.at(min_index).toString()<<" is closest";
+            s.push(local.at(min_index));
+        }   //end else
+    }   //end while
+    grid->clear();
+
+    //std::cout<<"\nresult:"<<result.toString()<<"\n";
+    return result;
+}   //END CONNECT_FOR_RRT
+
+
 Path Grid_Analyzer::rrt_path(Position& init, Position& goal) {
 
     //make tree with pos as the init state
@@ -312,6 +438,7 @@ Path Grid_Analyzer::rrt_path(Position& init, Position& goal) {
     Position x = init;
     int r_samp = 2;
     int c_samp = 2;
+    int branching = 5;
     srand(time(NULL));
 
     //while the goal is not found
@@ -331,37 +458,42 @@ Path Grid_Analyzer::rrt_path(Position& init, Position& goal) {
 
         //get list of potential samples
         std::vector<Position> potential_samples = get_potential_samples(init, r_samp, c_samp);
-        //seed again with rand
-        srand(rand());
-        //get one of the samples
-        Position rand_state = potential_samples.at(rand() % potential_samples.size());
-        //std::cout<<"\nrand_state: "<<rand_state.toString()<<"\n";
-        //increase r and c samp
-        r_samp += r_samp;
-        c_samp += c_samp;
-        //avoid going over int max storage
-        if(r_samp >= grid->getNumOfRows()) {
-            r_samp = grid->getNumOfRows()-init.getRow()-1;
-            c_samp = grid->getNumOfCols()-init.getCol()-1;
-        }
 
-        //if position is valid and not already in tree,
-        //continue with algorithm
-        if(positionValid(rand_state) && !tree->contains(rand_state)) {
+        //go through list and get and get samples to add
+        for(int i=0;i<branching;i++) {
 
-            //xnear<-nearest_neighbor
-            Tree::Node* near = find_closest_node_in_tree(tree, rand_state);
-            //std::cout<<"\nfind_closest_node_in_tree returned:"<<near->getValue().toString()<<"\n";
+            //seed again with rand
+            srand(rand());
+            //get one of the samples
+            Position rand_state = potential_samples.at(rand() % potential_samples.size());
+            //std::cout<<"\nrand_state: "<<rand_state.toString()<<"\n";
+            //increase r and c samp
+            r_samp += r_samp;
+            c_samp += c_samp;
+            //avoid going over int max storage
+            if(r_samp >= grid->getNumOfRows()) {
+                r_samp = grid->getNumOfRows()-init.getRow()-1;
+                c_samp = grid->getNumOfCols()-init.getCol()-1;
+            }
 
-            //get a path from nearest point to the random point
-            Path connect_points = astar_path(near->getValue(), rand_state);
+            //if position is valid and not already in tree,
+            //continue with algorithm
+            if(positionValid(rand_state)) {
 
-            //add the path to the tree
-            for(int i=1;i<connect_points.getPathVector().size();i++)
-                tree->add(connect_points.getPathVector().at(i), tree->find(connect_points.getPathVector().at(i-1)));
+                //xnear<-nearest_neighbor
+                Tree::Node* near = find_closest_node_in_tree(tree, rand_state);
+                //std::cout<<"\nfind_closest_node_in_tree returned:"<<near->getValue().toString()<<"for "<<rand_state.toString()<<"\n";
 
-            //std::cout<<"\ntree:\n"<<tree->toString()<<"\n\n";
-        }   //end if
+                //get a path from nearest point to the random point
+                Path connect_points = connect_for_rrt(near->getValue(), rand_state);
+
+                //add the path to the tree
+                for(int i=1;i<connect_points.getPathVector().size();i++)
+                    tree->add(connect_points.getPathVector().at(i), tree->find(connect_points.getPathVector().at(i-1)));
+
+                //std::cout<<"\ntree:\n"<<tree->toString()<<"\n\n";
+            }   //end if
+        }   //end for
     }   //end while
 
 
@@ -374,11 +506,12 @@ Path Grid_Analyzer::rrt_path(Position& init, Position& goal) {
         current = current->getParent();
     }
 
+    //add the root
     result.add(current->getValue());
+    //reverse
     result.reverse();
 
     //std::cout<<"\nrrt path from init:"<<init.toString()<<" to end:"<<end.toString()<<" :\n"<<result.toString();
-
     delete tree;
     return result;
 }   //END RRT

@@ -14,7 +14,7 @@ OBJDIR=obj
 
 LDFLAGS= -L/usr/X11R6/lib$(LIBSELECT) -lpthread -lfltk -lXext -lXft -lfontconfig -lXinerama -lpthread -ldl -lm -lX11
 
-SOURCES_RAW= robot_driver_agent.cpp robot_driver_position.cpp robot_driver_priorityqueue.cpp main.cpp robot_driver_tree.cpp robot_driver_grid.cpp robot_driver_path.cpp grid_analyzer.cpp tcpserver.cpp tcpclient.cpp servercontrol.cpp clientcontrol.cpp robot.cpp udpserver.cpp udpclient.cpp owncontrol.cpp guiwindow.cpp rs232.cpp
+SOURCES_RAW= robot_driver_agent.cpp robot_driver_position.cpp robot_driver_priorityqueue.cpp main.cpp robot_driver_tree.cpp robot_driver_stack.cpp robot_driver_grid.cpp robot_driver_path.cpp grid_analyzer.cpp tcpserver.cpp tcpclient.cpp servercontrol.cpp clientcontrol.cpp robot.cpp udpserver.cpp udpclient.cpp owncontrol.cpp guiwindow.cpp rs232.cpp
 
 TARGET:= go
 TARGETD:= go_d

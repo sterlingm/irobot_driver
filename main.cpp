@@ -37,7 +37,7 @@ string serial_port = "/dev/ttyUSB0";
 string initial_sensor = "35";
 string velocity = "200";
 string robot_mode = "f";
-string algo = "a*";
+string algo = "astar";
 int robot_port = 16;
 bool v_read = false;
 bool v_sent = false;
@@ -498,12 +498,36 @@ int main(int argc, char* args[]) {
 
             //create grid
             Grid* grid = new Grid(grid_filename);
+            Grid_Analyzer* grid_analyzer = new Grid_Analyzer(grid);
 
             Robot robot(robot_port, ROBOT_BAUDRATE, id[0]);
-             //set robot members and stream sensors
-            robot.fullMode();
-            robot.setVelocity(200);
+             //stream sensors
             robot.streamSensors();
+            //get mode
+            if(strcmp(robot_mode.c_str(), "f") == 0)
+                robot.fullMode();
+            else if(strcmp(robot_mode.c_str(), "s") == 0)
+                robot.safeMode();
+            //get velocity
+            int v = atoi(velocity.c_str());
+            if(v > 500)
+                v = 500;
+            else if(v < -500)
+                v = -500;
+            robot.setVelocity(v);
+
+
+            int cs = atoi(initial_sensor.c_str());
+            //set current sensor
+            if(cs < 7 || cs > 42)
+                cs = OI_MODE;
+
+            int al;
+            if(strcmp(algo.c_str(), "rrt") == 0)
+                al = RRT;
+            else
+                al = ASTAR;
+
 
             int d;
             if(direction == "n")
@@ -525,8 +549,13 @@ int main(int argc, char* args[]) {
             else
                 d = EAST;
 
-            //make agent and set robot's agent
+
+
+            //make agent and set members
             Agent* agent = new Agent(grid, robot, d);
+            agent->setGridAnalyzer(grid_analyzer);
+            agent->setCurrentSensor(cs);
+            agent->set_algorithm(al);
 
             //make initial start and goal positions
             Position start(atoi(row.c_str()), atoi(col.c_str()));
@@ -545,6 +574,7 @@ int main(int argc, char* args[]) {
             agent = 0;
             delete grid;
             grid = 0;
+            usleep(1500000);
         }   //end if own
     }   //end else
 
