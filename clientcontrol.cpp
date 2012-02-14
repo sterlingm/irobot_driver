@@ -9,7 +9,7 @@ pthread_t c_udp_comm;
 
 
 
-ClientControl::ClientControl(TcpClient* tc, Udpclient* uc) : myClient(tc), myUDP(uc) {}
+ClientControl::ClientControl(TcpClient* tc, UdpClient* uc) : myClient(tc), myUDP(uc) {}
 ClientControl::~ClientControl() {}
 
 /*Getter and setter for myClient*/
@@ -17,8 +17,8 @@ TcpClient*& ClientControl::getClient() {return myClient;}
 void ClientControl::setClient(TcpClient* c) {myClient = c;}
 
 /*Getter and setter for myUDP*/
-Udpclient*& ClientControl::getUDP() {return myUDP;}
-void ClientControl::setUDP(Udpclient* uc) {myUDP = uc;}
+UdpClient*& ClientControl::getUDP() {return myUDP;}
+void ClientControl::setUDP(UdpClient* uc) {myUDP = uc;}
 
 
 /*Callback for drive thread*/

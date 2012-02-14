@@ -65,6 +65,8 @@ public:
     /*! Sets ip_addr to addr*/
     void setIP(char*);
 
+    bool launchServer();
+
     //! Launches tcp server
     /*!
      * Waits for a tcp client to connect\n

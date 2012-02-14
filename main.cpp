@@ -42,6 +42,14 @@ int robot_port = 16;
 bool v_read = false;
 bool v_sent = false;
 bool simple = false;
+bool gui = false;
+pthread_t gui_client_comm;
+
+
+void gui_client_comm_cb(void* v) {
+    UdpClient* uc = (UdpClient*)v;
+    uc->communicate();
+}
 
 /*Grab the command line arguments and set global vars*/
 void get_command_line_args(int count, char** args) {
@@ -149,6 +157,10 @@ void get_command_line_args(int count, char** args) {
             //cout<<"\nargs["<<i<<"]:"<<args[i];
             simple = true;
         }
+        else if(strcmp(temp.c_str(), "--gui") == 0) {
+            //cout<<"\nargs["<<i<<"]:"<<args[i];
+            gui = true;
+        }
     }   //end for
 }   //END GETCOMMANDLINEARGS
 
@@ -215,24 +227,6 @@ int main(int argc, char* args[]) {
     }   //end if --help
 
 
-    else if(strcmp(args[1], "--gui") == 0) {
-        /*
-        Fl_Window win( 300,200,"Testing" );
-        win.begin();
-           Fl_Button but( 10, 150, 70, 30, "Click me" );
-        win.end();
-        but.callback( but_cb );
-        win.show();
-        return Fl::run();
-        */
-
-        Robot robot(robot_port, ROBOT_BAUDRATE, direction[0]);
-        Agent a_temp(robot, direction[0]);
-        GUIWindow window(a_temp);
-        return Fl::run();
-
-    }   //end if --gui
-
 
     //else
     else {
@@ -254,9 +248,85 @@ int main(int argc, char* args[]) {
         else
             robot_port = 16;
 
+        if(gui) {
+
+                if(mode[0] == 's') {
+                    TcpServer server((char*)PORT, ip.c_str(), 1);
+                    if(server.launchServer()) {
+                        //set size
+                        int size = server.get_num_clients();
+                        //make robot
+                        Robot robot(robot_port, ROBOT_BAUDRATE, '1');
+                        //stream sensors
+                        robot.streamSensors();
+
+                        //make an agent
+                        Agent a_temp(robot, direction[0]);
+
+                        //make vector and push on the agent
+                        vector<Agent> agents;
+                        agents.push_back(a_temp);
+
+                        //set the server's agents
+                        server.set_agents(agents);
+
+                        //have to set the ID because recv_init_info never gets called!!!!!!!
+                        server.get_clients()[0].id = '1';
+
+                        //make udpserver and launch
+                        UdpServer u_server((char*)PORT, ip.c_str(), server.get_clients(), size);
+                        if(u_server.launch_server()) {
+                            GUIWindow window(a_temp, server, u_server);
+                            return Fl::run();
+                        }   //end if udp launch
+                    }   //end if tcp launch
+                }   //end if server
+
+                else if(mode[0] == 'c') {
+
+                    TcpClient client((char*)PORT, ip.c_str(), id[0]);
+                    UdpClient u_client((char*)PORT, ip.c_str(), id[0]);
+
+                    Robot robot(robot_port, ROBOT_BAUDRATE, '1');
+                    robot.streamSensors();
+
+                    //make agent
+                    Agent* agent = new Agent(robot, 1);
+                    int cs=35;
+                    int a=1;
+                    agent->setCurrentSensor(cs);
+                    agent->getRobot()->setVelocity(0);
+                    agent->set_algorithm(a);
+
+                    client.setAgent(agent);
+                    u_client.setAgent(agent);
+
+                    if(client.launchClient(true) && u_client.launch_client()) {
+                        pthread_create(&gui_client_comm, 0, gui_client_comm_cb, (void*)&u_client);
+
+                        //get commands until done
+                        while(!client.getDone())
+                            client.get_gui_command();
+                        //set udp client to true
+                        u_client.setDone(true);
+
+                        if(pthread_detach(gui_client_comm) != 0)
+                            printf("\ndetach on gui_client_comm thread failed with error %m", errno);
+                    }   //end if launch
+                }   //end if client
+
+                //else, no networking needed
+                else {
+                    Robot robot(robot_port, ROBOT_BAUDRATE, direction[0]);
+                    Agent a_temp(robot, direction[0]);
+                    GUIWindow window(a_temp);
+                    return Fl::run();
+                }   //end else
+        }   //end if --gui
+
 
         //if server
-        if(mode[0] == 's') {
+        else if(mode[0] == 's') {
 
             //create grid
             Grid* grid = new Grid(grid_filename);
@@ -279,7 +349,7 @@ int main(int argc, char* args[]) {
             //launch the servers
             if(server.launchServer(grid_filename)) {
                 int size = server.get_num_clients();
-                Udpserver u_server((char*)PORT, ip.c_str(), server.get_clients(), size);
+                UdpServer u_server((char*)PORT, ip.c_str(), server.get_clients(), size);
 
                 if(u_server.launch_server()) {
                     cout<<"\nSuccessful Connection!\n";
@@ -365,7 +435,7 @@ int main(int argc, char* args[]) {
 
             Robot robot(robot_port, ROBOT_BAUDRATE, id[0]);
             TcpClient client((char*)PORT, ip.c_str(), id[0]);
-            Udpclient u_client((char*)PORT, ip.c_str(), id[0]);
+            UdpClient u_client((char*)PORT, ip.c_str(), id[0]);
 
             //set and check current/initial sensor
             int cs = atoi(initial_sensor.c_str());
@@ -427,7 +497,7 @@ int main(int argc, char* args[]) {
             u_client.setAgent(agent);
 
             //launch the clients
-            if(client.launchClient() && u_client.launch_client()) {
+            if(client.launchClient(false) && u_client.launch_client()) {
 
                 cout<<"\nSuccessful Connection!";
 

@@ -2,6 +2,8 @@
 #ifndef GUIWINDOW_H
 #define GUIWINDOW_H
 #include "robot_driver_agent.h"
+#include "tcpserver.h"
+#include "udpserver.h"
 #include <cstdlib>
 #include <FL/Fl.H>
 #include <FL/Fl_Window.H>
@@ -15,6 +17,8 @@
 class GUIWindow : public Fl_Window {
 public:
 
+    GUIWindow(Agent&, TcpServer&, UdpServer&);
+
     //! A constructor
     /*! Sets robot to r */
     GUIWindow(Agent&);
@@ -22,10 +26,15 @@ public:
     //! Destructor
     ~GUIWindow();
 
+    void init_widgets();
+
     //! Getter function for robot member
     /*! Returns reference of robot member */
     Agent*& getAgent();
 
+    bool network;
+    TcpServer* tcps;
+    UdpServer* udps;
 private:
     Agent* agent;
 
@@ -88,5 +97,7 @@ private:
     static void cb_quit(Fl_Widget*, void*);
     void cb_quit_i();
 
+    static void* update_sensor_thread(void*);
+    void update_sensor_thread_i();
 };
 #endif

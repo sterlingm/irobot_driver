@@ -8,24 +8,24 @@ struct addrinfo *servinfo;  //will point to the results
 
 
 /*Constructor and destructor*/
-Udpclient::Udpclient(char* p, char* ip, char ID) : port(p), ip_addr(ip), done(false), myAgent(0), id(ID) {}
-Udpclient::~Udpclient() {freeaddrinfo(servinfo);}
+UdpClient::UdpClient(char* p, char* ip, char ID) : port(p), ip_addr(ip), done(false), myAgent(0), id(ID) {}
+UdpClient::~UdpClient() {freeaddrinfo(servinfo);}
 
 /*Getter and setter for done*/
-void Udpclient::setDone(bool d) {done = d;}
-bool Udpclient::getDone() {return done;}
+void UdpClient::setDone(bool d) {done = d;}
+bool UdpClient::getDone() {return done;}
 
 /*Getter and Setter for myAgent*/
-void Udpclient::setAgent(Agent* a) {myAgent = a;}
-Agent*& Udpclient::getAgent() {return myAgent;}
+void UdpClient::setAgent(Agent* a) {myAgent = a;}
+Agent*& UdpClient::getAgent() {return myAgent;}
 
 /*Getter and setter for ip_addr*/
-char* Udpclient::getIP() {return ip_addr;}
-void Udpclient::setIP(char* addr) {ip_addr = addr;}
+char* UdpClient::getIP() {return ip_addr;}
+void UdpClient::setIP(char* addr) {ip_addr = addr;}
 
 
 /*Launches the client*/
-bool Udpclient::launch_client() {
+bool UdpClient::launch_client() {
     int status;
 
     struct addrinfo hints;
@@ -56,7 +56,7 @@ bool Udpclient::launch_client() {
 
 
 /*Sends messages with sensor info to the sensor every 15ms*/
-void Udpclient::communicate() {
+void UdpClient::communicate() {
 
     //message to send
     std::stringstream tosend;

@@ -1,5 +1,23 @@
 #include "guiwindow.h"
 
+
+pthread_t update_sensor;
+
+
+/*Callback for get sensor thread*/
+void* GUIWindow::update_sensor_thread(void* threadid) {
+    GUIWindow* w = (GUIWindow*)threadid;
+    w->update_sensor_thread_i();
+}   //END GET_C_SENSOR_THREAD
+
+
+/*Inline for get sensor thread. Pollatthe robot for sensor values every 15ms*/
+inline void GUIWindow::update_sensor_thread_i() {
+    udps->communicate();
+}   //END GET_C_SENSOR_THREAD_I
+
+
+
 /*
  Callback function to loop
  Prints out the values of a given sensor
@@ -7,23 +25,70 @@
 void IdleCallback(void* v) {
 
     GUIWindow* window = (GUIWindow*)v;
-    //sleep for x milliseconds
     usleep(15000);
-    sensor_packet temp;
-    temp = window->getAgent()->getRobot()->get_sensor_value(window->getAgent()->getCurrentSensor());
-    std::cout<<"\n---";
-    std::cout<<"\n"<<temp.values[0]<<"\n"<<temp.values[1];
-    std::cout<<"\n"<<"---"<<"\n";
-
+    if(window->network) {
+        std::cout<<"\n---";
+        std::cout<<"\n"<<window->tcps->get_clients()[0].agent->getHighSV()<<"\n"<<window->tcps->get_clients()[0].agent->getLowSV();
+        std::cout<<"\n"<<"---"<<"\n";
+    }
+        else {
+        sensor_packet temp;
+        temp = window->getAgent()->getRobot()->get_sensor_value(window->getAgent()->getCurrentSensor());
+        std::cout<<"\n---";
+        std::cout<<"\n"<<temp.values[0]<<"\n"<<temp.values[1];
+        std::cout<<"\n"<<"---"<<"\n";
+    }
 }   //END IDLECALLBACK
-
 
 /*
  Contructor for a GUIWindow
  Takes in a specified robot
  By default, the sensors begin streaming when the window is created and the OI_MODE sensor is printed
 */
-GUIWindow::GUIWindow(Agent& a) : Fl_Window(500, 400, "iRobot Create"), agent(&a) {
+GUIWindow::GUIWindow(Agent& a, TcpServer& t, UdpServer& u) : Fl_Window(500, 400, "iRobot Create"), agent(&a), tcps(&t), udps(&u), network(true) {
+init_widgets();
+pthread_create(&update_sensor, 0, update_sensor_thread, (void*)this);
+}   //END CONSTRUCTOR
+
+/*
+ Contructor for a GUIWindow
+ Takes in a specified robot
+ By default, the sensors begin streaming when the window is created and the OI_MODE sensor is printed
+*/
+GUIWindow::GUIWindow(Agent& a) : Fl_Window(500, 400, "iRobot Create"), agent(&a), network(false) {
+init_widgets();
+}   //END CONSTRUCTOR
+
+/*Destructor*/
+GUIWindow::~GUIWindow() {
+    delete fullMode;
+    delete safeMode;
+    delete drive;
+    delete turn;
+    delete turnCW;
+    delete turnCCW;
+    delete stop;
+    delete leds;
+    delete toggleSensorStream;
+    delete quit;
+
+    delete playLED;
+    delete advanceLED;
+
+    delete velocity;
+    delete driveRadius;
+    delete turnAngle;
+    delete turnSeconds;
+
+    delete powerColor;
+    delete powerIntensity;
+
+    if(network)
+        if(pthread_detach(update_sensor) != 0)
+            printf("\ndetach on udp communication thread failed with error %m", errno);
+}
+
+void GUIWindow::init_widgets() {
     begin();    //make the widgets, button for each option
 
         fullMode = new Fl_Button(25, 300, 90, 30, "Full Mode");
@@ -107,35 +172,7 @@ GUIWindow::GUIWindow(Agent& a) : Fl_Window(500, 400, "iRobot Create"), agent(&a)
     Fl::add_idle(IdleCallback, this);
     resizable(this);
     show(); //show it
-
-}   //END CONSTRUCTOR
-
-/*Destructor*/
-GUIWindow::~GUIWindow() {
-    delete fullMode;
-    delete safeMode;
-    delete drive;
-    delete turn;
-    delete turnCW;
-    delete turnCCW;
-    delete stop;
-    delete leds;
-    delete toggleSensorStream;
-    delete quit;
-
-    delete playLED;
-    delete advanceLED;
-
-    delete velocity;
-    delete driveRadius;
-    delete turnAngle;
-    delete turnSeconds;
-
-    delete powerColor;
-    delete powerIntensity;
-
 }
-
 /*Returns a reference to the robot*/
 Agent*& GUIWindow::getAgent() {return agent;}
 
@@ -192,7 +229,14 @@ void GUIWindow::cb_fullmode(Fl_Widget* o, void* v) {
  Puts the robot into full mode
 */
 inline void GUIWindow::cb_fullmode_i() {
-    agent->getRobot()->fullMode();
+    if(network) {
+        std::string cmd = "@ 1";
+        int num_sent = send(tcps->get_clients()[0].fd, cmd.c_str(), cmd.length(), 0);
+        if(num_sent < 0)
+            printf("\nError sending command: %m", errno);
+    }   //end if network
+    else
+        agent->getRobot()->fullMode();
 }   //END CBFULLMODE_I
 
 /*Callback function for the safe mode button*/
@@ -206,8 +250,38 @@ void GUIWindow::cb_safemode(Fl_Widget* o, void* v) {
  Puts the robot in safe mode
 */
 inline void GUIWindow::cb_safemode_i() {
-    agent->getRobot()->safeMode();
+    if(network) {
+        std::string cmd = "@ 2";
+        int num_sent = send(tcps->get_clients()[0].fd, cmd.c_str(), cmd.length(), 0);
+        if(num_sent < 0)
+            printf("\nError sending command: %m", errno);
+    }   //end if network
+    else
+        agent->getRobot()->safeMode();
 }   //END CBSAFEMODE_I
+
+
+/*Callback function for the stop button*/
+void GUIWindow::cb_stop(Fl_Widget* o, void* v) {
+    GUIWindow* w = (GUIWindow*)v;
+    w->cb_stop_i();
+}   //END CBSTOP
+
+/*
+ Inline function for the stop button's callback
+ Stops the robot
+*/
+inline void GUIWindow::cb_stop_i() {
+    if(network) {
+        std::string cmd = "@ 3";
+        int num_sent = send(tcps->get_clients()[0].fd, cmd.c_str(), cmd.length(), 0);
+        if(num_sent < 0)
+            printf("\nError sending command: %m", errno);
+    }   //end if network
+
+    else
+        agent->getRobot()->stop();
+}   //END CBSTOP_I
 
 
 /*Callback function for the drive button*/
@@ -222,12 +296,23 @@ void GUIWindow::cb_drive(Fl_Widget* o, void* v) {
  If there is a value in the Radius text field, the robot drives at that radius. Otherwise, the robot drives straight
 */
 inline void GUIWindow::cb_drive_i() {
-    //if the radius has a value, drive at a radius
-    if(driveRadius->size() > 0)
-        agent->getRobot()->drive(atoi(velocity->value()), atoi(driveRadius->value()));
-    //if not, drive straight
-    else
-        agent->getRobot()->drive_straight(atoi(velocity->value()));
+    if(network) {
+        std::stringstream cmd;
+        cmd<<"@ 4 "<<atoi(velocity->value())<<" "<<atoi(driveRadius->value());
+
+        int num_sent = send(tcps->get_clients()[0].fd, cmd.str().c_str(), cmd.str().length(), 0);
+        if(num_sent < 0)
+            printf("\nError sending command: %m", errno);
+    }   //end if network
+
+    else {
+        //if the radius has a value, drive at a radius
+        if(driveRadius->size() > 0)
+            agent->getRobot()->drive(atoi(velocity->value()), atoi(driveRadius->value()));
+        //if not, drive straight
+        else
+            agent->getRobot()->drive_straight(atoi(velocity->value()));
+    }   //end else
 }   //END CBDRIVE_I
 
 
@@ -244,12 +329,23 @@ void GUIWindow::cb_turn(Fl_Widget* o, void* v) {
  If there is a value in the Seconds text field, the value in the Velocity text field is ignored and the robot turns that specified angle in the specified time
 */
 inline void GUIWindow::cb_turn_i() {
-    //if seconds has a value, turn x degrees in y seconds
-    if(atoi(turnSeconds->value()) == 0)
-        agent->getRobot()->turnXDegrees(atoi(turnAngle->value()), atoi(velocity->value()));
-    //if not, turn x degrees
-    else
-        agent->getRobot()->turnXDegreesInYSeconds(atoi(turnAngle->value()), atoi(turnSeconds->value()));
+    if(network) {
+        std::stringstream cmd;
+        cmd<<"@ 5 "<<atoi(turnAngle->value())<<" "<<atoi(velocity->value())<<" "<<atoi(turnSeconds->value());
+
+        int num_sent = send(tcps->get_clients()[0].fd, cmd.str().c_str(), cmd.str().length(), 0);
+        if(num_sent < 0)
+            printf("\nError sending command: %m", errno);
+    }
+
+    else {
+        //if seconds has a value, turn x degrees in y seconds
+        if(atoi(turnSeconds->value()) == 0)
+            agent->getRobot()->turnXDegrees(atoi(turnAngle->value()), atoi(velocity->value()));
+        //if not, turn x degrees
+        else
+            agent->getRobot()->turnXDegreesInYSeconds(atoi(turnAngle->value()), atoi(turnSeconds->value()));
+    }   //end else
 }   //END CBTURN_I
 
 
@@ -265,7 +361,18 @@ void GUIWindow::cb_turnCW(Fl_Widget* o, void* v) {
 */
 inline void GUIWindow::cb_turnCW_i() {
     int v = atoi(velocity->value());
-    agent->getRobot()->turnClockwise(v);
+
+    if(network) {
+        std::stringstream cmd;
+        cmd<<"@ 6 "<<v;
+
+        int num_sent = send(tcps->get_clients()[0].fd, cmd.str().c_str(), cmd.str().length(), 0);
+        if(num_sent < 0)
+            printf("\nError sending command: %m", errno);
+    }   //end if network
+
+    else
+        agent->getRobot()->turnClockwise(v);
 }   //END CBTURNCLOCKWISE_I
 
 /*Callback function for the turn counter clockwise button*/
@@ -280,22 +387,19 @@ void GUIWindow::cb_turnCCW(Fl_Widget* o, void* v) {
 */
 inline void GUIWindow::cb_turnCCW_i() {
     int v = atoi(velocity->value());
-    agent->getRobot()->turnCounterClockwise(v);
+
+    if(network) {
+        std::stringstream cmd;
+        cmd<<"@ 7 "<<v;
+
+        int num_sent = send(tcps->get_clients()[0].fd, cmd.str().c_str(), cmd.str().length(), 0);
+        if(num_sent < 0)
+            printf("\nError sending command: %m", errno);
+    }   //end if network
+
+    else
+        agent->getRobot()->turnCounterClockwise(v);
 }   //END CBTURNCOUNTERCLOCKWISE_I
-
-/*Callback function for the stop button*/
-void GUIWindow::cb_stop(Fl_Widget* o, void* v) {
-    GUIWindow* w = (GUIWindow*)v;
-    w->cb_stop_i();
-}   //END CBSTOP
-
-/*
- Inline function for the stop button's callback
- Stops the robot
-*/
-inline void GUIWindow::cb_stop_i() {
-    agent->getRobot()->stop();
-}   //END CBSTOP_I
 
 
 /*Callback function for the led button*/
@@ -313,7 +417,27 @@ void GUIWindow::cb_leds(Fl_Widget* o, void* v) {
  Sliding the intensity slider to the right makes the power led light brighter and sliding to the left makes it darker
 */
 inline void GUIWindow::cb_leds_i() {
-    agent->getRobot()->leds(playLED->value(),advanceLED->value(),powerColor->value(),powerIntensity->value());
+    if(network) {
+        std::stringstream cmd;
+        cmd<<"@ 8";
+
+        if(playLED->value())
+            cmd<<" 1";
+        else
+            cmd<<" 0";
+        if(advanceLED->value())
+            cmd<<" 1";
+        else
+            cmd<<" 0";
+
+        cmd<<" "<<powerColor->value()<<" "<<powerIntensity->value();
+
+        int num_sent = send(tcps->get_clients()[0].fd, cmd.str().c_str(), cmd.str().length(), 0);
+        if(num_sent < 0)
+            printf("\nError sending command: %m", errno);
+    }   //end if network
+    else
+        agent->getRobot()->leds(playLED->value(), advanceLED->value(), powerColor->value(), powerIntensity->value());
 }   //END CBLEDS_I
 
 /*Callback function for the toggle sensor stream button*/
@@ -327,7 +451,16 @@ void GUIWindow::cb_toggleSensorStream(Fl_Widget* o, void* v) {
  Toggles sensor streaming on and off
 */
 inline void GUIWindow::cb_toggleSensorStream_i() {
-    agent->getRobot()->toggleSensorStream();
+    if(network) {
+        std::string cmd = "@ 9";
+
+        int num_sent = send(tcps->get_clients()[0].fd, cmd.c_str(), cmd.length(), 0);
+        if(num_sent < 0)
+            printf("\nError sending command: %m", errno);
+    }   //end if network
+
+    else
+        agent->getRobot()->toggleSensorStream();
 }   //END CBTOGGLESENSORSTREAM_I
 
 
@@ -344,150 +477,126 @@ void GUIWindow::cb_choice(Fl_Widget* o, void* v) {
 */
 inline void GUIWindow::cb_choice_i() {
     int sensor;
-    //switch for the value selected
+    //switch for the value selected and assign to sensor
     switch(whichSensor->value()) {
 
         case 0:
             sensor = BUMP;
-            agent->setCurrentSensor(sensor);
             break;
         case 1:
             sensor = WALL;
-            agent->setCurrentSensor(sensor);
             break;
         case 2:
             sensor = CLIFF_LEFT;
-            agent->setCurrentSensor(sensor);
             break;
         case 3:
             sensor = CLIFF_FRONT_LEFT;
-            agent->setCurrentSensor(sensor);
             break;
         case 4:
             sensor = CLIFF_FRONT_RIGHT;
-            agent->setCurrentSensor(sensor);
             break;
         case 5:
             sensor = CLIFF_RIGHT;
-            agent->setCurrentSensor(sensor);
             break;
         case 6:
             sensor = VIRTUAL_WALL;
-            agent->setCurrentSensor(sensor);
             break;
         case 7:
             sensor = LOW_SIDE_DRIVER;
-            agent->setCurrentSensor(sensor);
             break;
         case 8:
             sensor = WHEEL_OVERCURRENT;
-            agent->setCurrentSensor(sensor);
             break;
         case 9:
             sensor = INFRARED_BYTE;
-            agent->setCurrentSensor(sensor);
             break;
         case 10:
             sensor = BUTTONS;
-            agent->setCurrentSensor(sensor);
             break;
         case 11:
             sensor = DISTANCE;
-            agent->setCurrentSensor(sensor);
             break;
         case 12:
             sensor = ANGLE;
-            agent->setCurrentSensor(sensor);
             break;
         case 13:
             sensor = CHARGING_STATE;
-            agent->setCurrentSensor(sensor);
             break;
         case 14:
             sensor = VOLTAGE;
-            agent->setCurrentSensor(sensor);
             break;
         case 15:
             sensor = CURRENT;
-            agent->setCurrentSensor(sensor);
             break;
         case 16:
             sensor = BATTERY_TEMPERATURE;
-            agent->setCurrentSensor(sensor);
             break;
         case 17:
             sensor = BATTERY_CHARGE;
-            agent->setCurrentSensor(sensor);
             break;
         case 18:
             sensor = BATTERY_CAPACITY;
-            agent->setCurrentSensor(sensor);
             break;
         case 19:
             sensor = WALL_SIGNAL;
-            agent->setCurrentSensor(sensor);
             break;
         case 20:
             sensor = CLIFF_LEFT_SIGNAL;
-            agent->setCurrentSensor(sensor);
             break;
         case 21:
             sensor = CLIFF_FRONT_LEFT_SIGNAL;
-            agent->setCurrentSensor(sensor);
             break;
         case 22:
             sensor = CLIFF_FRONT_RIGHT_SIGNAL;
-            agent->setCurrentSensor(sensor);
             break;
         case 23:
             sensor = CLIFF_RIGHT_SIGNAL;
-            agent->setCurrentSensor(sensor);
         case 24:
             sensor = CARGO_BAY_DIGITAL_INPUTS;
-            agent->setCurrentSensor(sensor);
             break;
         case 25:
             sensor = CARGO_BAY_ANALOG_SIGNAL;
-            agent->setCurrentSensor(sensor);
             break;
         case 26:
             sensor = CHARGING_SOURCES_AVAILABLE;
-            agent->setCurrentSensor(sensor);
             break;
         case 27:
             sensor = OI_MODE;
-            agent->setCurrentSensor(sensor);
             break;
         case 28:
             sensor = SONG_NUMBER;
-            agent->setCurrentSensor(sensor);
             break;
         case 29:
             sensor = SONG_PLAYING;
-            agent->setCurrentSensor(sensor);
             break;
         case 30:
             sensor = NUMBER_OF_STREAM_PACKETS;
-            agent->setCurrentSensor(sensor);
             break;
         case 31:
             sensor = REQUESTED_VELOCITY;
-            agent->setCurrentSensor(sensor);
             break;
         case 32:
             sensor = REQUESTED_RADIUS;
-            agent->setCurrentSensor(sensor);
             break;
         case 33:
             sensor = REQUESTED_RIGHT_VELOCITY;
-            agent->setCurrentSensor(sensor);
             break;
         case 34:
             sensor = REQUESTED_LEFT_VELOCITY;
-            agent->setCurrentSensor(sensor);
             break;
         default: break;
     }   //END SWITCH
+
+    if(network) {
+        std::stringstream cmd;
+        cmd<<"@ 0 "<<sensor;
+
+        int num_sent = send(tcps->get_clients()[0].fd, cmd.str().c_str(), cmd.str().length(), 0);
+        if(num_sent < 0)
+            printf("\nError sending command: %m", errno);
+    }   //end if network
+    else
+        agent->setCurrentSensor(sensor);
 }   //END CBCHOICE_I
 
 
@@ -503,8 +612,20 @@ void GUIWindow::cb_quit(Fl_Widget* o, void* v) {
  Stops the robot, pausing sensor streaming, turns off all leds, and hides the window
 */
 inline void GUIWindow::cb_quit_i() {
-    agent->getRobot()->stop();
-    agent->getRobot()->pauseSensorStream();
-    agent->getRobot()->leds(false, false, 0, 0);
+    if(network) {
+        std::string cmd = "@ q";
+
+        int num_sent = send(tcps->get_clients()[0].fd, cmd.c_str(), cmd.length(), 0);
+        if(num_sent < 0)
+            printf("\nError sending command: %m", errno);
+        udps->setDone(true);
+    }   //end if network
+
+    else {
+        agent->getRobot()->stop();
+        agent->getRobot()->pauseSensorStream();
+        agent->getRobot()->leds(false, false, 0, 0);
+    }   //end else
+
     hide();
 }   //END CBQUIT_I

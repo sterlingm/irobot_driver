@@ -3,15 +3,15 @@
 #include "robot_driver_utility.h"
 
 
-class Udpclient {
+class UdpClient {
 public:
 
     //! Constructor
     /*! Constructor\nSets port to p, ip_adds to ip, and done to false */
-    Udpclient(char*, char*, char);
+    UdpClient(char*, char*, char);
     //! Destructor
     /*! Calls freeaddrinfo */
-    ~Udpclient();
+    ~UdpClient();
 
     //! Setter function for done member
     /*! Sets done to d */

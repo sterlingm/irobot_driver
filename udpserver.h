@@ -3,15 +3,15 @@
 #include "robot_driver_utility.h"
 
 
-class Udpserver {
+class UdpServer {
 public:
 
     //! Constructor
     /*! Constructor\nSets port to p, ip_addr to ip, and done to false*/
-    Udpserver(char*, char*, client_info*&, int&);
+    UdpServer(char*, char*, client_info*&, int&);
     //! Destructor
     /*! Destructor */
-    ~Udpserver();
+    ~UdpServer();
 
     //! Getter function for done member\nReturns true if the program is done
     bool getDone();

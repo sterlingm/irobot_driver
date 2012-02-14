@@ -169,7 +169,7 @@ public:
      * degree parameter specifies the degree\n
      * velocity parameter specifies the velocity
      */
-    void turnXDegrees(int, int);
+    void turnXDegrees(int,int);
 
     //! Turns the robot X degrees
     /*!

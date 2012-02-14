@@ -32,6 +32,77 @@ char TcpServer::getWhichDisplay() {return which_display;}
 
 
 /*Waits to connect a client. Returns true if successful*/
+bool TcpServer::launchServer() {
+    int status;
+
+    struct addrinfo hints;
+    struct addrinfo *servinfo;  //will point to the results
+
+    //store the connecting address and size
+    struct sockaddr_storage their_addr;
+    socklen_t their_addr_size;
+
+
+    memset(&hints, 0, sizeof hints); //make sure the struct is empty
+    hints.ai_family = AF_INET;  //ipv4
+    hints.ai_socktype = SOCK_STREAM; //tcp
+
+    //get server info, put into servinfo
+    if ((status = getaddrinfo((const char*)ip_addr, port, &hints, &servinfo)) != 0) {
+        printf("\ngetaddrinfo error: %m", errno);
+        return false;
+    }
+
+
+    //make socket
+    fd = socket(servinfo->ai_family, servinfo->ai_socktype, servinfo->ai_protocol);
+    if (fd < 0) {
+        printf("\nserver socket failure %m", errno);
+        return false;
+    }
+
+    //allow reuse of port
+    int yes=1;
+    if (setsockopt(fd,SOL_SOCKET,SO_REUSEADDR,(char*) &yes,sizeof(int)) == -1) {
+        perror("setsockopt");
+        return false;
+    }
+
+    //bind
+    if(bind (fd, servinfo->ai_addr, servinfo->ai_addrlen) < 0) {
+        printf("\nBind error %m", errno);
+        return false;
+    }
+
+    //free up space
+    freeaddrinfo(servinfo);
+
+    //listen
+    if(listen(fd, 5) < 0) {
+        printf("\nListen error %m", errno);
+        return false;
+    }
+    their_addr_size = sizeof(their_addr);
+
+    //accept the connections
+    for(int i=0;i<count;i++) {
+        std::cout<<"\nWaiting for "<<count-i<<" client(s)\n";
+        clients[i].fd = accept(fd, (struct sockaddr*)&their_addr, &their_addr_size);
+        cs.push_back(35);
+        velocities.push_back(0);
+        algos.push_back(1);
+        if(clients[i].fd < 0) {
+            printf("\nError accepting client %i: %m", i+1, errno);
+            return false;
+        }   //end if
+    }   //end for
+
+    //for(int i=0;i<count;i++)
+        //std::cout<<"\nClient "<<i+1<<" fd: "<<clients[i].fd<<" id:"<<clients[i].id<<" agent"<<clients[i].agent;
+    return true;
+}   //END LAUNCHSERVER
+
+/*Waits to connect a client. Returns true if successful*/
 bool TcpServer::launchServer(std::string g) {
     int status;
 

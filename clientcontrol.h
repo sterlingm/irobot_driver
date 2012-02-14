@@ -7,7 +7,7 @@ class ClientControl {
 public:
 
     //!A Constructor
-    ClientControl(TcpClient*, Udpclient*);
+    ClientControl(TcpClient*, UdpClient*);
     //!A Desctructor
     ~ClientControl();
 
@@ -21,11 +21,11 @@ public:
 
     //! Getter function for myUDP member
     /*! Returns a reference to myUDP member*/
-    Udpclient*& getUDP();
+    UdpClient*& getUDP();
 
     //! Setter function for myUDP member
     /*! Sets myUDP to uc*/
-    void setUDP(Udpclient*);
+    void setUDP(UdpClient*);
 
 
     //! Controls the client
@@ -39,7 +39,7 @@ public:
 
 private:
     TcpClient* myClient;
-    Udpclient* myUDP;
+    UdpClient* myUDP;
 
     static void* update_server_thread(void*);
     void update_server_thread_i();

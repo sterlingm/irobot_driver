@@ -8,9 +8,9 @@ class ServerControl {
 public:
 
 	//! A Constructor
-	ServerControl(TcpServer*, Udpserver*);
+	ServerControl(TcpServer*, UdpServer*);
 	//! A Constructor
-	ServerControl(TcpServer*, Udpserver*, int&);
+	ServerControl(TcpServer*, UdpServer*, int&);
     //! A Destructor
     ~ServerControl();
 
@@ -24,11 +24,11 @@ public:
 
     //! Getter function for myUDP member
     /*! Returns a reference to myUDP member*/
-    Udpserver*& getUDP();
+    UdpServer*& getUDP();
 
     //! Setter function for myUDP member
     /*! Sets myUDP to us */
-    void setUDP(Udpserver*);
+    void setUDP(UdpServer*);
 
 	//! Controls the server
 	/*!
@@ -41,7 +41,7 @@ public:
 private:
 
     TcpServer* myServer;
-    Udpserver* myUDP;
+    UdpServer* myUDP;
 
     pthread_t display;
     pthread_t* update_path;

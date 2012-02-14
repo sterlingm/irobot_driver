@@ -4,9 +4,14 @@
 #include <netinet/tcp.h>
 
 
-TcpClient::TcpClient(char* p, char* ip, char ID) : port(p), ip_addr(ip), done(false), myAgent(0), id(ID) {}
+TcpClient::TcpClient(char* p, char* ip, char ID) : port(p), ip_addr(ip), done(false), myAgent(0), id(ID), grid(0), grid_analyzer(0) {}
 
-TcpClient::~TcpClient() {delete grid; delete grid_analyzer;}
+TcpClient::~TcpClient() {
+    if(grid != 0)
+        delete grid;
+    if(grid_analyzer != 0)
+        delete grid_analyzer;
+}
 
 /*Getter and Setter for done*/
 void TcpClient::setDone(bool d) {done = d;}
@@ -31,7 +36,7 @@ bool TcpClient::get_sent_mess() {return sent_mess;}
 
 
 /*Tries to connect to a server. Returns true if successful*/
-bool TcpClient::launchClient() {
+bool TcpClient::launchClient(bool gui) {
     int status, sock, adrlen;   //status, file descriptor, address length
 
     struct addrinfo hints;
@@ -63,9 +68,10 @@ bool TcpClient::launchClient() {
         return false;
     }
 
-    send_init_info();
-    receive_grid_filename();
-
+    if(!gui) {
+        send_init_info();
+        receive_grid_filename();
+    }
     freeaddrinfo(servinfo);
     return true;
 }   //END LAUNCHCLIENT
@@ -76,7 +82,7 @@ void TcpClient::send_init_info() {
     //std::cout<<"\nattempting to send "<<id;
     std::stringstream to_send;
     to_send<<id<<" "<<myAgent->getCurrentSensor()<<" "<<myAgent->getRobot()->getVelocity()<<" "<<myAgent->get_algorithm();
-    std::cout<<"\ntosend:"<<to_send.str();
+    //std::cout<<"\ntosend:"<<to_send.str();
 
     int num_sent = send(fd, to_send.str().c_str(), to_send.str().length(), 0);
     if(num_sent < 0)
@@ -506,6 +512,189 @@ void TcpClient::print_message(char* command) {
     //else
         //std::cout<<"\nelse message: "<<command;
 }   //END PRINTMESSAGE
+
+
+
+void TcpClient::get_gui_command() {
+    char in[255];
+    int num_read = recv(fd, in, 255, 0);
+    in[num_read] = '\0';
+    std::string cmd(in);
+
+    //count the number of headers
+    int num_headers = 0;
+    for(int i=0;i<cmd.length() && num_headers < 2;i++)
+        if(cmd[i] == '@')
+            num_headers++;
+
+    if(num_headers == 1) {
+
+        //FULL MODE BUTTON
+        if(cmd[2] == '1')
+            myAgent->getRobot()->fullMode();
+
+        //SAFE MODE BUTTON
+        else if(cmd[2] == '2')
+            myAgent->getRobot()->safeMode();
+
+        //STOP BUTTON
+        else if(cmd[2] == '3')
+            myAgent->getRobot()->stop();
+
+        //TOGGLE SENSOR STREAM BUTTON
+        else if(cmd[2] == '9')
+            myAgent->getRobot()->toggleSensorStream();
+
+        //DRIVE BUTTON
+        else if(cmd[2] == '4') {
+            int v_index = 4;
+            while(isdigit(cmd[v_index]) || cmd[v_index] == '-')
+                v_index++;
+            std::string v_str = cmd.substr(4, v_index - 4);
+            std::cout<<"\nv_str:"<<v_str;
+            int velocity = atoi(v_str.c_str());
+
+            int r_index = v_index+1;
+            while(isdigit(cmd[r_index]) || cmd[r_index] == '-')
+                r_index++;
+            std::string r_str = cmd.substr(v_index+1, r_index - v_index);
+            //std::cout<<"\nr_str:"<<r_str;
+            int radius = atoi(r_str.c_str());
+
+
+            //if the radius has a value, drive at a radius
+            if(radius != 0)
+                myAgent->getRobot()->drive(velocity, radius);
+            //if not, drive straight
+            else
+                myAgent->getRobot()->drive_straight(velocity);
+        }   //end drive
+
+        //TURN BUTTON
+        else if(cmd[2] == '5') {
+
+            int t_index = 4;
+            while(isdigit(cmd[t_index]) || cmd[t_index] == '-')
+                t_index++;
+            std::string t_str = cmd.substr(4, t_index - 4);
+            //std::cout<<"\nt_str:"<<t_str;
+            int turn = atoi(t_str.c_str());
+
+            int v_index = t_index+1;
+            while(isdigit(cmd[v_index]) || cmd[v_index] == '-')
+                v_index++;
+            std::string v_str = cmd.substr(t_index+1, v_index - t_index);
+            //std::cout<<"\nv_str:"<<v_str;
+            int velocity = atoi(v_str.c_str());
+
+            int s_index = v_index+1;
+            while(isdigit(cmd[s_index]))
+                s_index++;
+            std::string s_str = cmd.substr(v_index+1, s_index - v_index);
+            //std::cout<<"\ns_str:"<<s_str;
+            int seconds = atoi(s_str.c_str());
+
+            //only get the velocity in case seconds has no value
+            //if seconds has >0 value, the velocity is calculated
+            //depending on seconds and turn degrees
+
+            //if seconds has a positive value, turn x degrees in y seconds
+            if(seconds > 0)
+                myAgent->getRobot()->turnXDegreesInYSeconds(turn, seconds);
+            //if not, turn x degrees
+            else
+                myAgent->getRobot()->turnXDegrees(turn, velocity);
+        }   //end if turn button
+
+        //TURN CLOCKWISE BUTTON
+        else if(cmd[2] == '6') {
+            int v_index = 4;
+            while(isdigit(cmd[v_index]) || cmd[v_index] == '-')
+                v_index++;
+            std::string v_str = cmd.substr(4, v_index - 4);
+            //std::cout<<"\nv_str:"<<v_str;
+            int velocity = atoi(v_str.c_str());
+
+            myAgent->getRobot()->turnClockwise(velocity);
+        }   //end turncw button
+
+        //TURN COUNTER-CLOCKWISE BUTTON
+        else if(cmd[2] == '7') {
+            int v_index = 4;
+            while(isdigit(cmd[v_index]) || cmd[v_index] == '-')
+                v_index++;
+            std::string v_str = cmd.substr(4, v_index - 4);
+            //std::cout<<"\nv_str:"<<v_str;
+            int velocity = atoi(v_str.c_str());
+
+            myAgent->getRobot()->turnCounterClockwise(velocity);
+        }   //end turnccw button
+
+        //LED BUTTON
+        else if(cmd[2] == '8') {
+            //std::cout<<"\ncmd:"<<cmd;
+            bool play = false;
+            bool advance = false;
+
+            //get play checkbox
+            int p_index = 4;
+            while(isdigit(cmd[p_index]))
+                p_index++;
+            std::string p_str = cmd.substr(4, p_index - 4);
+            //std::cout<<"\np_str:"<<p_str;
+            if(atoi(p_str.c_str()) == 1)
+                play = true;
+
+            //get advance checkbox
+            int adv_index = p_index+1;
+            while(isdigit(cmd[adv_index]))
+                adv_index++;
+            std::string adv_str = cmd.substr(p_index+1, adv_index - p_index);
+            //std::cout<<"\nadv_str:"<<adv_str;
+            if(atoi(adv_str.c_str()) == 1)
+                advance = true;
+
+            //get color value
+            int c_index = adv_index+1;
+            while(isdigit(cmd[c_index]) || cmd[c_index] == '.')
+                c_index++;
+            std::string c_str = cmd.substr(adv_index+1, c_index - adv_index);
+            //std::cout<<"\nc_str:"<<c_str;
+            double color = atof(c_str.c_str());
+
+            //get intensity checkbox
+            int i_index = c_index+1;
+            while(isdigit(cmd[i_index]) || cmd[i_index] == '.')
+                i_index++;
+            std::string i_str = cmd.substr(c_index+1, i_index - c_index);
+            //std::cout<<"\ni_str:"<<i_str;
+            double intensity = atof(i_str.c_str());
+
+            myAgent->getRobot()->leds(play, advance, (unsigned char)color, (unsigned char)intensity);
+        }   //end if led button
+
+        //CHOICE SELECTED
+        else if(cmd[2] == '0') {
+            int s_index = 4;
+            while(isdigit(cmd[s_index]))
+                s_index++;
+            std::string s_str = cmd.substr(4, s_index - 4);
+            //std::cout<<"\ns_str:"<<s_str;
+            int sensor = atoi(s_str.c_str());
+
+            myAgent->setCurrentSensor(sensor);
+        }   //end if choice selected
+
+        else if(cmd[2] == 'q') {
+            done = true;
+            myAgent->getRobot()->stop();
+            myAgent->getRobot()->pauseSensorStream();
+            myAgent->getRobot()->leds(false, false, 0, 0);
+        }   //end if quit
+    }   //end if headers==1
+}   //END GET_GUI_COMMAND
+
+
 
 
 /*Non-blocking communication with server*/

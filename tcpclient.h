@@ -73,7 +73,7 @@ public:
      * Tries to connect to a tcp server\n
      * Returns true on success and false otherwise
      */
-    bool launchClient();
+    bool launchClient(bool);
 
     //! Communicate with server
     /*! Allows the client to send and receive messages from the server */
@@ -90,6 +90,8 @@ public:
     //! Polls the robot for sensor values
     /*! Polls the robot for sensor values every 15 milliseconds */
     void pollSensor();
+
+    void get_gui_command();
 
 private:
     char* ip_addr;

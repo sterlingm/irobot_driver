@@ -6,8 +6,8 @@ typedef struct {
     char id;
 } myStruct;
 
-ServerControl::ServerControl(TcpServer* ts, Udpserver* us) : myServer(ts), myUDP(us), update_path(new pthread_t[ts->get_num_clients()]) {}
-ServerControl::ServerControl(TcpServer* ts, Udpserver* us, int& al) : myServer(ts), myUDP(us),
+ServerControl::ServerControl(TcpServer* ts, UdpServer* us) : myServer(ts), myUDP(us), update_path(new pthread_t[ts->get_num_clients()]) {}
+ServerControl::ServerControl(TcpServer* ts, UdpServer* us, int& al) : myServer(ts), myUDP(us),
                                                                     update_path(new pthread_t[ts->get_num_clients()]) {}
 ServerControl::~ServerControl() {delete [] update_path; update_path = 0;}
 
@@ -17,8 +17,8 @@ TcpServer*& ServerControl::getServer() {return myServer;}
 void ServerControl::setServer(TcpServer* s) {myServer = s;}
 
 /*Getter and setter for myUDP*/
-void ServerControl::setUDP(Udpserver* us) {myUDP = us;}
-Udpserver*& ServerControl::getUDP() {return myUDP;}
+void ServerControl::setUDP(UdpServer* us) {myUDP = us;}
+UdpServer*& ServerControl::getUDP() {return myUDP;}
 
 /*Callback function for update_path thread*/
 void* ServerControl::update_path_thread(void* threadid) {

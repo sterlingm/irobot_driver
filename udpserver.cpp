@@ -7,22 +7,22 @@
 
 socklen_t addr_len;
 
-Udpserver::Udpserver(char* p, char* ip, client_info*& c, int& size) : port(p), done(false), ip_addr(ip), clients(c), count(size) {}
+UdpServer::UdpServer(char* p, char* ip, client_info*& c, int& size) : port(p), done(false), ip_addr(ip), clients(c), count(size) {}
 
-Udpserver::~Udpserver() {}
+UdpServer::~UdpServer() {}
 
 
-bool Udpserver::getDone() {return done;}
-void Udpserver::setDone(bool d) {done = d;}
+bool UdpServer::getDone() {return done;}
+void UdpServer::setDone(bool d) {done = d;}
 
 
 
 /*Getter and setter for ip_addr*/
-void Udpserver::setIP(char* addr) {ip_addr = addr;}
-char* Udpserver::getIP() {return ip_addr;}
+void UdpServer::setIP(char* addr) {ip_addr = addr;}
+char* UdpServer::getIP() {return ip_addr;}
 
 /*Launches the udp server*/
-bool Udpserver::launch_server() {
+bool UdpServer::launch_server() {
 
     int status;
 
@@ -71,22 +71,22 @@ bool Udpserver::launch_server() {
 }   //END LAUNCH_SERVER
 
 
-client_info* Udpserver::get_clients() {return clients;}
-int Udpserver::get_num_clients() {return count;}
+client_info* UdpServer::get_clients() {return clients;}
+int UdpServer::get_num_clients() {return count;}
 
-char Udpserver::get_client_id(int& fd) {
+char UdpServer::get_client_id(int& fd) {
     for(int i=0;i<count;i++)
         if(clients[i].fd == fd)
             return clients[i].id;
 }
 
-client_info& Udpserver::get_client(char& id) {
+client_info& UdpServer::get_client(char& id) {
     for(int i=0;i<count;i++)
         if(clients[i].id == id)
             return clients[i];
 }
 
-client_info& Udpserver::get_client(int& fd) {
+client_info& UdpServer::get_client(int& fd) {
     for(int i=0;i<count;i++)
         if(clients[i].fd == fd)
             return clients[i];
@@ -94,7 +94,7 @@ client_info& Udpserver::get_client(int& fd) {
 
 
 /*Intreprets a message from the client*/
-void Udpserver::get_message(char* message, char client_id) {
+void UdpServer::get_message(char* message, char client_id) {
     std::string temp_message(message);
     //std::cout<<"\nmessage: "<<temp_message;
 
@@ -128,6 +128,7 @@ void Udpserver::get_message(char* message, char client_id) {
             //lock
             pthread_mutex_lock(&mutex_agent);
 
+            //std::cout<<"\nhsv: "<<hsv<<" lsv: "<<lsv;
             get_client(client_id).agent->setHighSV(hsv);
             get_client(client_id).agent->setLowSV(lsv);
 
@@ -139,7 +140,7 @@ void Udpserver::get_message(char* message, char client_id) {
 }   //END GET_MESSAGE
 
 
-void Udpserver::communicate() {
+void UdpServer::communicate() {
 
     int num_read;
     //11 is the max size (if both sensor value bytes are 3 digits)
