@@ -22,8 +22,8 @@ public:
 
 
     //! A Constructor
-    /*! Sets port to p, ip_addr to ip, which_display to 1, and done to false */
-    TcpServer(char*, char*, int);
+    /*! Sets port to p, ip_addr to ip, which_display to 1, done to false, and grid_filename to g (grid_filename defaults to "") */
+    TcpServer(char*, char*, int, std::string g="");
     //! A Destructor
     ~TcpServer();
 
@@ -65,15 +65,21 @@ public:
     /*! Sets ip_addr to addr*/
     void setIP(char*);
 
-    bool launchServer();
+    //! Getter function for grid_filename member
+    /*! Returns the value of grid_filename */
+    std::string getGridFilename();
+
+    //! Setter function for grid_filename member
+    /*! Sets grid_filename to gf */
+    void setGridFilename(std::string);
 
     //! Launches tcp server
     /*!
      * Waits for a tcp client to connect\n
      * Returns true on success and false otherwise
-     * Takes in the string to the grid filename to pass to clients after they connect
      */
-    bool launchServer(std::string);
+    bool launchServer();
+
 
     //! Gets message sent back from client
     /*!
@@ -132,6 +138,7 @@ private:
     bool done;
     bool read_mess;
     bool sent_mess;
+    std::string grid_filename;
 
     //current sensor of each robot
     std::vector<int> cs;

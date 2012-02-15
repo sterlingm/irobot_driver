@@ -19,8 +19,8 @@ class Grid_Analyzer;
 class TcpClient {
 public:
 	//! A Constructor
-	/*! Sets port to p, ip_addr to ip, and done to false */
-    TcpClient(char*, char*, char);
+	/*! Sets port to p, ip_addr to ip, done to false, and gui to g (gui defaults to false) */
+    TcpClient(char*, char*, char, bool gui=false);
 
     //! A Destructor
     ~TcpClient();
@@ -68,12 +68,16 @@ public:
     /*! Sets ip_addr to addr*/
     void setIP(char*);
 
+    //! Getter function for gui member
+    /*! Returns the value of gui member */
+    bool getGUI();
+
     //! Launches tcp client
     /*!
      * Tries to connect to a tcp server\n
      * Returns true on success and false otherwise
      */
-    bool launchClient(bool);
+    bool launchClient();
 
     //! Communicate with server
     /*! Allows the client to send and receive messages from the server */
@@ -101,6 +105,7 @@ private:
     bool done;
     bool read_mess;
     bool sent_mess;
+    bool gui;
     Agent* myAgent;
     Grid* grid;     //needed to persist myAgent's grid member
     Grid_Analyzer* grid_analyzer;

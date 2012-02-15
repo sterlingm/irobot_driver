@@ -284,7 +284,7 @@ int main(int argc, char* args[]) {
 
                 else if(mode[0] == 'c') {
 
-                    TcpClient client((char*)PORT, ip.c_str(), id[0]);
+                    TcpClient client((char*)PORT, ip.c_str(), id[0], true);
                     UdpClient u_client((char*)PORT, ip.c_str(), id[0]);
 
                     Robot robot(robot_port, ROBOT_BAUDRATE, '1');
@@ -301,7 +301,7 @@ int main(int argc, char* args[]) {
                     client.setAgent(agent);
                     u_client.setAgent(agent);
 
-                    if(client.launchClient(true) && u_client.launch_client()) {
+                    if(client.launchClient() && u_client.launch_client()) {
                         pthread_create(&gui_client_comm, 0, gui_client_comm_cb, (void*)&u_client);
 
                         //get commands until done
@@ -344,10 +344,10 @@ int main(int argc, char* args[]) {
             //cout<<"\nHow many clients should be accepted?\n";
             //cin>>num_clients;
 
-            TcpServer server((char*)PORT, ip.c_str(), num_clients);
+            TcpServer server((char*)PORT, ip.c_str(), num_clients, grid_filename);
 
             //launch the servers
-            if(server.launchServer(grid_filename)) {
+            if(server.launchServer()) {
                 int size = server.get_num_clients();
                 UdpServer u_server((char*)PORT, ip.c_str(), server.get_clients(), size);
 
@@ -497,7 +497,7 @@ int main(int argc, char* args[]) {
             u_client.setAgent(agent);
 
             //launch the clients
-            if(client.launchClient(false) && u_client.launch_client()) {
+            if(client.launchClient() && u_client.launch_client()) {
 
                 cout<<"\nSuccessful Connection!";
 

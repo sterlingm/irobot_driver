@@ -4,7 +4,8 @@
 #include <netinet/tcp.h>
 
 
-TcpClient::TcpClient(char* p, char* ip, char ID) : port(p), ip_addr(ip), done(false), myAgent(0), id(ID), grid(0), grid_analyzer(0) {}
+TcpClient::TcpClient(char* p, char* ip, char ID, bool g) : port(p), ip_addr(ip), done(false), myAgent(0), id(ID), grid(0), grid_analyzer(0)
+, gui(g) {}
 
 TcpClient::~TcpClient() {
     if(grid != 0)
@@ -22,8 +23,8 @@ void TcpClient::setAgent(Agent* a) {myAgent = a;}
 Agent*& TcpClient::getAgent() {return myAgent;}
 
 /*Getter and setter for ip_addr*/
-char* TcpClient::getIP() {return ip_addr;}
 void TcpClient::setIP(char* addr) {ip_addr = addr;}
+char* TcpClient::getIP() {return ip_addr;}
 
 /*Getter and setter for read_mess*/
 void TcpClient::set_read_mess(bool r) {read_mess = r;}
@@ -33,10 +34,11 @@ bool TcpClient::get_read_mess() {return read_mess;}
 void TcpClient::set_sent_mess(bool s) {sent_mess = s;}
 bool TcpClient::get_sent_mess() {return sent_mess;}
 
+bool TcpClient::getGUI() {return gui;}
 
 
 /*Tries to connect to a server. Returns true if successful*/
-bool TcpClient::launchClient(bool gui) {
+bool TcpClient::launchClient() {
     int status, sock, adrlen;   //status, file descriptor, address length
 
     struct addrinfo hints;
@@ -72,6 +74,7 @@ bool TcpClient::launchClient(bool gui) {
         send_init_info();
         receive_grid_filename();
     }
+
     freeaddrinfo(servinfo);
     return true;
 }   //END LAUNCHCLIENT
@@ -551,7 +554,7 @@ void TcpClient::get_gui_command() {
             while(isdigit(cmd[v_index]) || cmd[v_index] == '-')
                 v_index++;
             std::string v_str = cmd.substr(4, v_index - 4);
-            std::cout<<"\nv_str:"<<v_str;
+            //std::cout<<"\nv_str:"<<v_str;
             int velocity = atoi(v_str.c_str());
 
             int r_index = v_index+1;
