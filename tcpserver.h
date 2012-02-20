@@ -146,6 +146,8 @@ private:
     std::vector<int> velocities;
     //algorithms for each robot
     std::vector<int> algos;
+    //replan times for each robot
+    std::vector<int> rpts;
 
     void recv_client_init_info(int&);
     void send_grid_filename(int&, std::string);

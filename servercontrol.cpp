@@ -26,46 +26,17 @@ void* ServerControl::update_path_thread(void* threadid) {
     f->sc->update_path_thread_i(f->id);
 }   //END UPDATE_PATH_THREAD
 
-void* ServerControl::rrt_update_thread(void* threadid) {
-    ServerControl* s = (ServerControl*)threadid;
-    s->rrt_update_thread_i();
-}
-
-inline void ServerControl::rrt_update_thread_i() {
-
-//*********1 is client_id***************//
-
-    int client_id = 1;
-    Position goal(1,1);
-
-    while(!myServer->getDone()) {
-        if(!myServer->get_client(client_id).agent->getGoal().equals(goal)) {
-
-            Path newPath = myServer->get_client(client_id).agent->getGridAnalyzer()->
-                                rrt_path(myServer->get_client(client_id).agent->getPosition(),
-                                         myServer->get_client(client_id).agent->getGoal());
-
-            //insert duplicate front position for bug
-            newPath.insert(myServer->get_client(client_id).agent->getPosition(), 0);
-
-            //set new path
-            myServer->get_client(client_id).agent->setPath(newPath);
-
-            //send path
-            myServer->sendPath(newPath, client_id);
-
-        }   //end if
-    }   //end while
-
-}
-
 /*Inline function for update_path. Infinitely updates the agent's path every 0.2 seconds*/
 inline void ServerControl::update_path_thread_i(char client_id) {
     //while the server is running
     while(!myServer->getDone()) {
 
-        //sleep for 0.2 seconds
-        usleep(UPDATE_PATH_TIME);
+        //sleep 0.2 seconds
+        if(myServer->get_client(client_id).agent->get_algorithm() == ASTAR)
+            usleep(ASTAR_UPDATE_PATH_TIME);
+        //sleep 5 seconds
+        else if(myServer->get_client(client_id).agent->get_algorithm() == RRT)
+            usleep(RRT_UPDATE_PATH_TIME);
 
 
         pthread_mutex_lock(&mutex_agent);
@@ -129,16 +100,42 @@ void* ServerControl::display_menu_thread(void* threadid) {
 
 /*Inline function for display thread. Infinitely displays the menu every 0.85 seconds*/
 inline void ServerControl::display_menu_thread_i() {
+
+    bool start=true;
     while(!myServer->getDone()) {
+
+        char display = myServer->getWhichDisplay();
+        //if the first display, plan path
+        if(start) {
+            usleep(1000000);
+            char client_id = display;
+            //std::cout<<"\nmyServer->get_client(client_id).agent->pos:"<<myServer->get_client(client_id).agent->getPosition().toString();
+            //std::cout<<"\nmyServer->get_client(client_id).agent->goal:"<<myServer->get_client(client_id).agent->getGoal().toString();
+            Path newPath;
+            myServer->get_client(client_id).agent->getGridAnalyzer()->setGrid(myServer->get_client(client_id).agent->getGrid());
+            if(myServer->get_client(client_id).agent->get_algorithm() == ASTAR)
+                //set newPath to the path astar returns
+                newPath = myServer->get_client(client_id).agent->getGridAnalyzer()->astar_path(myServer->get_client(client_id).agent->getPosition(),
+                    myServer->get_client(client_id).agent->getGoal());
+
+
+            else if(myServer->get_client(client_id).agent->get_algorithm() == RRT)
+                //set newPath to the path rrt returns
+                newPath = myServer->get_client(client_id).agent->getGridAnalyzer()->rrt_path(myServer->get_client(client_id).agent->getPosition(),
+                    myServer->get_client(client_id).agent->getGoal());
+
+            myServer->get_client(client_id).agent->setPath(newPath);
+            start = false;
+        }
+
         //usleep for x time
-        usleep(MENU_SLEEP_TIME);
+        if(myServer->get_client(display).agent->get_algorithm() == RRT)
+            usleep(MENU_SLEEP_TIME*2);
+        else
+            usleep(MENU_SLEEP_TIME);
 
         //clear the screen
         system("clear");
-
-
-        char display = myServer->getWhichDisplay();
-
         //lock
         pthread_mutex_lock(&mutex_agent);
 

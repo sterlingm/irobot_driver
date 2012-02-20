@@ -126,7 +126,7 @@ void TcpServer::recv_client_init_info(int& i) {
     char temp[11];
     int num_read = recv(clients[i].fd, temp, 10, 0);
     temp[10] = '\0';
-    std::cout<<"\ntemp:"<<temp;
+    //std::cout<<"\nreceived init message:"<<temp<<"\n";
     if(num_read < 0)
         printf("\nError reading client %i's id: %m", i, errno);
     else {
@@ -158,9 +158,8 @@ void TcpServer::recv_client_init_info(int& i) {
         while(isdigit(temp[a_index]))
             a_index++;
         std::string a = hold.substr(v_index+1, a_index-v_index);
-        std::cout<<"\na:"<<a;
+        //std::cout<<"\na:"<<a;
         algos.push_back(atoi(a.c_str()));
-        int al = atoi(a.c_str());
     }
     //else
         //std::cout<<"\nclient "<<i<<"'s id:"<<clients[i].id;
@@ -210,7 +209,8 @@ client_info& TcpServer::get_client(int& fd) {
 void TcpServer::set_agents(std::vector<Agent>& a_vec) {
     if(a_vec.size() == count)
         for(int i=0;i<count;i++) {
-            //std::cout<<"\nsetting clients["<<i<<"] to "<<a_vec.at(i);
+            //std::cout<<"\ni:"<<i<<"\n";
+            //std::cout<<"\nsetting clients["<<i<<"] to "<<&a_vec.at(i)<<"\n";
             clients[i].agent = &a_vec.at(i);
             clients[i].agent->setCurrentSensor(cs.at(i));
             clients[i].agent->getRobot()->setVelocity(velocities.at(i));

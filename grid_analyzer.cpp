@@ -445,17 +445,6 @@ Path Grid_Analyzer::rrt_path(Position& init, Position& goal) {
     while(!tree->contains(goal)) {
 
 
-        /*ANY RANDOM STATE!
-        //xrand<-random_state
-        //make a random position
-        srand(rand());
-        int row = (rand() % grid->getNumOfRows())+1;
-        srand(rand());
-        int col = (rand() % grid->getNumOfCols())+1;
-        Position rand_state(row, col);
-        //std::cout<<"\nrand_state: "<<rand_state.toString();*/
-
-
         //get list of potential samples
         std::vector<Position> potential_samples = get_potential_samples(init, r_samp, c_samp);
 

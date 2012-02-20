@@ -81,8 +81,9 @@ struct sensor_packet {
 
 static pthread_mutex_t mutex_agent;
 
-static int MENU_SLEEP_TIME = 850000;
-static int UPDATE_PATH_TIME = 200000;
+static int MENU_SLEEP_TIME = 1000000;
+static int ASTAR_UPDATE_PATH_TIME = 200000;
+static int RRT_UPDATE_PATH_TIME = 5000000;
 static int UPDATE_SERVER_TIME = 150000;
 
 //~1ft. more than 305 to account for speeding up

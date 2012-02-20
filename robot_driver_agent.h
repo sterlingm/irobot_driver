@@ -193,8 +193,5 @@ private:
     Position goal;
     Path path;
 
-    //Position find_next_best(Tree&, Position);
-    //Tree::Node* find_closest_node_in_tree(Tree*&, Position&);
-    //std::vector<Position> get_potential_samples(int&, int&);
 };
 #endif

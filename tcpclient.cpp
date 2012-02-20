@@ -82,10 +82,10 @@ bool TcpClient::launchClient() {
 
 /*Sends the id to the server*/
 void TcpClient::send_init_info() {
-    //std::cout<<"\nattempting to send "<<id;
+    //std::cout<<"\nattempting to send for client "<<id;
     std::stringstream to_send;
     to_send<<id<<" "<<myAgent->getCurrentSensor()<<" "<<myAgent->getRobot()->getVelocity()<<" "<<myAgent->get_algorithm();
-    //std::cout<<"\ntosend:"<<to_send.str();
+    //std::cout<<"\nsending init message:"<<to_send.str()<<"\n";
 
     int num_sent = send(fd, to_send.str().c_str(), to_send.str().length(), 0);
     if(num_sent < 0)
@@ -358,7 +358,7 @@ void TcpClient::getCommand(char* command) {
             }
             else
                 temp[1] = '\0';
-            std::cout<<"\ntemp:"<<temp;
+            //std::cout<<"\ntemp:"<<temp;
 
             int d;
             //if diagonal direction

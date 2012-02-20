@@ -533,12 +533,6 @@ int main(int argc, char* args[]) {
                 }
 
 
-                Path p;
-                if(al == RRT)
-                    p = agent->getGridAnalyzer()->rrt_path(agent->getPosition(), agent->getGoal());
-                else
-                    p = agent->getGridAnalyzer()->astar_path(agent->getPosition(), agent->getGoal());
-                agent->setPath(p);
 
                 //std::cout<<"\nID: "<<agent->getRobot()->getID()<<"\n";
                 //std::cout<<"\nGRID: "<<agent->getGrid()->toString();
