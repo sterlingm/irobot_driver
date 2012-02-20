@@ -28,11 +28,23 @@ Agent::Agent(Grid*& g, Robot& r, int d) : grid(g), robot(&r), direction(d), high
 Agent::~Agent() {}
 
 /*Sets direction to d if a valid direction*/
-void Agent::setDirection(int d) {direction = d;}
+void Agent::setDirection(int d) {
+    pthread_mutex_lock(&mutex_agent);
+    direction = d;
+    pthread_mutex_unlock(&mutex_agent);
+}
 /*Sets pos to p*/
-void Agent::setPosition(Position& p) {pos = p;}
+void Agent::setPosition(Position& p) {
+    pthread_mutex_lock(&mutex_agent);
+    pos = p;
+    pthread_mutex_unlock(&mutex_agent);
+}
 /*Sets goal to g*/
-void Agent::setGoal(Position& g) {goal = g;}
+void Agent::setGoal(Position& g) {
+    pthread_mutex_lock(&mutex_agent);
+    goal = g;
+    pthread_mutex_unlock(&mutex_agent);
+}
 /*Sets path to p*/
 void Agent::setPath(Path& p) {
     pthread_mutex_lock(&mutex_agent);
