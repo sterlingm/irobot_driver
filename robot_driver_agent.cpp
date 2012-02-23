@@ -13,16 +13,16 @@ const char* Agent::NoPathException::what() const throw() {
 	return "A path cannot be found!\n";
 }
 
-Agent::Agent() : grid(0), robot(0), spinning(false), ga(0) {}
+Agent::Agent() : grid(0), robot(0), spinning(false), driving(0), ga(0) {}
 
 
-Agent::Agent(Robot& r) : grid(0), robot(&r), direction(0), highsv(-1), lowsv(-1), spinning(false), ga(0) {}
-
-/*Constructor, sets grid to g, robot to r, direction to d*/
-Agent::Agent(Robot& r, int d) : grid(0), robot(&r), direction(d), highsv(-1), lowsv(-1), spinning(false), ga(0) {}
+Agent::Agent(Robot& r) : grid(0), robot(&r), direction(0), highsv(-1), lowsv(-1), spinning(false), driving(0), ga(0) {}
 
 /*Constructor, sets grid to g, robot to r, direction to d*/
-Agent::Agent(Grid*& g, Robot& r, int d) : grid(g), robot(&r), direction(d), highsv(-1), lowsv(-1), spinning(false), ga(0) {}
+Agent::Agent(Robot& r, int d) : grid(0), robot(&r), direction(d), highsv(-1), lowsv(-1), spinning(false), driving(0), ga(0) {}
+
+/*Constructor, sets grid to g, robot to r, direction to d*/
+Agent::Agent(Grid*& g, Robot& r, int d) : grid(g), robot(&r), direction(d), highsv(-1), lowsv(-1), spinning(false), driving(0), ga(0) {}
 
 /*Destructor*/
 Agent::~Agent() {}
@@ -41,9 +41,9 @@ void Agent::setPosition(Position& p) {
 }
 /*Sets goal to g*/
 void Agent::setGoal(Position& g) {
-    pthread_mutex_lock(&mutex_agent);
+    //pthread_mutex_lock(&mutex_agent);
     goal = g;
-    pthread_mutex_unlock(&mutex_agent);
+    //pthread_mutex_unlock(&mutex_agent);
 }
 /*Sets path to p*/
 void Agent::setPath(Path& p) {
@@ -99,171 +99,6 @@ bool Agent::is_driving() {return driving;}
 
 int Agent::get_algorithm() {return algorithm;}
 
-
-/*Steps the robot through the path*/
-void Agent::stepPath(bool own) {
-
-    try {
-
-        //trylock to check in while
-        pthread_mutex_trylock(&mutex_agent);
-
-        Position init;
-        Position next;
-        //while there is a path
-        while( path.getSize() > 1) {
-
-            //unlock path
-            pthread_mutex_unlock(&mutex_agent);
-            //lock path
-            pthread_mutex_lock(&mutex_agent);
-
-            //std::cout<<"\npath.getPathVector.at(1):"<<path.getPathVector().at(1).toString()<<" spinning:"<<spinning<<" robot velocity:"<<robot->getVelocity();
-            //make sure position is still valid
-            if( (!spinning) && (!driving) && (robot->getVelocity() != 0) ) {
-
-                driving = true;
-
-                //set new position and step through first pair
-                //pos = path.getPath().at(1);
-                init = path.getPathVector().at(0);
-                next = path.getPathVector().at(1);
-                step(init, next);
-
-                //delete the first position
-                path.pop_front();
-
-                driving = false;
-            }   //end if
-            //unlock
-            pthread_mutex_unlock(&mutex_agent);
-        }   //end while
-    } catch(std::out_of_range& e) {}
-}   //END STEPPATH
-
-
-
-
-/*Robot moves from one position to another
-  Sets the agent position to b*/
-void Agent::step(Position& a, Position& b) {
-
-    std::cout<<"\nStepping from "<<a.toString()<<" to "<<b.toString()<<"\n";
-
-    //if positions not connected
-    if( (abs(a.getCol() - b.getCol()) > 1) || (abs(a.getRow() - b.getRow()) > 1) )
-        std::cout<<"\nCannot step from "<<a.toString()<<" to "<<b.toString();
-
-    //if moving horizontal
-    else if(a.getRow() == b.getRow()) {
-
-        //if moving east
-        if( (a.getCol() - b.getCol() == -1) ) {
-
-            if(robot->getVelocity() > 0)
-                change_direction(EAST);
-            else
-                change_direction(WEST);
-
-            pos = b;
-            robot->driveXDistance(UNIT_SIZE);
-        }   //end if moving right
-
-        //if moving west
-        else if( (a.getCol() - b.getCol() == 1) ) {
-
-            if(robot->getVelocity() > 0)
-                change_direction(WEST);
-            else
-                change_direction(EAST);
-
-            pos = b;
-            robot->driveXDistance(UNIT_SIZE);
-        }   //end if moving west
-
-        pos = b;
-    }   //end if moving horizontally
-
-
-    //if moving vertically
-    else if(a.getCol() == b.getCol()) {
-
-        //if moving south
-        if( (a.getRow() - b.getRow() == -1) ) {
-
-            if(robot->getVelocity() > 0)
-                change_direction(SOUTH);
-            else
-                change_direction(NORTH);
-
-            pos = b;
-            robot->driveXDistance(UNIT_SIZE);
-        }   //end if moving south
-
-        //if moving north
-        else if( (a.getRow() - b.getRow() == 1) ) {
-
-            if(robot->getVelocity() > 0)
-                change_direction(NORTH);
-            else
-                change_direction(SOUTH);
-            pos = b;
-            robot->driveXDistance(UNIT_SIZE);
-        }   //end if moving north
-
-        pos = b;
-    }   //end if moving vertically
-
-    //if moving diagonally
-    else {
-
-        //if moving northeast
-        if( (a.getRow() - b.getRow() == 1) && (a.getCol() - b.getCol() == -1) ) {
-            if(robot->getVelocity() > 0)
-                change_direction(NORTHEAST);
-            else
-                change_direction(SOUTHWEST);
-
-            pos = b;
-            robot->driveXDistance(UNIT_SIZE);
-        }   //end if moving northeast
-
-        //if moving north west
-        else if( (a.getRow() - b.getRow() == 1) && (a.getCol() - b.getCol() == 1) ) {
-            if(robot->getVelocity() > 0)
-                change_direction(NORTHWEST);
-            else
-                change_direction(SOUTHEAST);
-
-            pos = b;
-            robot->driveXDistance(UNIT_SIZE);
-        }   //end if moving northwest
-
-        //if moving southeast
-        else if( (a.getRow() - b.getRow() == -1) && (a.getCol() - b.getCol() == -1) ) {
-            if(robot->getVelocity() > 0)
-                change_direction(SOUTHEAST);
-            else
-                change_direction(NORTHWEST);
-
-            pos = b;
-            robot->driveXDistance(UNIT_SIZE);
-        }   //end if moving southeast
-
-        //if moving southwest
-        else { // if( (a.getRow() - b.getRow() == -1) && (a.getCol() - b.getCol() == 1) )
-            if(robot->getVelocity() > 0)
-                change_direction(SOUTHWEST);
-            else
-                change_direction(NORTHEAST);
-
-            pos = b;
-            robot->driveXDistance(UNIT_SIZE);
-        }   //end if moving southwest
-
-        pos = b;
-    }   //end if moving diagonally
-}   //END STEP
 
 
 
@@ -424,4 +259,175 @@ void Agent::change_direction(int after) {
         direction = after;
     }
 }
+
+
+
+
+
+/*Robot moves from one position to another
+  Sets the agent position to b*/
+void Agent::step(Position& a, Position& b) {
+
+    std::cout<<"\nStepping from "<<a.toString()<<" to "<<b.toString()<<"\n";
+
+    //if positions not connected
+    if( (abs(a.getCol() - b.getCol()) > 1) || (abs(a.getRow() - b.getRow()) > 1) )
+        std::cout<<"\nCannot step from "<<a.toString()<<" to "<<b.toString();
+
+    //if moving horizontal
+    else if(a.getRow() == b.getRow()) {
+
+        //if moving east
+        if( (a.getCol() - b.getCol() == -1) ) {
+
+            if(robot->getVelocity() > 0)
+                change_direction(EAST);
+            else
+                change_direction(WEST);
+
+            pos = b;
+            robot->driveXDistance(UNIT_SIZE);
+        }   //end if moving right
+
+        //if moving west
+        else if( (a.getCol() - b.getCol() == 1) ) {
+
+            if(robot->getVelocity() > 0)
+                change_direction(WEST);
+            else
+                change_direction(EAST);
+
+            pos = b;
+            robot->driveXDistance(UNIT_SIZE);
+        }   //end if moving west
+
+        pos = b;
+    }   //end if moving horizontally
+
+
+    //if moving vertically
+    else if(a.getCol() == b.getCol()) {
+
+        //if moving south
+        if( (a.getRow() - b.getRow() == -1) ) {
+
+            if(robot->getVelocity() > 0)
+                change_direction(SOUTH);
+            else
+                change_direction(NORTH);
+
+            pos = b;
+            robot->driveXDistance(UNIT_SIZE);
+        }   //end if moving south
+
+        //if moving north
+        else if( (a.getRow() - b.getRow() == 1) ) {
+
+            if(robot->getVelocity() > 0)
+                change_direction(NORTH);
+            else
+                change_direction(SOUTH);
+            pos = b;
+            robot->driveXDistance(UNIT_SIZE);
+        }   //end if moving north
+
+        pos = b;
+    }   //end if moving vertically
+
+    //if moving diagonally
+    else {
+
+        //if moving northeast
+        if( (a.getRow() - b.getRow() == 1) && (a.getCol() - b.getCol() == -1) ) {
+            if(robot->getVelocity() > 0)
+                change_direction(NORTHEAST);
+            else
+                change_direction(SOUTHWEST);
+
+            pos = b;
+            robot->driveXDistance(UNIT_SIZE);
+        }   //end if moving northeast
+
+        //if moving north west
+        else if( (a.getRow() - b.getRow() == 1) && (a.getCol() - b.getCol() == 1) ) {
+            if(robot->getVelocity() > 0)
+                change_direction(NORTHWEST);
+            else
+                change_direction(SOUTHEAST);
+
+            pos = b;
+            robot->driveXDistance(UNIT_SIZE);
+        }   //end if moving northwest
+
+        //if moving southeast
+        else if( (a.getRow() - b.getRow() == -1) && (a.getCol() - b.getCol() == -1) ) {
+            if(robot->getVelocity() > 0)
+                change_direction(SOUTHEAST);
+            else
+                change_direction(NORTHWEST);
+
+            pos = b;
+            robot->driveXDistance(UNIT_SIZE);
+        }   //end if moving southeast
+
+        //if moving southwest
+        else { // if( (a.getRow() - b.getRow() == -1) && (a.getCol() - b.getCol() == 1) )
+            if(robot->getVelocity() > 0)
+                change_direction(SOUTHWEST);
+            else
+                change_direction(NORTHEAST);
+
+            pos = b;
+            robot->driveXDistance(UNIT_SIZE);
+        }   //end if moving southwest
+
+        pos = b;
+    }   //end if moving diagonally
+}   //END STEP
+
+
+
+
+/*Steps the robot through the path*/
+void Agent::stepPath(bool own) {
+
+    try {
+
+        //trylock to check in while
+        pthread_mutex_trylock(&mutex_agent);
+
+        Position init;
+        Position next;
+        //while there is a path
+        while( path.getSize() > 1) {
+            //unlock path
+            pthread_mutex_unlock(&mutex_agent);
+            //lock path
+            pthread_mutex_trylock(&mutex_agent);
+
+            //std::cout<<"\npath.getPathVector.at(1):"<<path.getPathVector().at(1).toString()<<" spinning:"<<spinning<<" robot velocity:"<<robot->getVelocity();
+            //make sure position is still valid
+            if( (!spinning) && (!driving) && (robot->getVelocity() != 0) ) {
+                driving = true;
+
+                //set new position and step through first pair
+                //pos = path.getPath().at(1);
+                init = path.getPathVector().at(0);
+                next = path.getPathVector().at(1);
+                step(init, next);
+
+                //delete the first position
+                path.pop_front();
+
+                driving = false;
+            }   //end if
+            //else {
+                //std::cout<<"\nspinning:"<<spinning<<" driving:"<<driving<<" robot->getVelocity():"<<robot->getVelocity();
+            //}
+            //unlock
+            pthread_mutex_unlock(&mutex_agent);
+        }   //end while
+    } catch(std::out_of_range& e) {}
+}   //END STEPPATH
+
 

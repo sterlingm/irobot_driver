@@ -431,31 +431,40 @@ Path Grid_Analyzer::connect_for_rrt(Position& near_neigh, Position& sample) {
 
 
 Path Grid_Analyzer::rrt_path(Position& init, Position& goal) {
+    //std::cout<<"\ninit:"<<init.toString()<<" end:"<<end.toString()<<"\n";
+    //std::cout<<"\ngrid:"<<grid->getNumOfRows()<<" "<<grid->getNumOfCols();
+
 
     //make tree with pos as the init state
     Tree* tree = new Tree(init);
 
-    Position x = init;
+    Position rand_state;
     int r_samp = 2;
     int c_samp = 2;
     int branching = 5;
+    //if we sample within 30% of grid bounds to the goal, stop and connect
+    int close_enough = grid->getNumOfRows() * .3;
+    //std::cout<<"\nclose enough:"<<close_enough;
+    bool done_sampling=false;
+
     srand(time(NULL));
-
     //while the goal is not found
-    while(!tree->contains(goal)) {
-
+    while(!done_sampling) {
 
         //get list of potential samples
         std::vector<Position> potential_samples = get_potential_samples(init, r_samp, c_samp);
-
+        //for(int i=0;i<potential_samples.size();i++)
+            //std::cout<<"\n"<<potential_samples.at(i).toString();
         //go through list and get and get samples to add
         for(int i=0;i<branching;i++) {
 
             //seed again with rand
             srand(rand());
             //get one of the samples
-            Position rand_state = potential_samples.at(rand() % potential_samples.size());
+            //std::cout<<"\npotential samples.size():"<<potential_samples.size()<<"\n";
+            rand_state = potential_samples.at(rand() % potential_samples.size());
             //std::cout<<"\nrand_state: "<<rand_state.toString()<<"\n";
+
             //increase r and c samp
             r_samp += r_samp;
             c_samp += c_samp;
@@ -477,13 +486,39 @@ Path Grid_Analyzer::rrt_path(Position& init, Position& goal) {
                 Path connect_points = connect_for_rrt(near->getValue(), rand_state);
 
                 //add the path to the tree
-                for(int i=1;i<connect_points.getPathVector().size();i++)
-                    tree->add(connect_points.getPathVector().at(i), tree->find(connect_points.getPathVector().at(i-1)));
-
+                for(int i=1;i<connect_points.getPathVector().size();i++) {
+                    Tree::Node* n = tree->find(connect_points.getPathVector().at(i-1));
+                    tree->add(connect_points.getPathVector().at(i), n);
+                }
                 //std::cout<<"\ntree:\n"<<tree->toString()<<"\n\n";
-            }   //end if
+            }   //end if valid position
+
+            //if we've sampled the goal or are close enough, break out of loops
+            if(rand_state.equals(goal) || (abs(goal.getRow() - rand_state.getRow()) <= close_enough)
+                                        || (abs(goal.getCol() - rand_state.getCol()) <= close_enough) ) {
+                done_sampling = true;
+                i=branching;
+            }   //end if sampled goal
         }   //end for
     }   //end while
+
+    //std::cout<<"\noutide of while with rand_state:"<<rand_state.toString()<<"\n";
+
+    //if stopped because close to goal
+    if(!tree->contains(goal)) {
+        //xnear<-nearest_neighbor
+        Tree::Node* near = find_closest_node_in_tree(tree, goal);
+        //std::cout<<"\nfind_closest_node_in_tree returned:"<<near->getValue().toString()<<"for "<<rand_state.toString()<<"\n";
+
+        //get a path from nearest point to the random point
+        Path connect_points = connect_for_rrt(near->getValue(), goal);
+
+        //add the path to the tree
+        for(int i=1;i<connect_points.getPathVector().size();i++) {
+            Tree::Node* n = tree->find(connect_points.getPathVector().at(i-1));
+            tree->add(connect_points.getPathVector().at(i), n);
+        }   //end for
+    }   //end if stopped because close to goal
 
 
     Path result;
@@ -500,7 +535,7 @@ Path Grid_Analyzer::rrt_path(Position& init, Position& goal) {
     //reverse
     result.reverse();
 
-    //std::cout<<"\nrrt path from init:"<<init.toString()<<" to end:"<<end.toString()<<" :\n"<<result.toString();
+    //std::cout<<"\nrrt path from init:"<<init.toString()<<" to end:"<<end.toString()<<" :\n"<<result.toString()<<"\n";
     delete tree;
     return result;
 }   //END RRT
