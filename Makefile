@@ -7,7 +7,7 @@ INCLUDE = -I/usr/include/X11 -I/usr/local/include -I/usr/local/include/FL/images
 
 CC=g++ 
 CFLAGS=-w -D LINUX -O3 -fpermissive 
-OBJDIR=obj
+OBJDIR=release
 SRCDIR=src
 
 LDFLAGS= -L/usr/X11R6/lib$(LIBSELECT) -lpthread -lfltk -lXext -lXft -lfontconfig -lXinerama -lpthread -ldl -lm -lX11
@@ -19,7 +19,9 @@ TARGETD:= go_d
 
 
 OBJECTS:=$(SOURCES_RAW:.cpp=.o)
-#SOURCES:=$(SRCDIR)/%.cpp, $(SOURCES_RAW)
+
+SOURCES:=$(SOURCES_RAW)
+SOURCES:=$(patsubst %.cpp, $(SRCDIR)/%.cpp, $(SOURCES))
 
 
 all: $(TARGET)
@@ -28,12 +30,13 @@ $(TARGET): $(OBJECTS)
 	$(CC) -w -D LINUX $(INCLUDE) $^ -o $@ $(LDFLAGS)
 
 debug: $(TARGETD)
-	
+
 $(TARGETD): $(OBJECTS)
-	$(CC) -w -D LINUX $(INCLUDE) $^ -o $@ (LDFLAGS)
+	$(CC) -w -D LINUX $(INCLUDE) $^ -o $@ $(LDFLAGS)
 
 %.o: $(SRCDIR)/%.cpp
-	$(CC) -c -g $< $(CFLAGS)-o $@ 
+	$(CC) -c -g $< $(CFLAGS)-o $@
+
 
 
 .PHONY : clean
