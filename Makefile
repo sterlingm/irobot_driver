@@ -17,16 +17,11 @@ SOURCES_RAW= robot_driver_agent.cpp robot_driver_position.cpp robot_driver_prior
 TARGET:= go
 TARGETD:= go_d
 
-
-#OBJECTS:=$(SOURCES_RAW:.cpp=.o)
 OBJECTS:=$(SOURCES_RAW:.cpp=.o)
 OBJECTS:=$(patsubst %.o, $(OBJDIR)/%.o, $(OBJECTS))
 
 SOURCES:=$(SOURCES_RAW)
 SOURCES:=$(patsubst %.cpp, $(SRCDIR)/%.cpp, $(SOURCES))
-
-#OBJECTS:=$(SOURCES_RAW:.cpp=.o)
-#SOURCES:=$$(SOURCES_RAW)
 
 all: $(TARGET)
 

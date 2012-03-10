@@ -174,6 +174,10 @@ int main(int argc, char* args[]) {
     cout<<"\n";
     */
 
+    if(argc < 2) {
+        cout<<"\n\nError! No command line arguments specified! See ./go --help for information!\n\n";
+        exit(1);
+    }
 
     //if --help, print message and stop
     if(strcmp(args[1],"--help") == 0) {
