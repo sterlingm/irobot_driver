@@ -5,12 +5,10 @@ INCLUDE = -I/usr/include/X11 -I/usr/local/include -I/usr/local/include/FL/images
 
 #INCLUDE_W32 = -Isrc 
 
-srcdir = .
-VPATH =  .
-
 CC=g++ 
 CFLAGS=-w -D LINUX -O3 -fpermissive 
 OBJDIR=obj
+SRCDIR=src
 
 LDFLAGS= -L/usr/X11R6/lib$(LIBSELECT) -lpthread -lfltk -lXext -lXft -lfontconfig -lXinerama -lpthread -ldl -lm -lX11
 
@@ -21,8 +19,7 @@ TARGETD:= go_d
 
 
 OBJECTS:=$(SOURCES_RAW:.cpp=.o)
-SOURCES:=$(SOURCES_RAW)
-
+#SOURCES:=$(SRCDIR)/%.cpp, $(SOURCES_RAW)
 
 
 all: $(TARGET)
@@ -35,7 +32,7 @@ debug: $(TARGETD)
 $(TARGETD): $(OBJECTS)
 	$(CC) -w -D LINUX $(INCLUDE) $^ -o $@ (LDFLAGS)
 
-%.o: %.cpp
+%.o: $(SRCDIR)/%.cpp
 	$(CC) -c -g $< $(CFLAGS)-o $@ 
 
 
