@@ -18,16 +18,23 @@ TARGET:= go
 TARGETD:= go_d
 
 
+#OBJECTS:=$(SOURCES_RAW:.cpp=.o)
 OBJECTS:=$(SOURCES_RAW:.cpp=.o)
+OBJECTS:=$(patsubst %.o, $(OBJDIR)/%.o, $(OBJECTS))
 
 SOURCES:=$(SOURCES_RAW)
 SOURCES:=$(patsubst %.cpp, $(SRCDIR)/%.cpp, $(SOURCES))
 
+#OBJECTS:=$(SOURCES_RAW:.cpp=.o)
+#SOURCES:=$$(SOURCES_RAW)
 
 all: $(TARGET)
 
 $(TARGET): $(OBJECTS)
 	$(CC) -w -D LINUX $(INCLUDE) $^ -o $@ $(LDFLAGS)
+
+release/%.o: src/%.cpp
+	$(CC) -g -c $< $(CFLAGS) -o $@ 
 
 debug: $(TARGETD)
 
@@ -41,5 +48,5 @@ $(TARGETD): $(OBJECTS)
 
 .PHONY : clean
 clean:
-	rm -f *.o
+	rm -f release/*.o
 	rm -f $(TARGET) $(TARGETD)
