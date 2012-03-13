@@ -1,5 +1,6 @@
 #ifndef SERVERCONTROL_H
 #define SERVERCONTROL_H
+#include <sys/time.h>
 #include "tcpserver.h"
 #include "udpserver.h"
 #include "robot_driver_agent.h"
@@ -61,5 +62,9 @@ private:
     static void* udp_comm_thread(void*);
     void udp_comm_thread_i();
 
+    Position localize(Agent, struct timeval);
+
+    Position last_known;
+    struct timeval last_timestamp;
 };
 #endif

@@ -24,7 +24,7 @@
 using namespace std;
 
 string mode;
-string grid_filename;
+string grid_filename = "grids/";
 string ip;
 string id;
 string client_count;
@@ -66,7 +66,8 @@ void get_command_line_args(int count, char** args) {
 
         else if(strcmp(temp.substr(0,16).c_str(), "--grid-filename=") == 0) {
             //cout<<"\nargs["<<i<<"]:"<<args[i];
-            grid_filename = temp.substr(16,strlen(temp.c_str())-16);
+            string rest = temp.substr(16,strlen(temp.c_str())-16);
+            grid_filename.append(rest);
             //cout<<"\ngrid_filename:"<<grid_filename;
         }
 

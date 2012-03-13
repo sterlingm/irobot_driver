@@ -20,6 +20,26 @@ void ServerControl::setServer(TcpServer* s) {myServer = s;}
 void ServerControl::setUDP(UdpServer* us) {myUDP = us;}
 UdpServer*& ServerControl::getUDP() {return myUDP;}
 
+
+
+Position ServerControl::localize(Agent agent, struct timeval new_time) {
+    int sec_diff = new_time.tv_sec - last_timestamp.tv_sec;
+    int u_sec_diff = new_time.tv_usec - last_timestamp.tv_usec;
+
+    float whole_diff = sec_diff;
+    whole_diff += (u_sec_diff / 1000000);
+
+    float time_for_one_unit = UNIT_SIZE / agent.getRobot()->getVelocity();
+
+    int estimated_steps = whole_diff / time_for_one_unit;
+
+    Position result = agent.getPath().getPathVector().at(estimated_steps);
+    return result;
+}
+
+
+
+
 /*Callback function for update_path thread*/
 void* ServerControl::update_path_thread(void* threadid) {
     myStruct* f = (myStruct*)threadid;
