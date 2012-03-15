@@ -7,7 +7,7 @@ INCLUDE = -I/usr/include/X11 -I/usr/local/include -I/usr/local/include/FL/images
 
 CC=g++ 
 CFLAGS=-w -D LINUX -O3 -fpermissive 
-OBJDIR=release
+OBJDIR=objects
 SRCDIR=src
 
 LDFLAGS= -L/usr/X11R6/lib$(LIBSELECT) -lpthread -lfltk -lXext -lXft -lfontconfig -lXinerama -lpthread -ldl -lm -lX11
@@ -25,23 +25,20 @@ SOURCES:=$(patsubst %.cpp, $(SRCDIR)/%.cpp, $(SOURCES))
 
 all: $(TARGET)
 
+$(OBJDIR)/%.o: src/%.cpp
+	$(CC) -g -c $< $(CFLAGS) -o $@ 
+
 $(TARGET): $(OBJECTS)
 	$(CC) -w -D LINUX $(INCLUDE) $^ -o $@ $(LDFLAGS)
 
-release/%.o: src/%.cpp
-	$(CC) -g -c $< $(CFLAGS) -o $@ 
+$(OBJECTS): | $(OBJDIR)
 
-debug: $(TARGETD)
-
-$(TARGETD): $(OBJECTS)
-	$(CC) -w -D LINUX $(INCLUDE) $^ -o $@ $(LDFLAGS)
-
-%.o: $(SRCDIR)/%.cpp
-	$(CC) -c -g $< $(CFLAGS)-o $@
+$(OBJDIR):
+	mkdir $(OBJDIR)
 
 
 
 .PHONY : clean
 clean:
-	rm -f release/*.o
+	rm -f $(OBJDIR)/*.o
 	rm -f $(TARGET) $(TARGETD)

@@ -286,7 +286,7 @@ void Agent::step(Position& a, Position& b) {
                 change_direction(WEST);
 
             pos = b;
-            robot->driveXDistance(UNIT_SIZE);
+            robot->driveXDistance(UNIT_SIZE_STRAIGHT);
         }   //end if moving right
 
         //if moving west
@@ -298,7 +298,7 @@ void Agent::step(Position& a, Position& b) {
                 change_direction(EAST);
 
             pos = b;
-            robot->driveXDistance(UNIT_SIZE);
+            robot->driveXDistance(UNIT_SIZE_STRAIGHT);
         }   //end if moving west
 
         pos = b;
@@ -317,7 +317,7 @@ void Agent::step(Position& a, Position& b) {
                 change_direction(NORTH);
 
             pos = b;
-            robot->driveXDistance(UNIT_SIZE);
+            robot->driveXDistance(UNIT_SIZE_STRAIGHT);
         }   //end if moving south
 
         //if moving north
@@ -328,7 +328,7 @@ void Agent::step(Position& a, Position& b) {
             else
                 change_direction(SOUTH);
             pos = b;
-            robot->driveXDistance(UNIT_SIZE);
+            robot->driveXDistance(UNIT_SIZE_STRAIGHT);
         }   //end if moving north
 
         pos = b;
@@ -345,7 +345,7 @@ void Agent::step(Position& a, Position& b) {
                 change_direction(SOUTHWEST);
 
             pos = b;
-            robot->driveXDistance(UNIT_SIZE);
+            robot->driveXDistance(UNIT_SIZE_DIAGONAL);
         }   //end if moving northeast
 
         //if moving north west
@@ -356,7 +356,7 @@ void Agent::step(Position& a, Position& b) {
                 change_direction(SOUTHEAST);
 
             pos = b;
-            robot->driveXDistance(UNIT_SIZE);
+            robot->driveXDistance(UNIT_SIZE_DIAGONAL);
         }   //end if moving northwest
 
         //if moving southeast
@@ -367,7 +367,7 @@ void Agent::step(Position& a, Position& b) {
                 change_direction(NORTHWEST);
 
             pos = b;
-            robot->driveXDistance(UNIT_SIZE);
+            robot->driveXDistance(UNIT_SIZE_DIAGONAL);
         }   //end if moving southeast
 
         //if moving southwest
@@ -378,7 +378,7 @@ void Agent::step(Position& a, Position& b) {
                 change_direction(NORTHEAST);
 
             pos = b;
-            robot->driveXDistance(UNIT_SIZE);
+            robot->driveXDistance(UNIT_SIZE_DIAGONAL);
         }   //end if moving southwest
 
         pos = b;

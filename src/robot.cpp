@@ -1,16 +1,52 @@
 
-
+#include <errno.h>
 #include "robot.h"
 #include "rs232.h"
 
 pthread_t get_sensors;
-int result_high_low_byte[2];
+pthread_t get_real_velocity;
+pthread_t get_v_over_t;
+
+
+/*Callback for get real velocity thread*/
+void* Robot::get_v_over_t_thread(void* threadid) {
+    Robot* r = (Robot*)threadid;
+    r->get_v_over_t_thread_i();
+}
+
+inline void Robot::get_v_over_t_thread_i() {
+    while(1) {
+        usleep(1000000);
+        velocity_over_time.push_back(real_velocity);
+    }   //end while
+}
+
+/*Callback for get real velocity thread*/
+void* Robot::get_real_velocity_thread(void* threadid) {
+    Robot* r = (Robot*)threadid;
+    r->get_real_velocity_thread_i();
+}
+
+inline void Robot::get_real_velocity_thread_i() {
+    while(1) {
+        usleep(14500);
+
+        sensor_packet temp = get_sensor_value(REQUESTED_VELOCITY);
+        //std::cout<<"\ntemp.values[0]:"<<temp.values[0];
+        //std::cout<<"\ntemp.values[1]:"<<temp.values[1];
+
+        real_velocity = temp.values[0];
+        if(temp.values[1] != -1)
+            real_velocity += temp.values[1];
+        //std::cout<<"\nIN ROBOT real_velocity:"<<real_velocity;
+    }   //end while
+}
 
 /*Callback for get sensors thread*/
 void* Robot::get_sensors_thread(void* threadid) {
     Robot* r = (Robot*)threadid;
     r->get_sensors_thread_i();
-}   //END DRIVING_THREAD
+}   //END GETSENSORS_THREAD
 
 
 /*Inline for getting the robots sensors every 15ms.*/
@@ -168,36 +204,56 @@ inline void Robot::get_sensors_thread_i() {
   Takes in a port number and a baudrate
   Defaults the current sensor OI_MODE
 */
-Robot::Robot(int portNo, int br) : port(portNo), baudrate(br), sensorsstreaming(false), velocity(0) {
-    if(connection.OpenComport(port, baudrate))
-        printf("port open did not work\n");
-    else {
-        //printf("port open worked\n");
-        //make the thread
-        pthread_create(&get_sensors, 0, get_sensors_thread, (void*)this);
-    }   //end else
-}   //END ROBOT()
+Robot::Robot(int portNo, int br) : port(portNo), baudrate(br), sensorsstreaming(false), velocity(0), real_velocity(0) {init();}
+
 
 /*
   Constructor for a Robot
   Takes in a port number and a baudrate
   Defaults the current sensor OI_MODE
 */
-Robot::Robot(int portNo, int br, char ID) : port(portNo), baudrate(br), sensorsstreaming(false), id(ID), velocity(0) {
-    if(connection.OpenComport(port, baudrate))
-        printf("port open did not work\n");
-    else {
-        printf("port open worked\n");
-        //make the thread
-        pthread_create(&get_sensors, 0, get_sensors_thread, (void*)this);
-    }   //end else
-}   //END ROBOT()
+Robot::Robot(int portNo, int br, char ID) : port(portNo), baudrate(br), sensorsstreaming(false), id(ID), velocity(0), real_velocity(0) {init();}
+
 
 /*
  Destructor for a Robot
  Closes the serial comport
 */
-Robot::~Robot() {connection.CloseComport(port);}
+Robot::~Robot() {
+    std::cout<<"\n";
+    for(int i=0;i<velocity_over_time.size();i++)
+        std::cout<<"\nv_t["<<i<<"]:"<<velocity_over_time.at(i);
+    detach_threads();
+    connection.CloseComport(port);
+}
+
+void Robot::detach_threads() {
+    /*
+    std::cout<<"\ngetting called\n";
+    if(pthread_detach(get_sensors) != 0)
+        printf("\ndetach on get_sensors failed with error %m", errno);
+
+    if(pthread_detach(get_real_velocity) != 0)
+        printf("\ndetach on get_real_velocity failed with error %m", errno);
+
+    if(pthread_detach(get_v_over_t) != 0)
+        printf("\ndetach on get_v_over_t failed with error %m", errno);
+        */
+}
+
+void Robot::init() {
+
+    if(connection.OpenComport(port, baudrate))
+        printf("port open did not work\n");
+    else {
+        //printf("port open worked\n");
+        //make the thread
+        pthread_create(&get_sensors, 0, get_sensors_thread, (void*)this);
+        pthread_create(&get_real_velocity, 0, get_real_velocity_thread, (void*)this);
+        velocity_over_time.reserve(200);
+        pthread_create(&get_v_over_t, 0, get_v_over_t_thread, (void*)this);
+    }
+}
 
 /* Closes the serial comport*/
 void Robot::close() {connection.CloseComport(port);}
@@ -216,8 +272,9 @@ SerialConnect& Robot::getConnection() {return connection;}
 /*Returns the default velocity*/
 int& Robot::getVelocity() {return velocity;}
 /*Returns id*/
- char Robot::getID() {return id;}
+char Robot::getID() {return id;}
 
+int Robot::get_r_velocity() {return real_velocity;}
 /*
  Sends a single byte to the robot
  Returns true if the byte was successfully sent
@@ -482,29 +539,6 @@ sensor_packet Robot::get_sensor_value(int which) {
 }   //END GETSENSORVALUE
 
 
-
-/*
- Returns an int array of size two for the high and low byte for a value
- index 0 is the high byte and index 1 is the low byte
-*/
-int* Robot::getHighAndLowByte(int v) {
-
-    //if a low value, just use the low byte
-    if(v > 0 && v < 256) {
-        result_high_low_byte[0] = 0;
-        result_high_low_byte[1] = v;
-    }   //end if
-
-    //else use both the bytes
-    else {
-        result_high_low_byte[0] = (v>>8) & 0xff;
-        result_high_low_byte[1] = v & 0xff;
-    }
-
-    usleep(1000);
-    return result_high_low_byte;
-}   //END GETHIGHANDLOWBYTE
-
 /*
  Drives the robot at a given velocity and radius
  velocity is the specified velocity in mm/s and can range from -500-500
@@ -519,10 +553,10 @@ void Robot::drive(int velocity, int radius) {
     //get velocity and radius values
     int* v = getHighAndLowByte(velocity);
     int* r = getHighAndLowByte(radius);
-    vhigh = v[0];
-    vlow = v[1];
-    rhigh = r[0];
-    rlow = r[1];
+    vhigh = v[1];
+    vlow = v[0];
+    rhigh = r[1];
+    rlow = r[0];
 
     unsigned char command[5] = {137, vhigh, vlow, rhigh, rlow};
     if(!sendBytes(command, 5))
@@ -536,7 +570,6 @@ void Robot::drive(int radius) {
 }   //END DRIVE
 
 
-
 /*
  Drives the robot straight at a given velocity
  velocity is the specified velocity in mm/s and can rage from -500-500
@@ -547,8 +580,8 @@ void Robot::drive_straight(int velocity) {
 
     //get velocity values
     int* v = getHighAndLowByte(velocity);
-    vhigh = v[0];
-    vlow = v[1];
+    vhigh = v[1];
+    vlow = v[0];
 
     unsigned char command[5] = {137, vhigh, vlow, 127, 255};
     if(!sendBytes(command, 5))
@@ -628,8 +661,8 @@ void Robot::turnClockwise(int velocity) {
     unsigned char vlow;
 
     int* v = getHighAndLowByte(velocity);   //get velocity values
-    vhigh = v[0];   //high byte
-    vlow = v[1];    //low byte
+    vhigh = v[1];   //high byte
+    vlow = v[0];    //low byte
 
     //create and send drive command
     unsigned char command[5] = {137, vhigh, vlow, 255, 255};
@@ -647,8 +680,8 @@ void Robot::turnCounterClockwise(int velocity) {
     unsigned char vlow;
 
     int* v = getHighAndLowByte(velocity);   //get velocity values
-    vhigh = v[0];   //high byte
-    vlow = v[1];    //low byte
+    vhigh = v[1];   //high byte
+    vlow = v[0];    //low byte
 
     //create and send drive command
     unsigned char command[5] = {137, vhigh, vlow, 0, 1};

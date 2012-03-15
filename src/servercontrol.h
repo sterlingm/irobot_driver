@@ -62,9 +62,5 @@ private:
     static void* udp_comm_thread(void*);
     void udp_comm_thread_i();
 
-    Position localize(Agent, struct timeval);
-
-    Position last_known;
-    struct timeval last_timestamp;
 };
 #endif

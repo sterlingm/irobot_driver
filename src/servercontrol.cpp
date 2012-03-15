@@ -20,26 +20,6 @@ void ServerControl::setServer(TcpServer* s) {myServer = s;}
 void ServerControl::setUDP(UdpServer* us) {myUDP = us;}
 UdpServer*& ServerControl::getUDP() {return myUDP;}
 
-
-
-Position ServerControl::localize(Agent agent, struct timeval new_time) {
-    int sec_diff = new_time.tv_sec - last_timestamp.tv_sec;
-    int u_sec_diff = new_time.tv_usec - last_timestamp.tv_usec;
-
-    float whole_diff = sec_diff;
-    whole_diff += (u_sec_diff / 1000000);
-
-    float time_for_one_unit = UNIT_SIZE / agent.getRobot()->getVelocity();
-
-    int estimated_steps = whole_diff / time_for_one_unit;
-
-    Position result = agent.getPath().getPathVector().at(estimated_steps);
-    return result;
-}
-
-
-
-
 /*Callback function for update_path thread*/
 void* ServerControl::update_path_thread(void* threadid) {
     myStruct* f = (myStruct*)threadid;
@@ -63,8 +43,9 @@ inline void ServerControl::update_path_thread_i(char client_id) {
 
         //clear grid and mark all other robots
         myServer->get_client(client_id).agent->getGrid()->clear();
+        //mark
         for(int i=0;i<myServer->get_num_clients();i++) {
-            //if not this client
+            //if not this client, mark it on grid
             if(myServer->get_clients()[i].id != client_id) {
                 Agent* temp_agent = myServer->get_clients()[i].agent;
                 myServer->get_client(client_id).agent->getGrid()->setPos(temp_agent->getPosition().getRow(),
@@ -77,6 +58,7 @@ inline void ServerControl::update_path_thread_i(char client_id) {
         //try to find a path
         try {
 
+            //localize(*myServer->get_client(client_id).agent, stamp, myServer->get_client_index(client_id));
             //okay, check with algorithm and set path
             Path newPath;
             myServer->get_client(client_id).agent->getGridAnalyzer()->setGrid(myServer->get_client(client_id).agent->getGrid());

@@ -66,8 +66,12 @@ void get_command_line_args(int count, char** args) {
 
         else if(strcmp(temp.substr(0,16).c_str(), "--grid-filename=") == 0) {
             //cout<<"\nargs["<<i<<"]:"<<args[i];
-            string rest = temp.substr(16,strlen(temp.c_str())-16);
-            grid_filename.append(rest);
+            if(temp[16] == '/')
+                grid_filename = temp.substr(16,strlen(temp.c_str())-16);
+            else {
+                string rest = temp.substr(16,strlen(temp.c_str())-16);
+                grid_filename.append(rest);
+            }
             //cout<<"\ngrid_filename:"<<grid_filename;
         }
 

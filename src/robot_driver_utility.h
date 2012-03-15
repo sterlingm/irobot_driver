@@ -79,6 +79,29 @@ struct sensor_packet {
     sensor_packet() {values[0] = -1; values[1] = -1;}
 };
 
+static int result_high_low_byte[2];
+/*
+ Returns an int array of size two for the high and low byte for a value
+ index 0 is the low byte and index 1 is the high byte
+*/
+static int* getHighAndLowByte(int v) {
+
+    //if a low value, just use the low byte
+    if(v > 0 && v < 256) {
+        result_high_low_byte[1] = 0;
+        result_high_low_byte[0] = v;
+    }   //end if
+
+    //else use both the bytes
+    else {
+        result_high_low_byte[1] = (v>>8) & 0xff;
+        result_high_low_byte[0] = v & 0xff;
+    }
+
+    usleep(1000);
+    return result_high_low_byte;
+}   //END GETHIGHANDLOWBYTE
+
 static pthread_mutex_t mutex_agent;
 
 static int MENU_SLEEP_TIME = 1000000;
@@ -87,7 +110,8 @@ static int RRT_UPDATE_PATH_TIME = 5000000;
 static int UPDATE_SERVER_TIME = 150000;
 
 //~1ft. more than 305 to account for speeding up
-static int UNIT_SIZE = 320;
+static int UNIT_SIZE_STRAIGHT = 320;
+static int UNIT_SIZE_DIAGONAL = 450;
 
 
 #endif

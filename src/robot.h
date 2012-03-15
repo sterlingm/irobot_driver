@@ -1,5 +1,6 @@
 #ifndef ROBOT_H
 #define ROBOT_H
+#include <sys/time.h>
 #include "rs232.h"
 #include "robot_driver_utility.h"
 #include "robot_driver_path.h"
@@ -22,6 +23,8 @@ public:
     //! A destructor
     /*! Closes communication port */
     ~Robot();
+
+    void init();
 
     //! Closes communication port
     /*! Closes communication port */
@@ -201,25 +204,37 @@ public:
      */
     void leds(bool,bool,unsigned char,unsigned char);
 
-
+    int get_r_velocity();
+    std::vector<int> velocity_over_time;
 private:
 
     double adjustTurningTime(int,int);
-    int* getHighAndLowByte(int);
 
 
     static void* get_sensors_thread(void*);
     void get_sensors_thread_i();
 
+    static void* get_real_velocity_thread(void*);
+    void get_real_velocity_thread_i();
+
+    static void* get_v_over_t_thread(void*);
+    void get_v_over_t_thread_i();
+
+    void detach_threads();
+
     int port;
     int baudrate;
     int velocity;
+    int real_velocity;
     int currentSensor;
     int sensor_values[72];
     bool sensorsstreaming;
     SerialConnect connection;
     char id;
     char mode;
+
+    struct timeval timestamp;
+
 };
 
 #endif

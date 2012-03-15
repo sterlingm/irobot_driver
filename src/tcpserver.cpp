@@ -226,6 +226,14 @@ bool TcpServer::is_id(char& id) {
     return false;
 }   //END ISID
 
+
+int TcpServer::get_client_index(char id) {
+    for(int i=0;i<count;i++)
+        if(clients[i].id == id)
+            return i;
+    return -1;
+}
+
 /*Returns the array of client_info*/
 client_info*& TcpServer::get_clients() {return clients;}
 

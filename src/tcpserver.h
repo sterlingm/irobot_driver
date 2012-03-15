@@ -80,7 +80,6 @@ public:
      */
     bool launchServer();
 
-
     //! Gets message sent back from client
     /*!
      * Receives message from client in response to a previously sent command\n
@@ -126,6 +125,10 @@ public:
     //! Sets each client_info array's agent members
     /*! Sets clients[i] to &a_vec[i]*/
     void set_agents(std::vector<Agent>&);
+
+
+
+    int get_client_index(char);
 
 private:
 
