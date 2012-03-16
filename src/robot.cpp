@@ -1,5 +1,6 @@
 
 #include <errno.h>
+#include <math.h>
 #include "robot.h"
 #include "rs232.h"
 
@@ -32,13 +33,17 @@ inline void Robot::get_real_velocity_thread_i() {
         usleep(14500);
 
         sensor_packet temp = get_sensor_value(REQUESTED_VELOCITY);
-        //std::cout<<"\ntemp.values[0]:"<<temp.values[0];
-        //std::cout<<"\ntemp.values[1]:"<<temp.values[1];
 
-        real_velocity = temp.values[0];
-        if(temp.values[1] != -1)
-            real_velocity += temp.values[1];
-        //std::cout<<"\nIN ROBOT real_velocity:"<<real_velocity;
+        //low byte
+        real_velocity = temp.values[1];
+        //if high byte is used, get that
+        if(temp.values[0] == 1)
+            real_velocity += pow(2, 8);
+
+        //if high byte > 1, negative number - shift and add
+        if(temp.values[0] > 1)
+            real_velocity = (temp.values[0]<<8) + temp.values[1];
+
     }   //end while
 }
 
@@ -375,6 +380,7 @@ void Robot::toggleSensorStream() {
 
 
 /*Returns a Sensor_Packet for which*/
+/*All sensors that use 2 bytes RETURN HIGH BYTE FIRST so result[0] is high, result[1] is low*/
 sensor_packet Robot::get_sensor_value(int which) {
     sensor_packet result;
     //if the sensors are streaming

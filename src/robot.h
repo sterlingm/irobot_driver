@@ -225,7 +225,7 @@ private:
     int port;
     int baudrate;
     int velocity;
-    int real_velocity;
+    short int real_velocity;  //robot requested velocity sensor value
     int currentSensor;
     int sensor_values[72];
     bool sensorsstreaming;
