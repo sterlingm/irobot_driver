@@ -44,6 +44,10 @@ inline void Robot::get_real_velocity_thread_i() {
         if(temp.values[0] > 1)
             real_velocity = (temp.values[0]<<8) + temp.values[1];
 
+        /*FOR 4 BYTE INTS*/
+        //real_velocity <<= 16;
+        //real_velocity >>= 16;
+
     }   //end while
 }
 
@@ -224,27 +228,7 @@ Robot::Robot(int portNo, int br, char ID) : port(portNo), baudrate(br), sensorss
  Destructor for a Robot
  Closes the serial comport
 */
-Robot::~Robot() {
-    std::cout<<"\n";
-    for(int i=0;i<velocity_over_time.size();i++)
-        std::cout<<"\nv_t["<<i<<"]:"<<velocity_over_time.at(i);
-    detach_threads();
-    connection.CloseComport(port);
-}
-
-void Robot::detach_threads() {
-    /*
-    std::cout<<"\ngetting called\n";
-    if(pthread_detach(get_sensors) != 0)
-        printf("\ndetach on get_sensors failed with error %m", errno);
-
-    if(pthread_detach(get_real_velocity) != 0)
-        printf("\ndetach on get_real_velocity failed with error %m", errno);
-
-    if(pthread_detach(get_v_over_t) != 0)
-        printf("\ndetach on get_v_over_t failed with error %m", errno);
-        */
-}
+Robot::~Robot() {}
 
 void Robot::init() {
 

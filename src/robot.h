@@ -220,7 +220,6 @@ private:
     static void* get_v_over_t_thread(void*);
     void get_v_over_t_thread_i();
 
-    void detach_threads();
 
     int port;
     int baudrate;
