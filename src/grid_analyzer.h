@@ -28,7 +28,7 @@ public:
 
     //! Returns straight line distance between two Positions
     /*! Returns straight line distance between two Position references passed */
-    double getSLDistance(Position&,Position&);
+    double getEuclideanDistance(Position&,Position&);
 
     //! Returns vector of adjacent positions to the parameter position
     /*! Returns a vector of Positions that are adjacent to the Position reference passed */
@@ -59,8 +59,8 @@ private:
     Grid* grid;
 
     Position find_next_best(Tree&, Position);
-    Tree::Node* find_closest_node_in_tree(Tree*&, Position&);
-    std::vector<Position> get_potential_samples(Position&, int&, int&);
+    Tree::Node* find_nearest_neighbor(Tree*&, Position&);
     Path connect_for_rrt(Position&, Position&);
+    std::vector<Position> get_sampling_square(Position&, Position&);
 };
 #endif

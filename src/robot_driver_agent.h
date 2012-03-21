@@ -127,31 +127,6 @@ public:
 
     void set_algorithm(int&);
 
-    //! Returns true if position has been visited
-    /*!
-     * Returns true if Position reference passed is\n
-     * within grid member bounds, not visited, and equal to ' '
-     */
-    //bool positionValid(Position&);
-
-
-    //! Returns straight line distance between two Positions
-    /*! Returns straight line distance between two Position references passed */
-    //double getSLDistance(Position&,Position&);
-
-    //! Returns vector of adjacent positions to the parameter position
-    /*! Returns a vector of Positions that are adjacent to the Position reference passed */
-    //std::vector<Position> adjacentPositions(Position&);
-
-    //! Returns a path from pos to the parameter
-    /*!
-     * Returns a Path from pos member to the Position reference passed\n
-     * Throws a NoPathException if no path exists
-     */
-    //Path astar_path(Position&,Position&);
-
-    //Path rrt_path(Position&, Position&);
-
 
     //! Moves the robot through path
     /*!
