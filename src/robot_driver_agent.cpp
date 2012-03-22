@@ -266,13 +266,15 @@ void Agent::change_direction(int after) {
 
 /*Robot moves from one position to another
   Sets the agent position to b*/
-void Agent::step(Position& a, Position& b) {
+bool Agent::step(Position& a, Position& b) {
 
     std::cout<<"\nStepping from "<<a.toString()<<" to "<<b.toString()<<"\n";
 
     //if positions not connected
-    if( (abs(a.getCol() - b.getCol()) > 1) || (abs(a.getRow() - b.getRow()) > 1) )
+    if( (abs(a.getCol() - b.getCol()) > 1) || (abs(a.getRow() - b.getRow()) > 1) ) {
         std::cout<<"\nCannot step from "<<a.toString()<<" to "<<b.toString();
+        return false;
+    }
 
     //if moving horizontal
     else if(a.getRow() == b.getRow()) {
@@ -285,7 +287,6 @@ void Agent::step(Position& a, Position& b) {
             else
                 change_direction(WEST);
 
-            pos = b;
             robot->driveXDistance(UNIT_SIZE_STRAIGHT);
         }   //end if moving right
 
@@ -297,11 +298,10 @@ void Agent::step(Position& a, Position& b) {
             else
                 change_direction(EAST);
 
-            pos = b;
             robot->driveXDistance(UNIT_SIZE_STRAIGHT);
         }   //end if moving west
 
-        pos = b;
+        return true;
     }   //end if moving horizontally
 
 
@@ -316,7 +316,6 @@ void Agent::step(Position& a, Position& b) {
             else
                 change_direction(NORTH);
 
-            pos = b;
             robot->driveXDistance(UNIT_SIZE_STRAIGHT);
         }   //end if moving south
 
@@ -327,11 +326,11 @@ void Agent::step(Position& a, Position& b) {
                 change_direction(NORTH);
             else
                 change_direction(SOUTH);
-            pos = b;
+
             robot->driveXDistance(UNIT_SIZE_STRAIGHT);
         }   //end if moving north
 
-        pos = b;
+        return true;
     }   //end if moving vertically
 
     //if moving diagonally
@@ -344,7 +343,6 @@ void Agent::step(Position& a, Position& b) {
             else
                 change_direction(SOUTHWEST);
 
-            pos = b;
             robot->driveXDistance(UNIT_SIZE_DIAGONAL);
         }   //end if moving northeast
 
@@ -355,7 +353,6 @@ void Agent::step(Position& a, Position& b) {
             else
                 change_direction(SOUTHEAST);
 
-            pos = b;
             robot->driveXDistance(UNIT_SIZE_DIAGONAL);
         }   //end if moving northwest
 
@@ -366,7 +363,6 @@ void Agent::step(Position& a, Position& b) {
             else
                 change_direction(NORTHWEST);
 
-            pos = b;
             robot->driveXDistance(UNIT_SIZE_DIAGONAL);
         }   //end if moving southeast
 
@@ -377,11 +373,10 @@ void Agent::step(Position& a, Position& b) {
             else
                 change_direction(NORTHEAST);
 
-            pos = b;
             robot->driveXDistance(UNIT_SIZE_DIAGONAL);
         }   //end if moving southwest
 
-        pos = b;
+        return true;
     }   //end if moving diagonally
 }   //END STEP
 
@@ -414,10 +409,14 @@ void Agent::stepPath(bool own) {
                 //pos = path.getPath().at(1);
                 init = path.getPathVector().at(0);
                 next = path.getPathVector().at(1);
-                step(init, next);
 
-                //delete the first position
-                path.pop_front();
+                if(step(init, next)) {
+                    pos = next;
+                    //delete the first position
+                    path.pop_front();
+                    usleep(1000000);
+                }   //end if successful step
+
 
                 driving = false;
             }   //end if

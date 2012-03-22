@@ -150,7 +150,7 @@ public:
      * Second Parameter is Position b\n
      * If move is successful, the new Position is set\n
      */
-    void step(Position&, Position&);
+    bool step(Position&, Position&);
 
 private:
     int direction;
