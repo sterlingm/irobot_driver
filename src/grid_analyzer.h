@@ -61,6 +61,6 @@ private:
     Position find_next_best(Tree&, Position);
     Tree::Node* find_nearest_neighbor(Tree*&, Position&);
     Path connect_for_rrt(Position&, Position&);
-    std::vector<Position> get_sampling_square(Position&, Position&);
+    std::vector<Position>* get_sampling_boxes(Position&, Position&);
 };
 #endif
