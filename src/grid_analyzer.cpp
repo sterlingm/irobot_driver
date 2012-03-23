@@ -353,7 +353,7 @@ Tree::Node* Grid_Analyzer::find_nearest_neighbor(Tree*& tree, Position& ver) {
 //greedy search based on euclidean distance
 Path Grid_Analyzer::connect_for_rrt(Position& near_neigh, Position& sample) {
     //std::cout<<"\nnn:"<<near_neigh.toString()<<" s:"<<sample.toString();
-    std::cout<<"\ngrid for connect_for_rrt:\n"<<grid->toString();
+
     Path result;
     Position current=near_neigh;
     Stack s;
@@ -369,10 +369,11 @@ Path Grid_Analyzer::connect_for_rrt(Position& near_neigh, Position& sample) {
         current = s.pop();
         result.add(current);
         grid->setPos(current.getRow(),current.getCol(),'.');
-        std::cout<<"\ncurrent:"<<current.toString();
-        if(current.equals(sample)) {
+        //std::cout<<"\ncurrent:"<<current.toString();
+
+        if(current.equals(sample))
             done = true;
-        }
+
         else {
             local = adjacentPositions(current);
             //std::cout<<"\nadjacent pos to "<<current.toString()<<":";
@@ -392,7 +393,7 @@ Path Grid_Analyzer::connect_for_rrt(Position& near_neigh, Position& sample) {
     }   //end while
     grid->clear();
 
-    std::cout<<"\nresult:"<<result.toString()<<"\n";
+    //std::cout<<"\nresult:"<<result.toString()<<"\n";
     return result;
 }   //END CONNECT_FOR_RRT
 
@@ -440,13 +441,13 @@ Path Grid_Analyzer::rrt_path(Position& init, Position& goal) {
     //get the sampling box
     std::vector<Position>* sampling_boxes = get_sampling_boxes(init, goal);
     int box = 0;
-
-    std::cout<<"\nbox:"<<box;
-    for(int i=0;i<sampling_boxes[box].size();i++)
-        std::cout<<" "<<sampling_boxes[box].at(i).toString();
-    std::cout<<"\nbox:"<<box+1;
-    for(int i=0;i<sampling_boxes[box+1].size();i++)
-        std::cout<<" "<<sampling_boxes[box+1].at(i).toString();
+//
+//    std::cout<<"\nbox:"<<box;
+//    for(int i=0;i<sampling_boxes[box].size();i++)
+//        std::cout<<" "<<sampling_boxes[box].at(i).toString();
+//    std::cout<<"\nbox:"<<box+1;
+//    for(int i=0;i<sampling_boxes[box+1].size();i++)
+//        std::cout<<" "<<sampling_boxes[box+1].at(i).toString();
 
     //make tree with pos as the init state
     Tree* tree = new Tree(init);
@@ -459,7 +460,7 @@ Path Grid_Analyzer::rrt_path(Position& init, Position& goal) {
 
     //if we sample within 30% of grid bounds to the goal, stop and connect
     float close_distance = grid->getNumOfCols() * 0.3;
-    std::cout<<"\nclose_distance:"<<close_distance;
+    //std::cout<<"\nclose_distance:"<<close_distance;
 
     //holds the index of sample in sampling_boxes[box]
     int index;
@@ -477,7 +478,7 @@ Path Grid_Analyzer::rrt_path(Position& init, Position& goal) {
 
 
             if(sampling_boxes[box].size() == 1) {
-                std::cout<<"\nNO PATH IN sampling_boxes[box]";
+                //std::cout<<"\nNO PATH IN sampling_boxes[box]";
                 box++;
             }
 
@@ -523,12 +524,12 @@ Path Grid_Analyzer::rrt_path(Position& init, Position& goal) {
         }   //end for
     }   //end while
 
-    std::cout<<"\noutide of while with rand_state:"<<sampled_state.toString()<<": "<<grid->getPos(sampled_state.getRow(), sampled_state.getCol())<<"\n";
+    //std::cout<<"\noutide of while with rand_state:"<<sampled_state.toString()<<": "<<grid->getPos(sampled_state.getRow(), sampled_state.getCol())<<"\n";
 
     //if stopped because close to goal
     if(!tree->contains(goal)) {
-        std::cout<<"\nstopped because close enough to goal at "<<sampled_state.toString();
-        std::cout<<"\ndistance:"<<sqrt( pow( (goal.getRow() - sampled_state.getRow()), 2)
+        //std::cout<<"\nstopped because close enough to goal at "<<sampled_state.toString();
+        //std::cout<<"\ndistance:"<<sqrt( pow( (goal.getRow() - sampled_state.getRow()), 2)
                                                         + pow( (goal.getCol() - sampled_state.getCol()), 2));
         //xnear<-nearest_neighbor
         Tree::Node* near = find_nearest_neighbor(tree, goal);
