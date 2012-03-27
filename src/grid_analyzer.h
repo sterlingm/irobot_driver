@@ -51,6 +51,8 @@ public:
 
     Path astar_path_decomposed(Position&, Position&, Tree*);
 
+    Tree* build_rrt(Position&, Position&);
+
     //! Returns an RRT Path
     /*! Returns an RRT Path from init to goal based on grid member*/
     Path rrt_path(Position&, Position&);
@@ -61,6 +63,6 @@ private:
     Position find_next_best(Tree&, Position);
     Tree::Node* find_nearest_neighbor(Tree*&, Position&);
     Path connect_for_rrt(Position&, Position&);
-    std::vector<Position>* get_sampling_boxes(Position&, Position&);
+    std::vector<Position>* get_sampling_sets(Position&, Position&);
 };
 #endif

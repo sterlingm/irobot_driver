@@ -103,7 +103,8 @@ Position Grid_Analyzer::find_next_best(Tree& tree, Position e) {
         //std::cout<<"\nnb->getHValue: "<<nb->getHValue()<<" "<<tree.getNodes().at(i)->getValue().toString()<<"->HValue: "<<tree.getNodes().at(i)->getHValue();
 
         //check straight line distance
-        if( tree.getNodes().at(i)->getHValue() < nb->getHValue() )
+        if( getEuclideanDistance(tree.getNodes().at(i)->getValue(), e) <
+                getEuclideanDistance(nb->getValue(), e) )
             nb = tree.getNodes().at(i);
 
         //if straight line distance is equal, check step cost
@@ -350,55 +351,7 @@ Tree::Node* Grid_Analyzer::find_nearest_neighbor(Tree*& tree, Position& ver) {
 }   //END FIND_NEAREST_NEIGHBOR
 
 
-//greedy search based on euclidean distance
-Path Grid_Analyzer::connect_for_rrt(Position& near_neigh, Position& sample) {
-    //std::cout<<"\nnn:"<<near_neigh.toString()<<" s:"<<sample.toString();
-
-    Path result;
-    Position current=near_neigh;
-    Stack s;
-    s.push(near_neigh);
-    std::vector<Position> local;
-    bool done=false;
-
-    grid->setPos(sample.getRow(), sample.getCol(), ' ');
-    //get adjacent pos
-    //push on one with lowest sld
-    while(!done) {
-
-        current = s.pop();
-        result.add(current);
-        grid->setPos(current.getRow(),current.getCol(),'.');
-        //std::cout<<"\ncurrent:"<<current.toString();
-
-        if(current.equals(sample))
-            done = true;
-
-        else {
-            local = adjacentPositions(current);
-            //std::cout<<"\nadjacent pos to "<<current.toString()<<":";
-            //for(int i=0;i<local.size();i++)
-                //std::cout<<" "<<local.at(i).toString();
-            int min_index=0;
-            for(int i=1;i<local.size();i++) {
-                if(getEuclideanDistance(local.at(i), sample) < getEuclideanDistance(local.at(min_index), sample)) {
-                    //std::cout<<"\n"<<local.at(i).toString()<<":"<<getEuclideanDistance(local.at(i), sample);
-                    //std::cout<<"\n"<<local.at(min_index).toString()<<":"<<getEuclideanDistance(local.at(min_index), sample);
-                    min_index = i;
-                }
-            }   //end for
-            //std::cout<<"\n"<<local.at(min_index).toString()<<" is closest";
-            s.push(local.at(min_index));
-        }   //end else
-    }   //end while
-    grid->clear();
-
-    //std::cout<<"\nresult:"<<result.toString()<<"\n";
-    return result;
-}   //END CONNECT_FOR_RRT
-
-
-std::vector<Position>* Grid_Analyzer::get_sampling_boxes(Position& init, Position& goal) {
+std::vector<Position>* Grid_Analyzer::get_sampling_sets(Position& init, Position& goal) {
     std::vector<Position>* result = new std::vector<Position>[2];
     int row_diff = init.getRow() - goal.getRow();
     int col_diff = init.getCol() - goal.getCol();
@@ -431,26 +384,79 @@ std::vector<Position>* Grid_Analyzer::get_sampling_boxes(Position& init, Positio
 }
 
 
-Path Grid_Analyzer::rrt_path(Position& init, Position& goal) {
-    //std::cout<<"\ninit:"<<init.toString()<<" end:"<<end.toString()<<"\n";
-    //std::cout<<"\ngrid:"<<grid->getNumOfRows()<<" "<<grid->getNumOfCols();
+//greedy search based on euclidean distance
+Path Grid_Analyzer::connect_for_rrt(Position& near_neigh, Position& sample) {
+    //std::cout<<"\nnn:"<<near_neigh.toString()<<" s:"<<sample.toString();
 
-    //value to return
     Path result;
+    Position current=near_neigh;
+    Stack s;
+    s.push(near_neigh);
+    std::vector<Position> local;
+    bool done=false;
 
-    //get the sampling box
-    std::vector<Position>* sampling_boxes = get_sampling_boxes(init, goal);
-    int box = 0;
-//
-//    std::cout<<"\nbox:"<<box;
-//    for(int i=0;i<sampling_boxes[box].size();i++)
-//        std::cout<<" "<<sampling_boxes[box].at(i).toString();
-//    std::cout<<"\nbox:"<<box+1;
-//    for(int i=0;i<sampling_boxes[box+1].size();i++)
-//        std::cout<<" "<<sampling_boxes[box+1].at(i).toString();
+    //grid->setPos(sample.getRow(), sample.getCol(), ' ');
+    //get adjacent pos
+    //push on one with lowest sld
+    while(!done) {
+
+        //if stack is not empty
+        if(!s.isEmpty()) {
+            current = s.pop();
+            result.add(current);
+            grid->setPos(current.getRow(),current.getCol(),'.');
+            //std::cout<<"\ncurrent:"<<current.toString();
+
+            //if at the sample, done
+            if(current.equals(sample))
+                done = true;
+
+            else {
+                local = adjacentPositions(current);
+                //std::cout<<"\nadjacent pos to "<<current.toString()<<":";
+                //for(int i=0;i<local.size();i++)
+                    //std::cout<<" "<<local.at(i).toString();
+                if(local.size() > 0) {
+                    int min_index=0;
+                    for(int i=1;i<local.size();i++) {
+                        if(getEuclideanDistance(local.at(i), sample) < getEuclideanDistance(local.at(min_index), sample)) {
+                            //std::cout<<"\n"<<local.at(i).toString()<<":"<<getEuclideanDistance(local.at(i), sample);
+                            //std::cout<<"\n"<<local.at(min_index).toString()<<":"<<getEuclideanDistance(local.at(min_index), sample);
+                            min_index = i;
+                        }
+                    }   //end for
+                    //std::cout<<"\n"<<local.at(min_index).toString()<<" is closest";
+                    s.push(local.at(min_index));
+                }   //end if local.size>0
+            }   //end else
+        }   //end if stack not empty
+        //if stack is empty, cannot reach goal
+        else
+            done = true;
+    }   //end while
+    grid->clear();
+
+    //std::cout<<"\nresult:"<<result.toString()<<"\n";
+    return result;
+}   //END CONNECT_FOR_RRT
+
+
+
+Tree* Grid_Analyzer::build_rrt(Position& init, Position& goal) {
 
     //make tree with pos as the init state
     Tree* tree = new Tree(init);
+
+    //get the sampling box
+    std::vector<Position>* sampling_sets = get_sampling_sets(init, goal);
+    int set = 0;
+//
+//    std::cout<<"\nset:"<<set;
+//    for(int i=0;i<sampling_sets[set].size();i++)
+//        std::cout<<" "<<sampling_sets[set].at(i).toString();
+//    std::cout<<"\nset:"<<set+1;
+//    for(int i=0;i<sampling_sets[set+1].size();i++)
+//        std::cout<<" "<<sampling_sets[set+1].at(i).toString();
 
     //make Position to hold the sample
     Position sampled_state;
@@ -468,59 +474,67 @@ Path Grid_Analyzer::rrt_path(Position& init, Position& goal) {
     //seed rand
     srand(time(NULL));
 
+    //flag for done
     bool done_sampling=false;
     //while the goal is not found
     while(!done_sampling) {
 
         //get number of samples to add equal to branching
         for(int i=0;i<branching;i++) {
-            //std::cout<<"\nsampling_boxes[box] size:"<<sampling_boxes[box].size();
+            //std::cout<<"\nsampling_boxes["<<box<<"] size:"<<sampling_boxes[box].size();
 
 
-            if(sampling_boxes[box].size() == 1) {
-                //std::cout<<"\nNO PATH IN sampling_boxes[box]";
-                box++;
+            if(sampling_sets[set].size() == 1) {
+                //std::cout<<"\nNO PATH IN sampling_boxes[0]";
+                if(set == 0)
+                    set++;
+                else
+                    i = branching;
             }
 
-            //seed again with rand
-            srand(rand());
+            else {
 
-            index = rand() % sampling_boxes[box].size();
+                //seed again with rand
+                srand(rand());
 
-            //get one of the samples
-            sampled_state = sampling_boxes[box].at(index);
-            //std::cout<<"\nsampled_state: "<<sampled_state.toString()<<"\n";
+                //get an index
+                index = rand() % sampling_sets[set].size();
 
-            //if position is valid
-            if(positionValid(sampled_state)) {
-                //xnear<-nearest_neighbor
-                Tree::Node* near = find_nearest_neighbor(tree, sampled_state);
-                //std::cout<<"\nfind_closest_node_in_tree returned:"<<near->getValue().toString()<<"for "<<sampled_state.toString()<<"\n";
+                //get one of the samples
+                sampled_state = sampling_sets[set].at(index);
+                //std::cout<<"\nsampled_state: "<<sampled_state.toString()<<"\n";
 
-                //get a path from nearest point to the random point
-                Path connect_points = connect_for_rrt(near->getValue(), sampled_state);
+                //if position is valid
+                if(positionValid(sampled_state)) {
+                    //xnear<-nearest_neighbor
+                    Tree::Node* near = find_nearest_neighbor(tree, sampled_state);
+                    //std::cout<<"\nfind_closest_node_in_tree returned:"<<near->getValue().toString()<<"for "<<sampled_state.toString()<<"\n";
 
-                //add the path to the tree
-                for(int j=1;j<connect_points.getPathVector().size();j++) {
-                    Tree::Node* n = tree->find(connect_points.getPathVector().at(j-1));
-                    tree->add(connect_points.getPathVector().at(j), n);
-                }
-                //std::cout<<"\ntree:\n"<<tree->toString()<<"\n\n";
+                    //get a path from nearest point to the random point
+                    Path connect_points = connect_for_rrt(near->getValue(), sampled_state);
+
+                    //add the path to the tree
+                    for(int j=1;j<connect_points.getPathVector().size();j++) {
+                        Tree::Node* n = tree->find(connect_points.getPathVector().at(j-1));
+                        tree->add(connect_points.getPathVector().at(j), n);
+                    }
+                    //std::cout<<"\ntree:\n"<<tree->toString()<<"\n\n";
 
 
 
-                //if we've sampled the goal or are close enough, break out of loops
-                if(sampled_state.equals(goal) || (sqrt( pow( (goal.getRow() - sampled_state.getRow()), 2)
-                                                        + pow( (goal.getCol() - sampled_state.getCol()), 2)) <= close_distance)) {
-                //if(sampled_state.equals(goal) || (abs(goal.getRow() - sampled_state.getRow()) <= close_enough_r)
-                                            //|| (abs(goal.getCol() - sampled_state.getCol()) <= close_enough_c) ) {
-                    done_sampling = true;
-                    i = branching;
-                }   //end if sampled goal or close enough
-            }   //end if valid position
+                    //if we've sampled the goal or are close enough, break out of loops
+                    if(sampled_state.equals(goal) || (sqrt( pow( (goal.getRow() - sampled_state.getRow()), 2)
+                                                            + pow( (goal.getCol() - sampled_state.getCol()), 2)) <= close_distance)) {
+                    //if(sampled_state.equals(goal) || (abs(goal.getRow() - sampled_state.getRow()) <= close_enough_r)
+                                                //|| (abs(goal.getCol() - sampled_state.getCol()) <= close_enough_c) ) {
+                        done_sampling = true;
+                        i = branching;
+                    }   //end if sampled goal or close enough
+                }   //end if valid position
 
-            //remove position from sample list
-            sampling_boxes[box].erase(sampling_boxes[box].begin()+index);
+                //remove position from sample list
+                sampling_sets[set].erase(sampling_sets[set].begin()+index);
+            }   //end else
         }   //end for
     }   //end while
 
@@ -530,13 +544,14 @@ Path Grid_Analyzer::rrt_path(Position& init, Position& goal) {
     if(!tree->contains(goal)) {
         //std::cout<<"\nstopped because close enough to goal at "<<sampled_state.toString();
         //std::cout<<"\ndistance:"<<sqrt( pow( (goal.getRow() - sampled_state.getRow()), 2)
-                                                        + pow( (goal.getCol() - sampled_state.getCol()), 2));
+                                                    //+ pow( (goal.getCol() - sampled_state.getCol()), 2));
         //xnear<-nearest_neighbor
         Tree::Node* near = find_nearest_neighbor(tree, goal);
         //std::cout<<"\nfind_closest_node_in_tree returned:"<<near->getValue().toString()<<"for "<<rand_state.toString()<<"\n";
 
         //get a path from nearest point to the random point
         Path connect_points = connect_for_rrt(near->getValue(), goal);
+        //std::cout<<"\nconnect_points:"<<connect_points.toString()<<"\n";
 
         //add the path to the tree
         for(int i=1;i<connect_points.getPathVector().size();i++) {
@@ -544,6 +559,34 @@ Path Grid_Analyzer::rrt_path(Position& init, Position& goal) {
             tree->add(connect_points.getPathVector().at(i), n);
         }   //end for
     }   //end if stopped because close to goal
+
+    delete [] sampling_sets;
+    return tree;
+}   //END BUILD_RRT
+
+Path Grid_Analyzer::rrt_path(Position& init, Position& goal) {
+    //std::cout<<"\ninit:"<<init.toString()<<" end:"<<end.toString()<<"\n";
+    //std::cout<<"\ngrid:\n"<<grid->toString();
+    //std::cout<<"\ngrid rows:"<<grid->getNumOfRows()<<" grid columns:"<<grid->getNumOfCols();
+
+    //value to return
+    Path result;
+
+    Tree* tree = build_rrt(init, goal);
+    //std::cout<<"\ntree:\n"<<tree->toString();
+
+    //if tree does not contain the goal,
+    //there is no path to the goal.
+    //find the closest we can get to the goal and set that as goal
+    if(!tree->contains(goal)) {
+
+        //call find_next_best
+        Position temp = find_next_best(*tree, goal);
+
+        //std::cout<<"\nNO PATH - SETTING GOAL TO "<<temp.toString()<<"\n";
+        //set end to the next best position
+        goal = temp;
+    }   //end if
 
     //hold current
     Tree::Node* current = tree->find(goal);
@@ -560,7 +603,7 @@ Path Grid_Analyzer::rrt_path(Position& init, Position& goal) {
     result.reverse();
 
     //std::cout<<"\nrrt path from init:"<<init.toString()<<" to end:"<<end.toString()<<" :\n"<<result.toString()<<"\n";
-    delete [] sampling_boxes;
+    //delete [] sampling_sets;
     delete tree;
     return result;
 }   //END RRT
