@@ -414,7 +414,7 @@ void Agent::stepPath(bool own) {
                     pos = next;
                     //delete the first position
                     path.pop_front();
-                    usleep(1000000);
+                    usleep(2000000);
                 }   //end if successful step
 
 

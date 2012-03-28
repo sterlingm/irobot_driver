@@ -167,6 +167,7 @@ inline void ServerControl::display_menu_thread_i() {
         int lowsv = myServer->get_client(display).agent->getLowSV();
         char mode = myServer->get_client(display).agent->get_mode();
         std::string direction;
+        std::string algorithm;
 
         //get direction
         switch (myServer->get_client(display).agent->getDirection()) {
@@ -196,6 +197,15 @@ inline void ServerControl::display_menu_thread_i() {
             break;
         }
 
+        switch (myServer->get_client(display).agent->get_algorithm()) {
+        case ASTAR:
+            algorithm = "A*";
+            break;
+        case RRT:
+            algorithm = "RRT";
+            break;
+        }
+
         //print
         std::cout<<g->toString();
         std::cout<<"Robot "<<display<<" Information";
@@ -203,6 +213,7 @@ inline void ServerControl::display_menu_thread_i() {
         std::cout<<"\nPath:"<<p.toString();
         std::cout<<"\nVelocity: "<<velocity;
         std::cout<<"\nDirection: "<<direction;
+        std::cout<<"\nAlgorithm: "<<algorithm;
         std::cout<<"\nSensor Packet "<<current_s<<" high byte: "<<highsv<<" low byte: "<<lowsv;
         std::cout<<"\n\nChange Viewing Robot - r ROBOT-ID";
         std::cout<<"\nChange Goal - ROBOT-ID g ROW COLUMN";

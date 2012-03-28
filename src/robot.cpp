@@ -29,25 +29,27 @@ void* Robot::get_real_velocity_thread(void* threadid) {
 }
 
 inline void Robot::get_real_velocity_thread_i() {
+    usleep(1000000);
     while(1) {
         usleep(14500);
 
-        sensor_packet temp = get_sensor_value(REQUESTED_VELOCITY);
+        if(sensorsstreaming) {
+            sensor_packet temp = get_sensor_value(REQUESTED_VELOCITY);
 
-        //low byte
-        real_velocity = temp.values[1];
-        //if high byte is used, get that
-        if(temp.values[0] == 1)
-            real_velocity += pow(2, 8);
+            //low byte
+            real_velocity = temp.values[1];
+            //if high byte is used, get that
+            if(temp.values[0] == 1)
+                real_velocity += pow(2, 8);
 
-        //if high byte > 1, negative number - shift and add
-        if(temp.values[0] > 1)
-            real_velocity = (temp.values[0]<<8) + temp.values[1];
+            //if high byte > 1, negative number - shift and add
+            if(temp.values[0] > 1)
+                real_velocity = (temp.values[0]<<8) + temp.values[1];
 
-        /*FOR 4 BYTE INTS*/
-        //real_velocity <<= 16;
-        //real_velocity >>= 16;
-
+            /*FOR 4 BYTE INTS*/
+            //real_velocity <<= 16;
+            //real_velocity >>= 16;
+        }
     }   //end while
 }
 
@@ -223,6 +225,11 @@ Robot::Robot(int portNo, int br) : port(portNo), baudrate(br), sensorsstreaming(
 */
 Robot::Robot(int portNo, int br, char ID) : port(portNo), baudrate(br), sensorsstreaming(false), id(ID), velocity(0), real_velocity(0) {init();}
 
+Robot::Robot(int portNo, int br, char ID, bool create) : port(portNo), baudrate(br), sensorsstreaming(false), id(ID), velocity(0), real_velocity(0) {
+    if(create)
+        init();
+}
+
 
 /*
  Destructor for a Robot
@@ -242,6 +249,14 @@ void Robot::init() {
         velocity_over_time.reserve(200);
         pthread_create(&get_v_over_t, 0, get_v_over_t_thread, (void*)this);
     }
+}
+
+void Robot::detach_threads() {
+    if(pthread_detach(get_sensors) != 0)
+        printf("\ndetach on get_sensors failed with error %m", errno);
+
+    if(pthread_detach(get_real_velocity) != 0)
+        printf("\ndetach on get_real_velocity failed with error %m", errno);
 }
 
 /* Closes the serial comport*/

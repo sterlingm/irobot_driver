@@ -168,7 +168,8 @@ void TcpServer::recv_client_init_info(int& i) {
 
 /*Sends the grid filename to client at index i*/
 void TcpServer::send_grid_filename(int& i, std::string g) {
-    int num_sent = send(clients[i].fd, g.c_str(), 255, 0);
+    std::cout<<"\nsending:"<<g;
+    int num_sent = send(clients[i].fd, g.c_str(), g.length(), 0);
     if(num_sent < 0)
         printf("\nError sending grid filename to cliend %i: %m", i, errno);
 }   //END SEND_GRID_FILENAME

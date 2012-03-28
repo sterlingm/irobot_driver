@@ -441,7 +441,7 @@ Path Grid_Analyzer::connect_for_rrt(Position& near_neigh, Position& sample) {
 }   //END CONNECT_FOR_RRT
 
 
-
+/*RESULT IS ALLOCATED ON HEAP!!*/
 Tree* Grid_Analyzer::build_rrt(Position& init, Position& goal) {
 
     //make tree with pos as the init state

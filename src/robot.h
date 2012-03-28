@@ -20,6 +20,11 @@ public:
     /*! Sets port member to first parameter passed, baudrate member to second parameter passed, and id to third parameter */
     Robot(int, int, char);
 
+    //! A constructor
+    /*! Sets port member to first parameter passed, baudrate member to second parameter passed, and id to third parameter
+     *  Fourth parameter is for not creating the threads. This is for making robots on the server side*/
+    Robot(int, int, char, bool);
+
     //! A destructor
     /*! Closes communication port */
     ~Robot();
@@ -206,10 +211,10 @@ public:
 
     int get_r_velocity();
     std::vector<int> velocity_over_time;
+    void detach_threads();
 private:
 
     double adjustTurningTime(int,int);
-
 
     static void* get_sensors_thread(void*);
     void get_sensors_thread_i();

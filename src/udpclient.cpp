@@ -81,7 +81,7 @@ void UdpClient::communicate() {
             tosend<<"@ "<<myAgent->getRobot()->getID()<<" "<<temp.values[1]<<" "<<temp.values[0];
 
             //send
-            numSent = sendto(fd, tosend.str().c_str(), 10, 0, servinfo->ai_addr, servinfo->ai_addrlen);
+            numSent = sendto(fd, tosend.str().c_str(), tosend.str().length(), 0, servinfo->ai_addr, servinfo->ai_addrlen);
             if(numSent < 0)
                 printf("\nError sending message: %s\nError message: %m", tosend.str().c_str(), errno);
             //else

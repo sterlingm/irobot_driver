@@ -25,6 +25,7 @@ using namespace std;
 
 string mode;
 string grid_filename = "grids/";
+string rest;
 string ip;
 string id;
 string client_count;
@@ -43,7 +44,68 @@ bool v_read = false;
 bool v_sent = false;
 bool simple = false;
 bool gui = false;
+
+
 pthread_t gui_client_comm;
+
+
+std::string filename_flag("--grid-filename=");
+size_t filename_len = filename_flag.length();
+
+std::string mode_flag("--mode=");
+size_t mode_len = mode_flag.length();
+
+std::string ip_flag("--ip=");
+size_t ip_len = ip_flag.length();
+
+std::string id_flag("--id=");
+size_t id_len = id_flag.length();
+
+
+std::string direction_flag("--direction=");
+size_t direction_len = direction_flag.length();
+
+std::string row_flag("--row=");
+size_t row_len = row_flag.length();
+
+std::string col_flag("--col=");
+size_t col_len = col_flag.length();
+
+std::string goal_row_flag("--goal-row=");
+size_t goal_row_len = goal_row_flag.length();
+
+std::string goal_col_flag("--goal-col=");
+size_t goal_col_len = goal_col_flag.length();
+
+std::string serial_port_flag("--serial-port=");
+size_t serial_port_len = serial_port_flag.length();
+
+std::string initial_sensor_flag("--initial-sensor=");
+size_t initial_sensor_len = initial_sensor_flag.length();
+
+std::string velocity_flag("--velocity=");
+size_t velocity_len = velocity_flag.length();
+
+std::string robot_mode_flag("--robot-mode=");
+size_t robot_mode_len = robot_mode_flag.length();
+
+std::string algo_flag("--algo=");
+size_t algo_len = algo_flag.length();
+
+std::string count_flag("--count=");
+size_t count_len = count_flag.length();
+
+std::string view_sent_messages_flag("--view-sent-messages");
+size_t view_sent_messages_len = view_sent_messages_flag.length();
+
+std::string view_read_messages_flag("--view-read-messages");
+size_t view_read_messages_len = view_read_messages_flag.length();
+
+std::string simple_flag("--simple");
+size_t simple_len = simple_flag.length();
+
+std::string gui_flag("--gui");
+size_t gui_len = gui_flag.length();
 
 
 void gui_client_comm_cb(void* v) {
@@ -58,111 +120,111 @@ void get_command_line_args(int count, char** args) {
 
         string temp(args[i]);
 
-        if(strcmp(temp.substr(0,7).c_str(),"--mode=") == 0) {
+        if(temp.substr(0, mode_len) == mode_flag) {
             //cout<<"\nargs["<<i<<"]:"<<args[i];
-            mode = temp.substr(7,strlen(temp.c_str())-7);
+            mode = temp.substr(mode_len, temp.length()-mode_len);
             //cout<<"\nmode:"<<mode;
         }
 
-        else if(strcmp(temp.substr(0,16).c_str(), "--grid-filename=") == 0) {
+        else if(temp.substr(0, filename_len) == filename_flag) {
             //cout<<"\nargs["<<i<<"]:"<<args[i];
-            if(temp[16] == '/')
-                grid_filename = temp.substr(16,strlen(temp.c_str())-16);
+            if(temp[filename_len] == '/')
+                grid_filename = temp.substr(filename_len, temp.length()-filename_len);
             else {
-                string rest = temp.substr(16,strlen(temp.c_str())-16);
-                grid_filename.append(rest);
+                rest = temp.substr(filename_len, temp.length()-filename_len);
+                grid_filename += rest;
             }
             //cout<<"\ngrid_filename:"<<grid_filename;
         }
 
-        else if(strcmp(temp.substr(0,5).c_str(), "--ip=") == 0) {
+        else if(temp.substr(0, ip_len) == ip_flag) {
             //cout<<"\nargs["<<i<<"]:"<<args[i];
-            ip = temp.substr(5,strlen(temp.c_str())-5);
+            ip = temp.substr(ip_len, temp.length()-ip_len);
             //cout<<"\nip:"<<ip;
         }
 
-        else if(strcmp(temp.substr(0,5).c_str(), "--id=") == 0) {
+        else if(temp.substr(0, id_len) == id_flag) {
             //cout<<"\nargs["<<i<<"]:"<<args[i];
-            id = temp.substr(5, strlen(temp.c_str())-5);
+            id = temp.substr(id_len, temp.length()-id_len);
             //cout<<"\nid:"<<id;
         }
 
-        else if(strcmp(temp.substr(0,12).c_str(), "--direction=") == 0) {
+        else if(temp.substr(0, direction_len) == direction_flag) {
             //cout<<"\nargs["<<i<<"]:"<<args[i];
-            direction = temp.substr(12, strlen(temp.c_str())-12);
+            direction = temp.substr(direction_len, temp.length()-direction_len);
             //cout<<"\ndirection:"<<direction;
         }
 
 
-        else if(strcmp(temp.substr(0,6).c_str(), "--row=") == 0) {
+        else if(temp.substr(0, row_len) == row_flag) {
             //cout<<"\nargs["<<i<<"]:"<<args[i];
-            row = temp.substr(6, strlen(temp.c_str())-6);
+            row = temp.substr(row_len, temp.length()-row_len);
             //cout<<"\nrow:"<<row;
         }
 
-        else if(strcmp(temp.substr(0,6).c_str(), "--col=") == 0) {
+        else if(temp.substr(0, col_len) == col_flag) {
             //cout<<"\nargs["<<i<<"]:"<<args[i];
-            col = temp.substr(6, strlen(temp.c_str())-6);
+            col = temp.substr(col_len, temp.length()-col_len);
             //cout<<"\ncol:"<<col;
         }
 
-        else if(strcmp(temp.substr(0,11).c_str(), "--goal-row=") == 0) {
+        else if(temp.substr(0, goal_row_len) == goal_row_flag) {
             //cout<<"\nargs["<<i<<"]:"<<args[i];
-            goal_row = temp.substr(11, strlen(temp.c_str())-11);
+            goal_row = temp.substr(goal_row_len, temp.length()-goal_row_len);
             //cout<<"\ngoal_row:"<<goal_row;
         }
 
-        else if(strcmp(temp.substr(0,11).c_str(), "--goal-col=") == 0) {
+        else if(temp.substr(0, goal_col_len) == goal_col_flag) {
             //cout<<"\nargs["<<i<<"]:"<<args[i];
-            goal_col = temp.substr(11, strlen(temp.c_str())-11);
+            goal_col = temp.substr(goal_col_len, temp.length()-goal_col_len);
             //cout<<"\ngoal_col:"<<goal_col;
         }
 
-        else if(strcmp(temp.substr(0,14).c_str(), "--serial-port=") == 0) {
+        else if(temp.substr(0, serial_port_len) == serial_port_flag) {
             //cout<<"\nargs["<<i<<"]:"<<args[i];
-            serial_port = temp.substr(14, strlen(temp.c_str())-14);
+            serial_port = temp.substr(serial_port_len, temp.length()-serial_port_len);
             //cout<<"\nserial_port:"<<serial_port;
         }
 
-        else if(strcmp(temp.substr(0,17).c_str(), "--initial-sensor=") == 0) {
+        else if(temp.substr(0, initial_sensor_len) == initial_sensor_flag) {
             //cout<<"\nargs["<<i<<"]:"<<args[i];
-            initial_sensor = temp.substr(17, strlen(temp.c_str())-17);
+            initial_sensor = temp.substr(initial_sensor_len, temp.length()-initial_sensor_len);
         }
 
-        else if(strcmp(temp.substr(0,11).c_str(), "--velocity=") == 0) {
+        else if(temp.substr(0, velocity_len) == velocity_flag) {
             //cout<<"\nargs["<<i<<"]:"<<args[i];
-            velocity = temp.substr(11, strlen(temp.c_str())-11);
+            velocity = temp.substr(velocity_len, temp.length()-velocity_len);
         }
 
-        else if(strcmp(temp.substr(0,13).c_str(), "--robot-mode=") == 0) {
+        else if(temp.substr(0, robot_mode_len) == robot_mode_flag) {
             //cout<<"\nargs["<<i<<"]:"<<args[i];
-            robot_mode = temp.substr(13, strlen(temp.c_str())-13);
+            robot_mode = temp.substr(robot_mode_len, temp.length()-robot_mode_len);
         }
 
-        else if(strcmp(temp.substr(0,7).c_str(), "--algo=") == 0) {
+        else if(temp.substr(0, algo_len) == algo_flag) {
             //cout<<"\nargs["<<i<<"]:"<<args[i];
-            algo = temp.substr(7, strlen(temp.c_str())-7);
+            algo = temp.substr(algo_len, temp.length()-algo_len);
         }
 
-        else if(strcmp(temp.substr(0,8).c_str(), "--count=") == 0) {
+        else if(temp.substr(0, count_len) == count_flag) {
             //cout<<"\nargs["<<i<<"]:"<<args[i];
-            client_count = temp.substr(8, strlen(temp.c_str())-8);
+            client_count = temp.substr(count_len, temp.length()-count_len);
         }
 
-        else if(strcmp(temp.c_str(), "--view-sent-messages") == 0) {
+        else if(temp == view_sent_messages_flag) {
             //cout<<"\nargs["<<i<<"]:"<<args[i];
             v_sent = true;
         }
 
-        else if(strcmp(temp.c_str(), "--view-read-messages") == 0) {
+        else if(temp == view_read_messages_flag) {
             //cout<<"\nargs["<<i<<"]:"<<args[i];
             v_read = true;
         }
-        else if(strcmp(temp.c_str(), "--simple") == 0) {
+        else if(temp == simple_flag) {
             //cout<<"\nargs["<<i<<"]:"<<args[i];
             simple = true;
         }
-        else if(strcmp(temp.c_str(), "--gui") == 0) {
+        else if(temp == gui_flag) {
             //cout<<"\nargs["<<i<<"]:"<<args[i];
             gui = true;
         }
@@ -322,6 +384,8 @@ int main(int argc, char* args[]) {
                         if(pthread_detach(gui_client_comm) != 0)
                             printf("\ndetach on gui_client_comm thread failed with error %m", errno);
                     }   //end if launch
+                    delete agent;
+                    agent = 0;
                 }   //end if client
 
                 //else, no networking needed
@@ -397,7 +461,7 @@ int main(int argc, char* args[]) {
                     for(int i=0;i<server.get_num_clients();i++) {
 
                         //temp robot
-                        Robot temp(robot_port, ROBOT_BAUDRATE, server.get_clients()[i].id);
+                        Robot temp(robot_port, ROBOT_BAUDRATE, server.get_clients()[i].id, false);
 
                         //stream robot sensors
                         temp.streamSensors();
@@ -434,6 +498,8 @@ int main(int argc, char* args[]) {
                     usleep(1500000);
                 }
             }   //end if successful connection
+            delete grid_analyzer;
+            grid_analyzer = 0;
             delete grid;
             grid = 0;
         }   //end if server
