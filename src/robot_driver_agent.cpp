@@ -414,7 +414,10 @@ void Agent::stepPath(bool own) {
                     pos = next;
                     //delete the first position
                     path.pop_front();
-                    usleep(2000000);
+
+                    //give time to send new position to server
+                    if(algorithm == ASTAR) usleep(2000000);
+                    else usleep(4000000);
                 }   //end if successful step
 
 

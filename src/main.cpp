@@ -306,15 +306,15 @@ int main(int argc, char* args[]) {
 
 
         //check for serial port argument and set robot_port
-        if(strcmp(serial_port.c_str(), "/dev/ttyUSB1") == 0)
+        if(serial_port == "/dev/ttyUSB1")
             robot_port = 17;
-        else if(strcmp(serial_port.c_str(), "/dev/ttyUSB2") == 0)
+        else if(serial_port == "/dev/ttyUSB2")
             robot_port = 18;
-        else if(strcmp(serial_port.c_str(), "/dev/ttyUSB3") == 0)
+        else if(serial_port == "/dev/ttyUSB3")
             robot_port = 19;
-        else if(strcmp(serial_port.c_str(), "/dev/ttyUSB4") == 0)
+        else if(serial_port == "/dev/ttyUSB4")
             robot_port = 20;
-        else if(strcmp(serial_port.c_str(), "/dev/ttyUSB5") == 0)
+        else if(serial_port == "/dev/ttyUSB5")
             robot_port = 21;
         else
             robot_port = 16;
@@ -512,6 +512,7 @@ int main(int argc, char* args[]) {
             TcpClient client((char*)PORT, ip.c_str(), id[0]);
             UdpClient u_client((char*)PORT, ip.c_str(), id[0]);
 
+
             //set and check current/initial sensor
             int cs = atoi(initial_sensor.c_str());
             //set current sensor
@@ -545,19 +546,19 @@ int main(int argc, char* args[]) {
                 d = EAST;
 
             int al;
-            if(strcmp(algo.c_str(), "rrt") == 0)
+            if(algo == "rrt")
                 al = RRT;
             else
                 al = ASTAR;
 
-
+            robot.start();
             robot.streamSensors();
             robot.setVelocity(v);
 
             //set mode
-            if(strcmp(robot_mode.c_str(), "f") == 0)
+            if(robot_mode == "f")
                 robot.fullMode();
-            else if(strcmp(robot_mode.c_str(), "s") == 0)
+            else if(robot_mode == "s")
                 robot.safeMode();
 
             //make agent
@@ -600,7 +601,7 @@ int main(int argc, char* args[]) {
                         }   //end inner for
                 }   //end else invalid starting position
 
-                if( (strcmp(goal_row.c_str(), "-1") == 0) || (strcmp(goal_col.c_str(), "-1") == 0) )
+                if( (goal_row == "-1") || (goal_col == "-1") )
                     agent->setGoal(start);
                 else {
                     Position end(atoi(goal_row.c_str()), atoi(goal_col.c_str()));
@@ -643,9 +644,9 @@ int main(int argc, char* args[]) {
              //stream sensors
             robot.streamSensors();
             //get mode
-            if(strcmp(robot_mode.c_str(), "f") == 0)
+            if(robot_mode == "f")
                 robot.fullMode();
-            else if(strcmp(robot_mode.c_str(), "s") == 0)
+            else if(robot_mode == "s")
                 robot.safeMode();
             //get velocity
             int v = atoi(velocity.c_str());
@@ -662,7 +663,7 @@ int main(int argc, char* args[]) {
                 cs = OI_MODE;
 
             int al;
-            if(strcmp(algo.c_str(), "rrt") == 0)
+            if(algo == "rrt")
                 al = RRT;
             else
                 al = ASTAR;

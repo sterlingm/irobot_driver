@@ -130,7 +130,7 @@ void TcpClient::updateServerAgent() {
         message<<"@ 1 "<<myAgent->getPosition().getRow()<<" "<<myAgent->getPosition().getCol()<<" "<<myAgent->getGoal().getRow()<<" "
             <<myAgent->getGoal().getCol()<<" "<<myAgent->getRobot()->getVelocity()<<" "<<myAgent->getDirection()<<" "
             <<myAgent->getRobot()->get_sensor_value(35).values[0];
-        std::cout<<"\nmessage: "<<message.str();
+        //std::cout<<"\nmessage: "<<message.str();
 
         //unlock
         pthread_mutex_unlock(&mutex_agent);

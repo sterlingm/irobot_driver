@@ -80,6 +80,7 @@ inline void Robot::get_sensors_thread_i() {
             //read a byte
             read = connection.PollComport(port, &receive, sizeof(unsigned char));
             //std::cout << "\nBytes (" << read << "): ";
+            //std::cout<<"\nreceive:"<<(int)receive;
 
             if((int)receive == 19) {
                 //std::cout<<(int)receive;
@@ -93,7 +94,8 @@ inline void Robot::get_sensors_thread_i() {
                 //get values
                 read = connection.PollComport(port, rest, 54);
                 //std::cout << "  Bytes (" << read << "): ";
-
+                //for(int i=0;i<read;i++)
+                    //std::cout<<"\nrest["<<i<<"]:"<<(int)rest[i];
 
                 /* ***SET SENSOR VALUES*** */
                 //bump + wheel drop

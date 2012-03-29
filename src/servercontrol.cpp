@@ -108,7 +108,7 @@ inline void ServerControl::display_menu_thread_i() {
 
         char display = myServer->getWhichDisplay();
         //if the first display, plan path
-        //this prevents seg fault with rrt because it tries to display before path is planned\
+        //this prevents seg fault with rrt because it tries to display before path is planned
         //will be removed once i can synchronize the planning/moving better
         if(start) {
             usleep(1000000);

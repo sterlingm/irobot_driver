@@ -168,7 +168,7 @@ void TcpServer::recv_client_init_info(int& i) {
 
 /*Sends the grid filename to client at index i*/
 void TcpServer::send_grid_filename(int& i, std::string g) {
-    std::cout<<"\nsending:"<<g;
+    //std::cout<<"\nsending:"<<g;
     int num_sent = send(clients[i].fd, g.c_str(), g.length(), 0);
     if(num_sent < 0)
         printf("\nError sending grid filename to cliend %i: %m", i, errno);
@@ -298,13 +298,24 @@ void TcpServer::getSendBack(char* command, char client_id) {
             int velocity = atoi(vstr.c_str());
             //std::cout<<"\nv: "<<velocity;
 
-            int direction = atoi(&tempCommand[tempCommand.length()-3]);
+            int dend = vend+1;
+            while(isdigit(tempCommand[dend]))
+                dend++;
+            std::string dstr(tempCommand.substr(vend, dend-vend));
+            //std::cout<<"\ndstr:"<<dstr;
+            int direction = atoi(dstr.c_str());
             //std::cout<<"\ndirection: "<<direction;
 
-            char mode = tempCommand[tempCommand.length()-1];
-            if(mode == '3')      mode = 'f';
-            else if(mode == '2') mode = 's';
-            else if(mode == '1') mode = 'p';
+            int mend = dend+1;
+            while(isdigit(tempCommand[mend]) || tempCommand[mend] == '-')
+                mend++;
+            std::string mstr(tempCommand.substr(dend+1, mend-dend));    //give +1 because not doing atoi
+            //std::cout<<"\nmstr:"<<mstr;
+            char mode;
+            if(mstr == "3") mode = 'f';
+            else if(mstr == "2") mode = 's';
+            else if(mstr == "1") mode = 'p';
+            else mode = get_client(client_id).agent->get_mode();
             //std::cout<<"\nmode:"<<mode;
 
 
