@@ -135,16 +135,14 @@ void TcpClient::updateServerAgent() {
         //unlock
         pthread_mutex_unlock(&mutex_agent);
 
-        //check if spinning
-        //if(!myAgent->is_spinning()) {
-            //send
-            int numSent = send(fd, message.str().c_str(), message.str().length(), 0);
+        //send
+        int numSent = send(fd, message.str().c_str(), message.str().length(), 0);
 
-            if(numSent > 0 && sent_mess)
-                print_message(message.str().c_str());
-            else if(numSent < 0)
-                printf("\nError sending message: %s\nError message: %m", message.str().c_str(), errno);
-        //}   //end if not spinning
+        if(numSent > 0 && sent_mess)
+            print_message(message.str().c_str());
+        else if(numSent < 0)
+            printf("\nError sending message: %s\nError message: %m", message.str().c_str(), errno);
+
     }   //end if valid pointer
 }   //END UPDATESERVERAGENT
 
