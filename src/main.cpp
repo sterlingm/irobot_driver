@@ -1,4 +1,4 @@
- 
+
 #include "robot_driver_utility.h"
 #include "robot_driver_grid.h"
 #include "guiwindow.h"
@@ -11,6 +11,7 @@
 #include "tcpclient.h"
 #include "owncontrol.h"
 #include "grid_analyzer.h"
+#include <libfreenect.hpp>
 #include <pthread.h>
 #include <sys/types.h>
 #include <sys/socket.h>
@@ -183,7 +184,7 @@ void get_command_line_args(int count, char** args) {
         else if(temp.substr(0, serial_port_len) == serial_port_flag) {
             //cout<<"\nargs["<<i<<"]:"<<args[i];
             serial_port = temp.substr(serial_port_len, temp.length()-serial_port_len);
-            cout<<"\nserial_port:"<<serial_port;
+            //=cout<<"\nserial_port:"<<serial_port;
         }
 
         else if(temp.substr(0, initial_sensor_len) == initial_sensor_flag) {

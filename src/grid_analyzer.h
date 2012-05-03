@@ -63,6 +63,6 @@ private:
     Position find_next_best(Tree&, Position);
     Tree::Node* find_nearest_neighbor(Tree*&, Position&);
     Path connect_for_rrt(Position&, Position&);
-    std::vector<Position>* get_sampling_sets(Position&, Position&);
+    std::vector<Position>* get_potential_field(Position&, Position&);
 };
 #endif

@@ -351,7 +351,7 @@ Tree::Node* Grid_Analyzer::find_nearest_neighbor(Tree*& tree, Position& ver) {
 }   //END FIND_NEAREST_NEIGHBOR
 
 
-std::vector<Position>* Grid_Analyzer::get_sampling_sets(Position& init, Position& goal) {
+std::vector<Position>* Grid_Analyzer::get_potential_field(Position& init, Position& goal) {
     std::vector<Position>* result = new std::vector<Position>[2];
     int row_diff = init.getRow() - goal.getRow();
     int col_diff = init.getCol() - goal.getCol();
@@ -448,15 +448,15 @@ Tree* Grid_Analyzer::build_rrt(Position& init, Position& goal) {
     Tree* tree = new Tree(init);
 
     //get the sampling box
-    std::vector<Position>* sampling_sets = get_sampling_sets(init, goal);
+    std::vector<Position>* potential_field = get_potential_field(init, goal);
     int set = 0;
 //
 //    std::cout<<"\nset:"<<set;
-//    for(int i=0;i<sampling_sets[set].size();i++)
-//        std::cout<<" "<<sampling_sets[set].at(i).toString();
+//    for(int i=0;i<potential_field[set].size();i++)
+//        std::cout<<" "<<potential_field[set].at(i).toString();
 //    std::cout<<"\nset:"<<set+1;
-//    for(int i=0;i<sampling_sets[set+1].size();i++)
-//        std::cout<<" "<<sampling_sets[set+1].at(i).toString();
+//    for(int i=0;i<potential_field[set+1].size();i++)
+//        std::cout<<" "<<potential_field[set+1].at(i).toString();
 
     //make Position to hold the sample
     Position sampled_state;
@@ -484,7 +484,7 @@ Tree* Grid_Analyzer::build_rrt(Position& init, Position& goal) {
             //std::cout<<"\nsampling_boxes["<<box<<"] size:"<<sampling_boxes[box].size();
 
 
-            if(sampling_sets[set].size() == 1) {
+            if(potential_field[set].size() == 1) {
                 //std::cout<<"\nNO PATH IN sampling_boxes[0]";
                 if(set == 0)
                     set++;
@@ -498,10 +498,10 @@ Tree* Grid_Analyzer::build_rrt(Position& init, Position& goal) {
                 srand(rand());
 
                 //get an index
-                index = rand() % sampling_sets[set].size();
+                index = rand() % potential_field[set].size();
 
                 //get one of the samples
-                sampled_state = sampling_sets[set].at(index);
+                sampled_state = potential_field[set].at(index);
                 //std::cout<<"\nsampled_state: "<<sampled_state.toString()<<"\n";
 
                 //if position is valid
@@ -533,7 +533,7 @@ Tree* Grid_Analyzer::build_rrt(Position& init, Position& goal) {
                 }   //end if valid position
 
                 //remove position from sample list
-                sampling_sets[set].erase(sampling_sets[set].begin()+index);
+                potential_field[set].erase(potential_field[set].begin()+index);
             }   //end else
         }   //end for
     }   //end while
@@ -560,7 +560,7 @@ Tree* Grid_Analyzer::build_rrt(Position& init, Position& goal) {
         }   //end for
     }   //end if stopped because close to goal
 
-    delete [] sampling_sets;
+    delete [] potential_field;
     return tree;
 }   //END BUILD_RRT
 
@@ -603,7 +603,7 @@ Path Grid_Analyzer::rrt_path(Position& init, Position& goal) {
     result.reverse();
 
     //std::cout<<"\nrrt path from init:"<<init.toString()<<" to end:"<<end.toString()<<" :\n"<<result.toString()<<"\n";
-    //delete [] sampling_sets;
+    //delete [] potential_field;
     delete tree;
     return result;
 }   //END RRT
