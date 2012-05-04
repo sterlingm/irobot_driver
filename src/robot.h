@@ -52,10 +52,10 @@ public:
 
     //! Getter for velocity member
     /*! Returns a reference to velocity member */
-    int& getVelocity();
+    int& getDefaultVelocity();
     //! Setter for velocity member
     /*! Sets velocity member to v */
-    void setVelocity(int);
+    void setDefaultVelocity(int);
 
 
     //! Getter for id member
@@ -209,7 +209,9 @@ public:
      */
     void leds(bool,bool,unsigned char,unsigned char);
 
-    int get_r_velocity();
+    int getRealVelocity();
+    //only here for networking
+    void setRealVelocity(int);
     std::vector<int> velocity_over_time;
     void detach_threads();
 private:
@@ -228,7 +230,7 @@ private:
 
     int port;
     int baudrate;
-    int velocity;
+    int default_velocity;
     short int real_velocity;  //robot requested velocity sensor value
     int currentSensor;
     int sensor_values[72];

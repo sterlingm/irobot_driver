@@ -371,17 +371,18 @@ std::vector<Position>* Grid_Analyzer::get_potential_field(Position& init, Positi
         for(int c=0;c<grid->getNumOfCols();c++) {
             Position temp(r,c);
             if( (endr - temp.getRow() >= 0) && (endc - temp.getCol() >= 0)
-               && (temp.getRow() - startr >= 0) && (temp.getCol() - startc >= 0) )
+               && (temp.getRow() - startr >= 0) && (temp.getCol() - startc >= 0)
+               && positionValid(temp) )
                 result[0].push_back(temp);
 
-            else
+            else if(positionValid(temp))
                 result[1].push_back(temp);
 
         }
     }
-
+    result[1].push_back(goal);
     return result;
-}
+}   //END GET_POTENTIAL_FIELD
 
 
 //greedy search based on euclidean distance
@@ -447,26 +448,34 @@ Tree* Grid_Analyzer::build_rrt(Position& init, Position& goal) {
     //make tree with pos as the init state
     Tree* tree = new Tree(init);
 
-    //get the sampling box
+    //get the potential field. index 0 is first set of samples,
+    //index 1 is the rest of the samples in environment (for when no path in index 0)
     std::vector<Position>* potential_field = get_potential_field(init, goal);
+    //set to sample from
     int set = 0;
-//
-//    std::cout<<"\nset:"<<set;
-//    for(int i=0;i<potential_field[set].size();i++)
-//        std::cout<<" "<<potential_field[set].at(i).toString();
-//    std::cout<<"\nset:"<<set+1;
-//    for(int i=0;i<potential_field[set+1].size();i++)
-//        std::cout<<" "<<potential_field[set+1].at(i).toString();
+    //x dimension of potential field
+    int x_dimen_pf = ( abs(init.getCol() - goal.getCol())  )+1;
+    //y dimension of potential field
+    int y_dimen_pf = ( abs(init.getRow() - goal.getRow()) )+1;
+
+    //if we sample within 30% of minimum potenial field dimension the goal, stop and connect
+    float close_distance = 0.3 * (x_dimen_pf < y_dimen_pf ? x_dimen_pf : y_dimen_pf);
+    //std::cout<<"\nclose_distance:"<<close_distance<<"\n";
+
+    /*std::cout<<"\nset:"<<set;
+    for(int i=0;i<potential_field[set].size();i++)
+        std::cout<<" "<<potential_field[set].at(i).toString();
+    std::cout<<"\nset:"<<set+1;
+    for(int i=0;i<potential_field[set+1].size();i++)
+        std::cout<<" "<<potential_field[set+1].at(i).toString();
+    std::cout<<"\n";*/
+
 
     //make Position to hold the sample
     Position sampled_state;
 
     //how many Positions we sample with each iteration
     int branching = 5;
-
-    //if we sample within 30% of grid bounds to the goal, stop and connect
-    float close_distance = grid->getNumOfCols() * 0.3;
-    //std::cout<<"\nclose_distance:"<<close_distance;
 
     //holds the index of sample in sampling_boxes[box]
     int index;
@@ -481,9 +490,11 @@ Tree* Grid_Analyzer::build_rrt(Position& init, Position& goal) {
 
         //get number of samples to add equal to branching
         for(int i=0;i<branching;i++) {
-            //std::cout<<"\nsampling_boxes["<<box<<"] size:"<<sampling_boxes[box].size();
 
+            //for(int j=0;j<potential_field->size();j++)
+                //std::cout<<"\npotentialfield["<<set<<"]["<<j<<"]:"<<potential_field[0].at(j).toString();
 
+            //if no path in potential field
             if(potential_field[set].size() == 1) {
                 //std::cout<<"\nNO PATH IN sampling_boxes[0]";
                 if(set == 0)
@@ -504,33 +515,29 @@ Tree* Grid_Analyzer::build_rrt(Position& init, Position& goal) {
                 sampled_state = potential_field[set].at(index);
                 //std::cout<<"\nsampled_state: "<<sampled_state.toString()<<"\n";
 
-                //if position is valid
-                if(positionValid(sampled_state)) {
-                    //xnear<-nearest_neighbor
-                    Tree::Node* near = find_nearest_neighbor(tree, sampled_state);
-                    //std::cout<<"\nfind_closest_node_in_tree returned:"<<near->getValue().toString()<<"for "<<sampled_state.toString()<<"\n";
+                //xnear<-nearest_neighbor
+                Tree::Node* near = find_nearest_neighbor(tree, sampled_state);
+                //std::cout<<"\nfind_closest_node_in_tree returned:"<<near->getValue().toString()<<"for "<<sampled_state.toString()<<"\n";
 
-                    //get a path from nearest point to the random point
-                    Path connect_points = connect_for_rrt(near->getValue(), sampled_state);
+                //get a path from nearest point to the random point
+                Path connect_points = connect_for_rrt(near->getValue(), sampled_state);
 
-                    //add the path to the tree
-                    for(int j=1;j<connect_points.getPathVector().size();j++) {
-                        Tree::Node* n = tree->find(connect_points.getPathVector().at(j-1));
-                        tree->add(connect_points.getPathVector().at(j), n);
-                    }
-                    //std::cout<<"\ntree:\n"<<tree->toString()<<"\n\n";
+                //add the path to the tree
+                for(int j=1;j<connect_points.getPathVector().size();j++) {
+                    Tree::Node* n = tree->find(connect_points.getPathVector().at(j-1));
+                    tree->add(connect_points.getPathVector().at(j), n);
+                }
+                //std::cout<<"\ntree:\n"<<tree->toString()<<"\n\n";
 
 
-
-                    //if we've sampled the goal or are close enough, break out of loops
-                    if(sampled_state.equals(goal) || (sqrt( pow( (goal.getRow() - sampled_state.getRow()), 2)
-                                                            + pow( (goal.getCol() - sampled_state.getCol()), 2)) <= close_distance)) {
-                    //if(sampled_state.equals(goal) || (abs(goal.getRow() - sampled_state.getRow()) <= close_enough_r)
-                                                //|| (abs(goal.getCol() - sampled_state.getCol()) <= close_enough_c) ) {
-                        done_sampling = true;
-                        i = branching;
-                    }   //end if sampled goal or close enough
-                }   //end if valid position
+                //if we've sampled the goal or are close enough, break out of loops
+                if(sampled_state.equals(goal) || (sqrt( pow( (goal.getRow() - sampled_state.getRow()), 2)
+                                                        + pow( (goal.getCol() - sampled_state.getCol()), 2)) <= close_distance)) {
+                //if(sampled_state.equals(goal) || (abs(goal.getRow() - sampled_state.getRow()) <= close_enough_r)
+                                            //|| (abs(goal.getCol() - sampled_state.getCol()) <= close_enough_c) ) {
+                    done_sampling = true;
+                    i = branching;
+                }   //end if sampled goal or close enough
 
                 //remove position from sample list
                 potential_field[set].erase(potential_field[set].begin()+index);
@@ -603,7 +610,6 @@ Path Grid_Analyzer::rrt_path(Position& init, Position& goal) {
     result.reverse();
 
     //std::cout<<"\nrrt path from init:"<<init.toString()<<" to end:"<<end.toString()<<" :\n"<<result.toString()<<"\n";
-    //delete [] potential_field;
     delete tree;
     return result;
 }   //END RRT

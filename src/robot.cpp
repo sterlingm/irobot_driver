@@ -1,4 +1,4 @@
-	
+
 #include <errno.h>
 #include <math.h>
 #include "robot.h"
@@ -217,7 +217,7 @@ inline void Robot::get_sensors_thread_i() {
   Takes in a port number and a baudrate
   Defaults the current sensor OI_MODE
 */
-Robot::Robot(int portNo, int br) : port(portNo), baudrate(br), sensorsstreaming(false), velocity(0), real_velocity(0) {init();}
+Robot::Robot(int portNo, int br) : port(portNo), baudrate(br), sensorsstreaming(false), default_velocity(0), real_velocity(0) {init();}
 
 
 /*
@@ -225,9 +225,9 @@ Robot::Robot(int portNo, int br) : port(portNo), baudrate(br), sensorsstreaming(
   Takes in a port number and a baudrate
   Defaults the current sensor OI_MODE
 */
-Robot::Robot(int portNo, int br, char ID) : port(portNo), baudrate(br), sensorsstreaming(false), id(ID), velocity(0), real_velocity(0) {init();}
+Robot::Robot(int portNo, int br, char ID) : port(portNo), baudrate(br), sensorsstreaming(false), id(ID), default_velocity(0), real_velocity(0) {init();}
 
-Robot::Robot(int portNo, int br, char ID, bool create) : port(portNo), baudrate(br), sensorsstreaming(false), id(ID), velocity(0), real_velocity(0) {
+Robot::Robot(int portNo, int br, char ID, bool create) : port(portNo), baudrate(br), sensorsstreaming(false), id(ID), default_velocity(0), real_velocity(0) {
     if(create)
         init();
 }
@@ -265,9 +265,10 @@ void Robot::detach_threads() {
 void Robot::close() {connection.CloseComport(port);}
 
 /*Sets the default velocity to v*/
-void Robot::setVelocity(int v) {velocity = v;}
+void Robot::setDefaultVelocity(int v) {default_velocity = v;}
 /*Sets connection to c*/
 void Robot::setConnection(SerialConnect& c) {connection = c;}
+void Robot::setRealVelocity(int v) {real_velocity = v;}
 
 /*Returns the serial port connection*/
 SerialConnect& Robot::getConnection() {return connection;}
@@ -276,11 +277,11 @@ SerialConnect& Robot::getConnection() {return connection;}
 /*Returns the baud rate*/
  int& Robot::getBaudRate() {return baudrate;}
 /*Returns the default velocity*/
-int& Robot::getVelocity() {return velocity;}
+int& Robot::getDefaultVelocity() {return default_velocity;}
 /*Returns id*/
 char Robot::getID() {return id;}
 
-int Robot::get_r_velocity() {return real_velocity;}
+int Robot::getRealVelocity() {return real_velocity;}
 /*
  Sends a single byte to the robot
  Returns true if the byte was successfully sent
@@ -573,7 +574,7 @@ void Robot::drive(int velocity, int radius) {
 
 /*Calls drive(int,int) with the robot's velocity variable as the velocity*/
 void Robot::drive(int radius) {
-    drive(getVelocity(), radius);
+    drive(getDefaultVelocity(), radius);
 }   //END DRIVE
 
 
@@ -597,7 +598,7 @@ void Robot::drive_straight(int velocity) {
 
 /*Calls drive_straight with the velocity variable as the velocity*/
 void Robot::drive_straight() {
-    drive_straight(getVelocity());
+    drive_straight(getDefaultVelocity());
 }   //END DRIVESTRAIGHT
 
 
@@ -654,7 +655,7 @@ void Robot::driveXDistance(int distance, int velocity) {
 
 /*Calls driveXMM with the velocity variable as the velocity value*/
 void Robot::driveXDistance(int distance) {
-    driveXDistance(distance, getVelocity());
+    driveXDistance(distance, getDefaultVelocity());
 }   //END DRIVEXDISTANCE
 
 
@@ -1104,7 +1105,7 @@ void Robot::turnXDegrees(int degree, int velocity) {
 
 /*Turns the robot x degrees*/
 void Robot::turnXDegrees(int degree) {
-    turnXDegrees(degree, getVelocity());
+    turnXDegrees(degree, getDefaultVelocity());
 }
 
 /*Turn x degrees in y seconds*/

@@ -214,7 +214,7 @@ void TcpServer::set_agents(std::vector<Agent>& a_vec) {
             //std::cout<<"\nsetting clients["<<i<<"] to "<<&a_vec.at(i)<<"\n";
             clients[i].agent = &a_vec.at(i);
             clients[i].agent->setCurrentSensor(cs.at(i));
-            clients[i].agent->getRobot()->setVelocity(velocities.at(i));
+            clients[i].agent->getRobot()->setDefaultVelocity(velocities.at(i));
             clients[i].agent->set_algorithm(algos.at(i));
         }
 }   //END SETAGENTS
@@ -290,18 +290,27 @@ void TcpServer::getSendBack(char* command, char client_id) {
             int gcol = atoi(gc.c_str());
             //std::cout<<"\ngcol: "<<gcol;
 
-            //get velocity
-            int vend = gcolend+1;
-            while(isdigit(tempCommand[vend]) || tempCommand[vend] == '-')
-                vend++;
-            std::string vstr(tempCommand.substr(gcolend, vend-gcolend));
-            int velocity = atoi(vstr.c_str());
-            //std::cout<<"\nv: "<<velocity;
+            //get d_velocity
+            int dvend = gcolend+1;
+            while(isdigit(tempCommand[dvend]) || tempCommand[dvend] == '-')
+                dvend++;
+            std::string dvstr(tempCommand.substr(gcolend, dvend-gcolend));
+            int d_velocity = atoi(dvstr.c_str());
+            //std::cout<<"\ndv: "<<d_velocity;
 
-            int dend = vend+1;
+            int rvend = dvend+1;
+            while(isdigit(tempCommand[rvend]))
+                rvend++;
+            std::string rvstr(tempCommand.substr(dvend, rvend-dvend));
+            //std::cout<<"\nrvstr:"<<rvstr;
+            int r_velocity = atoi(rvstr.c_str());
+            //std::cout<<"\nrv: "<<r_velocity;
+
+
+            int dend = rvend+1;
             while(isdigit(tempCommand[dend]))
                 dend++;
-            std::string dstr(tempCommand.substr(vend, dend-vend));
+            std::string dstr(tempCommand.substr(rvend, dend-rvend));
             //std::cout<<"\ndstr:"<<dstr;
             int direction = atoi(dstr.c_str());
             //std::cout<<"\ndirection: "<<direction;
@@ -311,6 +320,7 @@ void TcpServer::getSendBack(char* command, char client_id) {
                 mend++;
             std::string mstr(tempCommand.substr(dend+1, mend-dend));    //give +1 because not doing atoi
             //std::cout<<"\nmstr:"<<mstr;
+
             char mode;
             if(mstr == "3") mode = 'f';
             else if(mstr == "2") mode = 's';
@@ -328,7 +338,8 @@ void TcpServer::getSendBack(char* command, char client_id) {
             //set the new information for the client
             get_client(client_id).agent->setPosition(temp_pos);
             get_client(client_id).agent->setGoal(temp_goal);
-            get_client(client_id).agent->getRobot()->setVelocity(velocity);
+            get_client(client_id).agent->getRobot()->setDefaultVelocity(d_velocity);
+            get_client(client_id).agent->getRobot()->setRealVelocity(r_velocity);
             get_client(client_id).agent->setDirection(direction);
             get_client(client_id).agent->set_mode(mode);
 

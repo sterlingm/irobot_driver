@@ -161,7 +161,8 @@ inline void ServerControl::display_menu_thread_i() {
         //make local variables to display
         Grid* g = myServer->get_client(display).agent->getGrid();
         Path p = myServer->get_client(display).agent->getPath();
-        int velocity = myServer->get_client(display).agent->getRobot()->getVelocity();
+        int d_velocity = myServer->get_client(display).agent->getRobot()->getDefaultVelocity();
+        int r_velocity = myServer->get_client(display).agent->getRobot()->getRealVelocity();
         int current_s = myServer->get_client(display).agent->getCurrentSensor();
         int highsv = myServer->get_client(display).agent->getHighSV();
         int lowsv = myServer->get_client(display).agent->getLowSV();
@@ -211,7 +212,8 @@ inline void ServerControl::display_menu_thread_i() {
         std::cout<<"Robot "<<display<<" Information";
         std::cout<<"\nMode: "<<mode;
         std::cout<<"\nPath:"<<p.toString();
-        std::cout<<"\nVelocity: "<<velocity;
+        std::cout<<"\nDefault Velocity: "<<d_velocity;
+        std::cout<<"\nReal Velocity: "<<r_velocity;
         std::cout<<"\nDirection: "<<direction;
         std::cout<<"\nAlgorithm: "<<algorithm;
         std::cout<<"\nSensor Packet "<<current_s<<" high byte: "<<highsv<<" low byte: "<<lowsv;

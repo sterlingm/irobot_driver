@@ -367,7 +367,7 @@ int main(int argc, char* args[]) {
                     int cs=35;
                     int a=1;
                     agent->setCurrentSensor(cs);
-                    agent->getRobot()->setVelocity(0);
+                    agent->getRobot()->setDefaultVelocity(0);
                     agent->set_algorithm(a);
 
                     client.setAgent(agent);
@@ -554,7 +554,7 @@ int main(int argc, char* args[]) {
 
             robot.start();
             robot.streamSensors();
-            robot.setVelocity(v);
+            robot.setDefaultVelocity(v);
 
             //set mode
             if(robot_mode == "f")
@@ -655,7 +655,7 @@ int main(int argc, char* args[]) {
                 v = 500;
             else if(v < -500)
                 v = -500;
-            robot.setVelocity(v);
+            robot.setDefaultVelocity(v);
 
 
             int cs = atoi(initial_sensor.c_str());

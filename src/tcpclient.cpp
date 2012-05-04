@@ -84,7 +84,7 @@ bool TcpClient::launchClient() {
 void TcpClient::send_init_info() {
     //std::cout<<"\nattempting to send for client "<<id;
     std::stringstream to_send;
-    to_send<<id<<" "<<myAgent->getCurrentSensor()<<" "<<myAgent->getRobot()->getVelocity()<<" "<<myAgent->get_algorithm();
+    to_send<<id<<" "<<myAgent->getCurrentSensor()<<" "<<myAgent->getRobot()->getDefaultVelocity()<<" "<<myAgent->get_algorithm();
     //std::cout<<"\nsending init message:"<<to_send.str()<<"\n";
 
     int num_sent = send(fd, to_send.str().c_str(), to_send.str().length(), 0);
@@ -128,8 +128,8 @@ void TcpClient::updateServerAgent() {
 
         //message is 1 prow pcol grow gcol velocity direction
         message<<"@ 1 "<<myAgent->getPosition().getRow()<<" "<<myAgent->getPosition().getCol()<<" "<<myAgent->getGoal().getRow()<<" "
-            <<myAgent->getGoal().getCol()<<" "<<myAgent->getRobot()->getVelocity()<<" "<<myAgent->getDirection()<<" "
-            <<myAgent->getRobot()->get_sensor_value(35).values[0];
+            <<myAgent->getGoal().getCol()<<" "<<myAgent->getRobot()->getDefaultVelocity()<<" "<<myAgent->getRobot()->getRealVelocity()
+            <<" "<<myAgent->getDirection()<<" "<<myAgent->getRobot()->get_sensor_value(35).values[0];
         //std::cout<<"\nmessage: "<<message.str();
 
         //unlock
@@ -340,7 +340,7 @@ void TcpClient::getCommand(char* command) {
             //lock
             pthread_mutex_lock(&mutex_agent);
 
-            myAgent->getRobot()->setVelocity(velocity);
+            myAgent->getRobot()->setDefaultVelocity(velocity);
 
             //unlock
             pthread_mutex_unlock(&mutex_agent);

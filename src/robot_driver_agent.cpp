@@ -282,7 +282,7 @@ bool Agent::step(Position& a, Position& b) {
         //if moving east
         if( (a.getCol() - b.getCol() == -1) ) {
 
-            if(robot->getVelocity() > 0)
+            if(robot->getDefaultVelocity() > 0)
                 change_direction(EAST);
             else
                 change_direction(WEST);
@@ -293,7 +293,7 @@ bool Agent::step(Position& a, Position& b) {
         //if moving west
         else if( (a.getCol() - b.getCol() == 1) ) {
 
-            if(robot->getVelocity() > 0)
+            if(robot->getDefaultVelocity() > 0)
                 change_direction(WEST);
             else
                 change_direction(EAST);
@@ -311,7 +311,7 @@ bool Agent::step(Position& a, Position& b) {
         //if moving south
         if( (a.getRow() - b.getRow() == -1) ) {
 
-            if(robot->getVelocity() > 0)
+            if(robot->getDefaultVelocity() > 0)
                 change_direction(SOUTH);
             else
                 change_direction(NORTH);
@@ -322,7 +322,7 @@ bool Agent::step(Position& a, Position& b) {
         //if moving north
         else if( (a.getRow() - b.getRow() == 1) ) {
 
-            if(robot->getVelocity() > 0)
+            if(robot->getDefaultVelocity() > 0)
                 change_direction(NORTH);
             else
                 change_direction(SOUTH);
@@ -338,7 +338,7 @@ bool Agent::step(Position& a, Position& b) {
 
         //if moving northeast
         if( (a.getRow() - b.getRow() == 1) && (a.getCol() - b.getCol() == -1) ) {
-            if(robot->getVelocity() > 0)
+            if(robot->getDefaultVelocity() > 0)
                 change_direction(NORTHEAST);
             else
                 change_direction(SOUTHWEST);
@@ -348,7 +348,7 @@ bool Agent::step(Position& a, Position& b) {
 
         //if moving north west
         else if( (a.getRow() - b.getRow() == 1) && (a.getCol() - b.getCol() == 1) ) {
-            if(robot->getVelocity() > 0)
+            if(robot->getDefaultVelocity() > 0)
                 change_direction(NORTHWEST);
             else
                 change_direction(SOUTHEAST);
@@ -358,7 +358,7 @@ bool Agent::step(Position& a, Position& b) {
 
         //if moving southeast
         else if( (a.getRow() - b.getRow() == -1) && (a.getCol() - b.getCol() == -1) ) {
-            if(robot->getVelocity() > 0)
+            if(robot->getDefaultVelocity() > 0)
                 change_direction(SOUTHEAST);
             else
                 change_direction(NORTHWEST);
@@ -368,7 +368,7 @@ bool Agent::step(Position& a, Position& b) {
 
         //if moving southwest
         else { // if( (a.getRow() - b.getRow() == -1) && (a.getCol() - b.getCol() == 1) )
-            if(robot->getVelocity() > 0)
+            if(robot->getDefaultVelocity() > 0)
                 change_direction(SOUTHWEST);
             else
                 change_direction(NORTHEAST);
@@ -402,7 +402,7 @@ void Agent::stepPath(bool own) {
 
             //std::cout<<"\npath.getPathVector.at(1):"<<path.getPathVector().at(1).toString()<<" spinning:"<<spinning<<" robot velocity:"<<robot->getVelocity();
             //make sure position is still valid
-            if( (!spinning) && (!driving) && (robot->getVelocity() != 0) ) {
+            if( (!spinning) && (!driving) && (robot->getDefaultVelocity() != 0) ) {
                 driving = true;
 
                 //set new position and step through first pair
