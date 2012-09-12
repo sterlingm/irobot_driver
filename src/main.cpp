@@ -49,7 +49,7 @@ bool gui = false;
 
 pthread_t gui_client_comm;
 
-
+ 
 std::string filename_flag("--grid-filename=");
 size_t filename_len = filename_flag.length();
 
