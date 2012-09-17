@@ -24,7 +24,7 @@ SOURCES:=$(patsubst %.cpp, $(SRCDIR)/%.cpp, $(SOURCES))
 
 all: $(TARGET)
 
-$(OBJDIR)/%.o: src/%.cpp
+$(OBJDIR)/%.o: $(SRCDIR)/%.cpp
 	$(CC) -c $< $(CFLAGS) -o $@ 
 
 $(TARGET): $(OBJECTS)
