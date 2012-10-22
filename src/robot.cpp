@@ -1,6 +1,7 @@
 
 #include <errno.h>
 #include <math.h>
+#include <stdlib.h>
 #include "robot.h"
 #include "rs232.h"
 
@@ -35,21 +36,8 @@ inline void Robot::get_real_velocity_thread_i() {
 
         if(sensorsstreaming) {
             sensor_packet temp = get_sensor_value(REQUESTED_VELOCITY);
-
-            //low byte
-            real_velocity = temp.values[1];
-            //if high byte is used, get that
-            if(temp.values[0] == 1)
-                real_velocity += pow(2, 8);
-
-            //if high byte > 1, negative number - shift and add
-            if(temp.values[0] > 1)
-                real_velocity = (temp.values[0]<<8) + temp.values[1];
-
-            /*FOR 4 BYTE INTS*/
-            //real_velocity <<= 16;
-            //real_velocity >>= 16;
-        }
+            real_velocity = get_signed_value_16_bit(temp.values[0], temp.values[1]);
+        }   //end if
     }   //end while
 }
 
@@ -225,7 +213,10 @@ Robot::Robot(int portNo, int br) : port(portNo), baudrate(br), sensorsstreaming(
   Takes in a port number and a baudrate
   Defaults the current sensor OI_MODE
 */
-Robot::Robot(int portNo, int br, char ID) : port(portNo), baudrate(br), sensorsstreaming(false), id(ID), default_velocity(0), real_velocity(0) {init();}
+Robot::Robot(int portNo, int br, char ID, int cp, int cb) : port(portNo), baudrate(br), compass_port(cp), compass_baudrate(cb),
+    sensorsstreaming(false), id(ID), default_velocity(0), real_velocity(0) {
+        init();
+}
 
 Robot::Robot(int portNo, int br, char ID, bool create) : port(portNo), baudrate(br), sensorsstreaming(false), id(ID), default_velocity(0), real_velocity(0) {
     if(create)
@@ -245,7 +236,7 @@ void Robot::init() {
         printf("port open did not work\n");
     else {
         //printf("port open worked\n");
-        //make the thread
+
         pthread_create(&get_sensors, 0, get_sensors_thread, (void*)this);
         pthread_create(&get_real_velocity, 0, get_real_velocity_thread, (void*)this);
         velocity_over_time.reserve(200);
@@ -1052,6 +1043,78 @@ double Robot::adjustTurningTime(int velocity, int angle) {
 }   //END ADJUSTTIME
 
 
+float Robot::findDegreeAdjustment(int d) {
+
+    int degree = abs(d);
+    int result;
+    //if(degree < 21) {
+        //result = -2;
+    //}
+    if(degree <= 17) {
+        result = ((degree / 5) * -1)+2;
+    }
+
+    else if(degree <= 52) {
+        result = ((degree / 5) * -1)+2.5;
+    }
+    else if(degree <= 72) {
+        result = ((degree / 5) * -1) + 2;
+    }
+    else if(degree <= 77) {
+        result = ((degree / 5) * -1) + 1.25;
+    }
+    else if(degree <= 87) {
+        result = ((degree / 5) * -1) + 1;
+    }
+    else if(degree <= 90) {
+        result = ((degree / 5) * -1) + 2;
+    }
+    else if(degree <= 102) {
+        result = ((degree / 5) * -1) + 1;
+    }
+    else if(degree <= 137) {
+        result = ((degree / 5) * -1) + 0.75;
+    }
+    else if(degree <= 167) {
+        result = ((degree / 5) * -1);
+    }
+    else if(degree <= 172) {
+        result = ((degree / 5) * -1) + 0.1;
+    }
+    else if(degree <= 177) {
+        result = ((degree / 5) * -1);
+    }
+    else if(degree <= 182) {
+        result = ((degree / 5) * -1) + 0.25;
+    }
+
+    else if(degree <= 227) {
+        result = ((degree / 5) * -1);
+    }
+
+    else if(degree <= 242) {
+        result = ((degree / 5) * -1) - 0.25;
+    }
+    else if(degree <= 322) {
+        result = ((degree / 5) * -1);
+    }
+    else if(degree <= 348) {
+        result = ((degree / 5) * -1) - 0.25;
+    }
+    else if(degree <= 352) {
+        result = ((degree / 5) * -1) - 0.50;
+    }
+    else if(degree <= 360) {
+        result = ((degree / 5) * -1) - 1.0;
+    }
+    else {
+
+        result = (degree / 5);
+    }
+
+    return result;
+}
+
 
 /*
  Turns the robot for a given degree at a given velocity
@@ -1059,9 +1122,9 @@ double Robot::adjustTurningTime(int velocity, int angle) {
  velocity is the specified velocity in mm/s and can range from -500-500
 */
 void Robot::turnXDegrees(int degree, int velocity) {
-    bool negative = false;  //true for moving clockwise, false for counter clockwise
-    double tDegree = degree;
-    double tVelocity = velocity;
+    bool clockwise = false;  //true for moving clockwise, false for counter clockwise
+    int tDegree = degree;
+    int tVelocity = velocity;
 
     //only turn if both the degree and velocity have a value > 0
     if( (degree != 0) && (velocity != 0) ) {
@@ -1070,33 +1133,36 @@ void Robot::turnXDegrees(int degree, int velocity) {
         //if the degree is negative, get absolute value and set negative
         if(degree < 0) {
             tDegree = degree * -1;
-            negative = negative ^ true;
+            clockwise = clockwise ^ true;
         }
         //if the velocity is negative, get abolsute value and set negative
         if(velocity < 0) {
             tVelocity = velocity * -1;
-            negative = negative ^ true;
+            clockwise = clockwise ^ true;
         }
 
-        double p = (tDegree * (double)100 / 360) / 100;  //percent of 180
+        tDegree += findDegreeAdjustment(tDegree);
+        cout<<"\ntDegree:"<<tDegree;
+
+        //percent of 360 degrees
+        double p = ((tDegree * (double)100) / 360) / 100;
+
+
         //std::cout<<"\np:"<<p;
-        double distance = p * 900; //how far to move (mm)
+        double distance = p * ROBOT_CIRCUMFERENCE; //how far to move (mm)
         //std::cout<<"\ndistance:"<<distance;
 
         double time = distance / tVelocity; //how long to turn
         //std::cout<<"\ntime:"<<time;
         //std::cout<<"\nadjustment:"<<adjustTurningTime(velocity,degree);
-        time += adjustTurningTime(velocity,degree);
-        //std::cout<<"\nadjusted time:"<<time;
+
         //set time to microseconds
-        time = time * 1000000;
+        time *= 1000000;
 
-        if(!negative)
+        if(!clockwise)
             turnCounterClockwise(velocity);
-
         else
             turnClockwise(velocity);
-
 
         usleep(time);
         stop();
@@ -1104,6 +1170,7 @@ void Robot::turnXDegrees(int degree, int velocity) {
 }   //END TURNXDEGREES
 
 /*Turns the robot x degrees*/
+
 void Robot::turnXDegrees(int degree) {
     turnXDegrees(degree, getDefaultVelocity());
 }

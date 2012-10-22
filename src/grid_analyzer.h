@@ -5,6 +5,7 @@
 #include "robot_driver_tree.h"
 #include "robot_driver_priorityqueue.h"
 #include "robot_driver_stack.h"
+#include "robot_driver_utility.h"
 #include <math.h>
 
 class Grid_Analyzer {
@@ -63,6 +64,6 @@ private:
     Position find_next_best(Tree&, Position);
     Tree::Node* find_nearest_neighbor(Tree*&, Position&);
     Path connect_for_rrt(Position&, Position&);
-    std::vector<Position>* get_potential_field(Position&, Position&);
+    std::vector<Position> get_cstate_subset(Position&, Position&, int&);
 };
 #endif

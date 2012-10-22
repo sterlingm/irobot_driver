@@ -351,36 +351,36 @@ Tree::Node* Grid_Analyzer::find_nearest_neighbor(Tree*& tree, Position& ver) {
 }   //END FIND_NEAREST_NEIGHBOR
 
 
-std::vector<Position>* Grid_Analyzer::get_potential_field(Position& init, Position& goal) {
-    std::vector<Position>* result = new std::vector<Position>[2];
+std::vector<Position> Grid_Analyzer::get_cstate_subset(Position& init, Position& goal, int& increment) {
+    std::vector<Position> result;
     int row_diff = init.getRow() - goal.getRow();
     int col_diff = init.getCol() - goal.getCol();
 
-    int startr = (row_diff > 0) ? goal.getRow() : init.getRow();
-    int startc = (col_diff > 0) ? goal.getCol() : init.getCol();
-    int endr = (row_diff > 0) ? init.getRow() : goal.getRow();
-    int endc = (col_diff > 0) ? init.getCol() : goal.getCol();
+    int startr = ((row_diff > 0) ? goal.getRow() : init.getRow()) - increment;
+    int startc = ((col_diff > 0) ? goal.getCol() : init.getCol()) - increment;
+    int endr = ((row_diff > 0) ? init.getRow() : goal.getRow()) + increment;
+    int endc = ((col_diff > 0) ? init.getCol() : goal.getCol()) + increment;
 
+    //bounds checking
+    if(startr < 0) startr = 0;
+    if(startc < 0) startc = 0;
+    if(endr >= grid->getNumOfRows()) endr = grid->getNumOfRows()-1;
+    if(endc >= grid->getNumOfCols()) endc = grid->getNumOfCols()-1;
+
+//    std::cout<<"\nincrement:"<<increment;
 //    std::cout<<"\nstartr:"<<startr;
 //    std::cout<<"\nstartc:"<<startc;
 //    std::cout<<"\nendr:"<<endr;
 //    std::cout<<"\nendc:"<<endc;
 
-
-    for(int r=0;r<grid->getNumOfRows();r++) {
-        for(int c=0;c<grid->getNumOfCols();c++) {
+    for(int r=startr;r<=endr;r++) {
+        for(int c=startc;c<=endc;c++) {
             Position temp(r,c);
-            if( (endr - temp.getRow() >= 0) && (endc - temp.getCol() >= 0)
-               && (temp.getRow() - startr >= 0) && (temp.getCol() - startc >= 0)
-               && positionValid(temp) )
-                result[0].push_back(temp);
-
-            else if(positionValid(temp))
-                result[1].push_back(temp);
-
+            if(positionValid(temp))
+                result.push_back(temp);
         }
     }
-    result[1].push_back(goal);
+
     return result;
 }   //END GET_POTENTIAL_FIELD
 
@@ -450,26 +450,16 @@ Tree* Grid_Analyzer::build_rrt(Position& init, Position& goal) {
 
     //get the potential field. index 0 is first set of samples,
     //index 1 is the rest of the samples in environment (for when no path in index 0)
-    std::vector<Position>* potential_field = get_potential_field(init, goal);
-    //set to sample from
-    int set = 0;
-    //x dimension of potential field
+    int subset_size_increment = 0;
+    std::vector<Position> cstate_subset = get_cstate_subset(init, goal, subset_size_increment);
+
+    //x dimension of potential field   +1 for 0-9 indicies
     int x_dimen_pf = ( abs(init.getCol() - goal.getCol())  )+1;
     //y dimension of potential field
     int y_dimen_pf = ( abs(init.getRow() - goal.getRow()) )+1;
 
-    //if we sample within 30% of minimum potenial field dimension the goal, stop and connect
-    float close_distance = 0.3 * (x_dimen_pf < y_dimen_pf ? x_dimen_pf : y_dimen_pf);
-    //std::cout<<"\nclose_distance:"<<close_distance<<"\n";
-
-    /*std::cout<<"\nset:"<<set;
-    for(int i=0;i<potential_field[set].size();i++)
-        std::cout<<" "<<potential_field[set].at(i).toString();
-    std::cout<<"\nset:"<<set+1;
-    for(int i=0;i<potential_field[set+1].size();i++)
-        std::cout<<" "<<potential_field[set+1].at(i).toString();
-    std::cout<<"\n";*/
-
+    //if we sample within some amount of minimum potenial field dimension the goal, stop and connect
+    float close_distance = SAMPLE_CLOSE_DISTANCE * (x_dimen_pf < y_dimen_pf ? x_dimen_pf : y_dimen_pf);
 
     //make Position to hold the sample
     Position sampled_state;
@@ -477,7 +467,7 @@ Tree* Grid_Analyzer::build_rrt(Position& init, Position& goal) {
     //how many Positions we sample with each iteration
     int branching = 5;
 
-    //holds the index of sample in sampling_boxes[box]
+    //holds the index of sample in the cstate_subset
     int index;
 
     //seed rand
@@ -488,20 +478,20 @@ Tree* Grid_Analyzer::build_rrt(Position& init, Position& goal) {
     //while the goal is not found
     while(!done_sampling) {
 
+//        for(int j=0;j<cstate_subset.size();j++)
+//            std::cout<<"\ncstate_subset["<<j<<"]:"<<cstate_subset.at(j).toString();
+
         //get number of samples to add equal to branching
         for(int i=0;i<branching;i++) {
 
-            //for(int j=0;j<potential_field->size();j++)
-                //std::cout<<"\npotentialfield["<<set<<"]["<<j<<"]:"<<potential_field[0].at(j).toString();
-
-            //if no path in potential field
-            if(potential_field[set].size() == 1) {
-                //std::cout<<"\nNO PATH IN sampling_boxes[0]";
-                if(set == 0)
-                    set++;
-                else
-                    i = branching;
+            //if no path in cstate subset
+            if(cstate_subset.size() == 1) {
+                //std::cout<<"\nNO PATH IN subset, incrementing subset size";
+                subset_size_increment++;
+                cstate_subset = get_cstate_subset(init, goal, subset_size_increment);
+                i = branching;
             }
+
 
             else {
 
@@ -509,10 +499,10 @@ Tree* Grid_Analyzer::build_rrt(Position& init, Position& goal) {
                 srand(rand());
 
                 //get an index
-                index = rand() % potential_field[set].size();
+                index = rand() % cstate_subset.size();
 
                 //get one of the samples
-                sampled_state = potential_field[set].at(index);
+                sampled_state = cstate_subset[index];
                 //std::cout<<"\nsampled_state: "<<sampled_state.toString()<<"\n";
 
                 //xnear<-nearest_neighbor
@@ -540,7 +530,7 @@ Tree* Grid_Analyzer::build_rrt(Position& init, Position& goal) {
                 }   //end if sampled goal or close enough
 
                 //remove position from sample list
-                potential_field[set].erase(potential_field[set].begin()+index);
+                cstate_subset.erase(cstate_subset.begin()+index);
             }   //end else
         }   //end for
     }   //end while
@@ -567,7 +557,6 @@ Tree* Grid_Analyzer::build_rrt(Position& init, Position& goal) {
         }   //end for
     }   //end if stopped because close to goal
 
-    delete [] potential_field;
     return tree;
 }   //END BUILD_RRT
 

@@ -17,8 +17,9 @@ public:
     Robot(int, int);
 
     //! A constructor
-    /*! Sets port member to first parameter passed, baudrate member to second parameter passed, and id to third parameter */
-    Robot(int, int, char);
+    /*! Sets port member to first parameter passed, baudrate member to second parameter passed, id to third parameter,
+        compass port member to fourth, and compass baudrate to fifth*/
+    Robot(int, int, char, int, int);
 
     //! A constructor
     /*! Sets port member to first parameter passed, baudrate member to second parameter passed, and id to third parameter
@@ -214,6 +215,7 @@ public:
     void setRealVelocity(int);
     std::vector<int> velocity_over_time;
     void detach_threads();
+
 private:
 
     double adjustTurningTime(int,int);
@@ -228,6 +230,8 @@ private:
     void get_v_over_t_thread_i();
 
 
+    float findDegreeAdjustment(int);
+
     int port;
     int baudrate;
     int default_velocity;
@@ -239,7 +243,10 @@ private:
     char id;
     char mode;
 
-    struct timeval timestamp;
+    float orientation;
+    SerialConnect compass_connect;
+    int compass_port;
+    int compass_baudrate;
 
 };
 

@@ -328,7 +328,7 @@ int main(int argc, char* args[]) {
                         //set size
                         int size = server.get_num_clients();
                         //make robot
-                        Robot robot(robot_port, ROBOT_BAUDRATE, '1');
+                        Robot robot(robot_port, ROBOT_BAUDRATE, '1', false);
                         //stream sensors
                         robot.streamSensors();
 
@@ -359,7 +359,7 @@ int main(int argc, char* args[]) {
                     TcpClient client((char*)PORT, ip.c_str(), id[0], true);
                     UdpClient u_client((char*)PORT, ip.c_str(), id[0]);
 
-                    Robot robot(robot_port, ROBOT_BAUDRATE, '1');
+                    Robot robot(robot_port, ROBOT_BAUDRATE, '1', 17, 19200);
                     robot.streamSensors();
 
                     //make agent
@@ -391,7 +391,7 @@ int main(int argc, char* args[]) {
 
                 //else, no networking needed
                 else {
-                    Robot robot(robot_port, ROBOT_BAUDRATE, direction[0]);
+                    Robot robot(robot_port, ROBOT_BAUDRATE, direction[0], COMPASS_PORT, COMPASS_BAUDRATE);
                     Agent a_temp(robot, direction[0]);
                     GUIWindow window(a_temp);
                     return Fl::run();
@@ -508,8 +508,27 @@ int main(int argc, char* args[]) {
         //else if client
         else if(mode[0] == 'c') {
 
+            /*SerialConnect compass_connect;
+            compass_connect.OpenComport(17, 19200);
 
-            Robot robot(robot_port, ROBOT_BAUDRATE, id[0]);
+            unsigned char request_poll_command[4] = {0x55, 0xC1, 0x02, 0x02};
+            compass_connect.SendBuf(17, request_poll_command, 4);
+            unsigned char receive[2];
+            read(compass_connect.handle, receive, 2);
+            float r = get_signed_value_16_bit(receive[0], receive[1]);
+            cout<<"\n"<<(int)receive[0]<<" "<<(int)receive[1];
+            usleep(15000);
+            cout<<"\nr:"<<r;
+            compass_connect.SendBuf(17, request_poll_command, 4);
+            read(compass_connect.handle, receive, 2);
+            r = get_signed_value_16_bit(receive[0], receive[1]);
+            r*=0.1;
+            cout<<"\n"<<(int)receive[0]<<" "<<(int)receive[1];
+            cout<<"\nr:"<<r;*/
+
+
+
+            Robot robot(robot_port, ROBOT_BAUDRATE, id[0], COMPASS_PORT, COMPASS_BAUDRATE);
             TcpClient client((char*)PORT, ip.c_str(), id[0]);
             UdpClient u_client((char*)PORT, ip.c_str(), id[0]);
 
@@ -641,7 +660,7 @@ int main(int argc, char* args[]) {
             Grid* grid = new Grid(grid_filename);
             Grid_Analyzer* grid_analyzer = new Grid_Analyzer(grid);
 
-            Robot robot(robot_port, ROBOT_BAUDRATE, id[0]);
+            Robot robot(robot_port, ROBOT_BAUDRATE, id[0], COMPASS_PORT, COMPASS_BAUDRATE);
              //stream sensors
             robot.streamSensors();
             //get mode

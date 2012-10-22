@@ -69,6 +69,7 @@ public:
     void cprintf(int, const char *);
     int IsCTSEnabled(int);
 
+    int handle;
 };
 #ifdef __cplusplus
 } /* extern "C" */

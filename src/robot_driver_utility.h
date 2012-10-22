@@ -4,6 +4,9 @@
 #include <iostream>
 #include <sstream>
 #include <pthread.h>
+#include <math.h>
+#include <vector>
+using namespace std;
 
 #define BUMP 7
 #define WHEEL_DROP 7
@@ -60,7 +63,27 @@
 #define PORT "4950"
 
 
+#define ROBOT_PORT 16
 #define ROBOT_BAUDRATE 57600
+#define COMPASS_PORT 17
+#define COMPASS_BAUDRATE 19200
+
+
+#define MENU_SLEEP_TIME 1000000
+#define ASTAR_UPDATE_PATH_TIME 200000
+#define RRT_UPDATE_PATH_TIME 2000000
+#define UPDATE_SERVER_TIME 150000
+
+
+//~1ft. more than 305 to account for speeding up
+#define UNIT_SIZE_STRAIGHT 320
+#define UNIT_SIZE_DIAGONAL 450
+
+#define SAMPLE_CLOSE_DISTANCE 0.3
+
+#define TURNING_DEGREE_VARIANCE 2.5
+
+#define ROBOT_CIRCUMFERENCE 1037
 
 class Agent;
 struct client_info {
@@ -102,16 +125,52 @@ static int* getHighAndLowByte(int v) {
     return result_high_low_byte;
 }   //END GETHIGHANDLOWBYTE
 
+
+static float get_signed_value_16_bit(unsigned char high, unsigned char low) {
+    int result = low;
+
+    //if high byte is used, get that
+    if(high > 0)
+        result += pow(2, 8);
+
+    //if high byte > 1, negative number - shift and add
+    if(high > 1)
+        result = (high<<8) + low;
+
+    return result;
+}
+
+/*result[0] is min, result[1] is max*/
+static std::vector<float> get_min_max_angle(float target, float variance) {
+    cout<<"\ntarget to get_min_max_angle:"<<target<<" ; variance:"<<variance;
+    std::vector<float> result;
+    result.push_back(target-variance);
+    result.push_back(target+variance);
+
+    if(result[0] > 360)
+        result[0] -= 360;
+    else if(result[0] < 0)
+        result[0] += 360;
+
+    if(result[1] > 360)
+        result[1] -= 360;
+    else if(result[1] < 0)
+        result[1] += 360;
+
+    for(int i=0;i<result.size();i++)
+        cout<<"\n"<<result[i];
+    return result;
+}
+
+
+static bool in_range(float num, float min, float max) {
+    if(min > max)
+        return ( (num >= min && num <= 360) || (num <= max && num >= 0) );
+
+    return (num >= min && num <= max);
+}
+
 static pthread_mutex_t mutex_agent;
-
-static int MENU_SLEEP_TIME = 1000000;
-static int ASTAR_UPDATE_PATH_TIME = 200000;
-static int RRT_UPDATE_PATH_TIME = 2000000;
-static int UPDATE_SERVER_TIME = 150000;
-
-//~1ft. more than 305 to account for speeding up
-static int UNIT_SIZE_STRAIGHT = 320;
-static int UNIT_SIZE_DIAGONAL = 450;
 
 
 #endif
